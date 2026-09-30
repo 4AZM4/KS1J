@@ -1,0 +1,18 @@
+# Code owners get review requests automatically.
+# When the team is confirmed, uncomment each line and replace the placeholder with a GitHub username.
+# The last matching line wins.
+
+*                         @4AZM4
+
+# Person A: member app
+# /apps/mobile/           @4AZM4 @member-app-owner
+
+# Person B: website and admin dashboard
+# /apps/web/              @4AZM4 @admin-web-owner
+
+# Person C: backend, schema and security (owns every migration)
+# /supabase/              @4AZM4 @backend-owner
+# /packages/shared/       @4AZM4 @backend-owner
+
+# Person D: AI helpdesk and pitch
+# /docs/modules/helpdesk.md @4AZM4 @ai-owner

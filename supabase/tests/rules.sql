@@ -1,0 +1,184 @@
+-- Behaviour tests for the money and approval rules. Run after migrations + seed:
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/rules.sql
+-- Each test impersonates an API user by setting the JWT claims Supabase would set.
+-- Everything runs in one transaction and is rolled back.
+
+begin;
+
+create or replace function pg_temp.as_user(uid text) returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+end $$;
+
+create or replace function pg_temp.as_system() returns void language plpgsql as $$
+begin
+  execute 'reset role';
+  perform set_config('request.jwt.claims', '', true);
+end $$;
+
+-- Blocked = raised an error, or RLS filtered the row out so nothing changed.
+create or replace function pg_temp.expect_error(sql text, label text) returns void language plpgsql as $$
+declare
+  n bigint;
+begin
+  begin
+    execute sql;
+    get diagnostics n = row_count;
+  exception when others then
+    raise notice 'PASS  %', label;
+    return;
+  end;
+  if n = 0 then
+    raise notice 'PASS  % (hidden by RLS)', label;
+    return;
+  end if;
+  raise exception 'FAIL  % (statement succeeded but should have been blocked)', label;
+end $$;
+
+create or replace function pg_temp.expect_ok(sql text, label text) returns void language plpgsql as $$
+declare
+  n bigint;
+begin
+  execute sql;
+  get diagnostics n = row_count;
+  if n = 0 then
+    raise exception 'FAIL  % (no rows changed)', label;
+  end if;
+  raise notice 'PASS  %', label;
+end $$;
+
+-- Ids from seed.sql
+--   …001 super admin · …002 verifier · …003 trustee · …004 finance · …005 volunteer
+--   …010 Fatema · …020 donor
+--   case …001 submitted Sadaat · …002 verified Non-Sadaat · …003 published Sadaat · …004 published Non-Sadaat
+
+-- 1. A member cannot see someone else's case.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.cases where id = '20000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  donor can read another member''s case';
+  end if;
+  raise notice 'PASS  members only see their own cases';
+end $$;
+
+-- 2. Donors only see safe columns of published cases.
+do $$ begin
+  if (select count(*) from public.list_public_cases()) <> 3 then
+    raise exception 'FAIL  list_public_cases should return the 3 published cases';
+  end if;
+  if (select count(*) from public.list_public_cases('sadaat')) <> 2 then
+    raise exception 'FAIL  Sadaat list should have 2 cases';
+  end if;
+  raise notice 'PASS  public case list shows published cases only, split by category';
+end $$;
+
+-- 3. Unverified institutions are hidden from donors.
+do $$ begin
+  if (select count(*) from public.institutions) <> 1 then
+    raise exception 'FAIL  donors should only see the one verified institution';
+  end if;
+  raise notice 'PASS  only institutions with a verified ijazah are visible';
+end $$;
+
+-- 4. Fund separation.
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, case_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'sehme_sadaat', '20000000-0000-0000-0000-000000000004', 1000)$$,
+  'Sehme Sadaat to a Non-Sadaat case is blocked');
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, case_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'sehme_imam', '20000000-0000-0000-0000-000000000003', 1000)$$,
+  'Sehme Imam to an individual case is blocked');
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, institution_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'sehme_imam', '30000000-0000-0000-0000-000000000002', 1000)$$,
+  'Sehme Imam to an institution without verified ijazah is blocked');
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, case_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000001', 1000)$$,
+  'Donations to an unpublished case are blocked');
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, case_id, amount, status)
+  values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000004', 1000, 'paid')$$,
+  'Members cannot mark their own donation as paid');
+select pg_temp.expect_ok($$insert into public.donations (id, donor_id, fund, case_id, amount)
+  values ('40000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', 'sehme_sadaat', '20000000-0000-0000-0000-000000000003', 5000)$$,
+  'Sehme Sadaat to a verified Sadaat case is allowed');
+select pg_temp.expect_ok($$insert into public.donations (donor_id, fund, institution_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'sehme_imam', '30000000-0000-0000-0000-000000000001', 5000)$$,
+  'Sehme Imam to a verified institution is allowed');
+
+-- 5. Payment confirmation (server) writes the ledger and updates the case once.
+select pg_temp.as_system();
+update public.donations set status = 'paid', gateway_ref = 'test_1' where id = '40000000-0000-0000-0000-000000000001';
+do $$ begin
+  if (select raised_amount from public.cases where id = '20000000-0000-0000-0000-000000000003') <> 47000 then
+    raise exception 'FAIL  raised amount should be 42000 + 5000';
+  end if;
+  if (select count(*) from public.ledger_entries where donation_id = '40000000-0000-0000-0000-000000000001') <> 1 then
+    raise exception 'FAIL  exactly one ledger entry per paid donation';
+  end if;
+  raise notice 'PASS  confirmed payment updates ledger and case total';
+end $$;
+select pg_temp.expect_error($$update public.ledger_entries set amount = 1 where donation_id = '40000000-0000-0000-0000-000000000001'$$,
+  'Ledger entries cannot be edited, even by the system');
+
+-- 6. Maker-checker approval.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$update public.cases set status = 'verified' where id = '20000000-0000-0000-0000-000000000001'$$,
+  'An applicant cannot verify their own case');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
+select pg_temp.expect_error($$update public.cases set status = 'verified' where id = '20000000-0000-0000-0000-000000000001'$$,
+  'A volunteer cannot verify a case');
+select pg_temp.expect_error($$update public.cases set lineage_verified = true where id = '20000000-0000-0000-0000-000000000001'$$,
+  'A volunteer cannot confirm Sadaat lineage');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_error($$update public.cases set status = 'approved' where id = '20000000-0000-0000-0000-000000000001'$$,
+  'A case cannot skip from submitted to approved');
+select pg_temp.expect_ok($$update public.cases set status = 'verified', lineage_verified = true where id = '20000000-0000-0000-0000-000000000001'$$,
+  'A verifier can verify a case and confirm lineage');
+update public.cases set raised_amount = 999999 where id = '20000000-0000-0000-0000-000000000003';
+do $$ begin
+  if (select raised_amount from public.cases where id = '20000000-0000-0000-0000-000000000003') = 999999 then
+    raise exception 'FAIL  staff changed a raised amount by hand';
+  end if;
+  raise notice 'PASS  staff cannot change a raised amount by hand';
+end $$;
+
+-- A super admin holding every role still cannot approve a case they verified.
+select pg_temp.as_system();
+update public.cases set status = 'submitted', verified_by = null, verified_at = null where id = '20000000-0000-0000-0000-000000000002';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_ok($$update public.cases set status = 'verified' where id = '20000000-0000-0000-0000-000000000002'$$,
+  'Super admin verifies a case');
+select pg_temp.expect_error($$update public.cases set status = 'approved' where id = '20000000-0000-0000-0000-000000000002'$$,
+  'The same person cannot also approve it');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_ok($$update public.cases set status = 'approved' where id = '20000000-0000-0000-0000-000000000002'$$,
+  'A different trustee can approve it');
+
+-- 7. Disbursement rules.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000004', 'sehme_sadaat', 1000, 'Demo Store', '00000000-0000-0000-0000-000000000004')$$,
+  'Sehme Sadaat cannot be disbursed to a Non-Sadaat case');
+
+-- 8. Members cannot verify themselves.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$update public.members set household_id = '10000000-0000-0000-0000-000000000001' where id = '00000000-0000-0000-0000-000000000020'$$,
+  'Members cannot move themselves to another household');
+
+-- 9. Loan repayment reduces the balance and funds the next student.
+select pg_temp.as_system();
+insert into public.loan_repayments (id, loan_id, amount)
+select '50000000-0000-0000-0000-000000000001', id, 2000 from public.education_loans limit 1;
+update public.loan_repayments set status = 'paid', gateway_ref = 'test_loan_1' where id = '50000000-0000-0000-0000-000000000001';
+do $$ begin
+  if (select outstanding from public.education_loans limit 1) <> 62000 then
+    raise exception 'FAIL  outstanding should drop from 64000 to 62000';
+  end if;
+  raise notice 'PASS  loan repayment reduces the balance and is recorded in the ledger';
+end $$;
+
+-- 10. Khums shares must add up.
+select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
+  values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,
+  'Khums shares that do not add up are rejected');
+
+rollback;

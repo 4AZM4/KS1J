@@ -1,0 +1,28 @@
+name: Module
+description: One KS1J module, built from its spec
+title: "[Module] "
+labels: ["module"]
+body:
+  - type: input
+    id: spec
+    attributes:
+      label: Spec
+      description: Path to the module spec
+      placeholder: docs/modules/cases.md
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Owner
+      placeholder: "@username"
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope for the hackathon
+      description: Which screens and acceptance tests must work on the day
+  - type: textarea
+    id: fallback
+    attributes:
+      label: Demo fallback
+      description: What we show if this module breaks (see Foolproofing in the plan)
