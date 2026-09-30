@@ -12,8 +12,7 @@ export default function LearnScreen() {
       <SectionLabel>Ask</SectionLabel>
       <FeatureCard title="Jamaat helpdesk" description="Ask about services, forms, timings and procedures." />
       <SectionLabel>Study</SectionLabel>
-      <FeatureCard title="Knowledge library" description="Books and lectures from the Jamaat." badge="Coming soon" />
-      <FeatureCard title="Ziyarat companion" description="Ziyarat and duas with translation, offline." badge="Coming soon" />
+      <FeatureCard title="History of the Jamaat" description="Our story, heritage and milestones." badge="Coming soon" />
       <FeatureCard title="eMadressa" description="Online madressa lessons and progress for your children." badge="Coming soon" />
       <SectionLabel>Careers</SectionLabel>
       <FeatureCard
