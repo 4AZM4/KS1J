@@ -1,0 +1,20 @@
+name: Bug
+description: Something is broken
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [Member app (iOS), Member app (Android), Website, Admin dashboard, Database]
