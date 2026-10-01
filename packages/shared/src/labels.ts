@@ -1,4 +1,8 @@
+import type { Enums } from './database.types';
 import type { AdminRole, CaseCategory, CaseStatus, CaseType, FundType } from './domain';
+import type { FollowUpStage } from './loans';
+
+type LoanStatus = Enums<'loan_status'>;
 
 export const rupees = (n: number | null | undefined) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
 
@@ -61,3 +65,38 @@ export const DEMO_ACCOUNTS = [
   { email: 'finance@ks1j.test', name: 'Finance', role: 'Finance admin' },
   { email: 'superadmin@ks1j.test', name: 'Super admin', role: 'Super admin' },
 ] as const;
+
+export const LOAN_STATUS_LABEL: Record<LoanStatus, string> = {
+  studying: 'Studying',
+  grace: 'Grace period',
+  repaying: 'Repaying',
+  paused: 'Paused (hardship)',
+  closed: 'Fully repaid',
+  converted_to_grant: 'Converted to a grant',
+};
+
+export const FOLLOW_UP_LABEL: Record<FollowUpStage, string> = {
+  none: 'On track',
+  upcoming_reminder: 'Due in 3 days',
+  missed_reminder: 'Missed, reminder sent',
+  notify_guarantor: 'Guarantor told',
+  officer_follow_up: 'Officer to call',
+  committee_review: 'Committee review',
+  paused_for_review: 'Hardship under review',
+};
+
+export const AUTOPAY_LABEL: Record<string, string> = {
+  not_set: 'Not set up',
+  pending: 'Waiting for bank',
+  active: 'On',
+  failed: 'Failed',
+  cancelled: 'Cancelled',
+};
+
+/** "15 Oct 2026" for a YYYY-MM-DD date. */
+export function formatDate(d: string | null | undefined): string {
+  if (!d) return '—';
+  const [y, m, day] = d.slice(0, 10).split('-').map(Number);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${day} ${months[m - 1]} ${y}`;
+}

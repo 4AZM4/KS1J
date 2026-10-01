@@ -43,6 +43,8 @@ The student or payer submits a request with income proof: **pause** (1–12 mont
 
 ## Screens
 
+**Built:** app `/loan` (plan agreement, My loan, AutoPay, pay, receipts) and `/loan-hardship` (proof upload to the private `documents` bucket); web `/admin/loans`. Loan statuses move with the dates via `refresh_loan_statuses()` (nightly with pg_cron).
+
 **App, Services → Education loan:** apply (guarantor, payer, course end date); repayment plan screen (enter EMI → "repaid in N months", with the floor explained); accept counter-proposal; set up AutoPay; My loan (balance, next due date, receipts); request hardship pause or lower EMI.
 **Web, /admin/loans:** plans awaiting agreement, follow-up list by stage, AutoPay not set up, hardship requests to decide, repaid this month, fund balance.
 

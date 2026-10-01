@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 // Placeholder for each admin section until its module is built.
 // Each section's spec lives in docs/modules/.
 const sections: Record<string, { title: string; spec: string; summary: string }> = {
-  loans: { title: "Education loans", spec: "loans.md", summary: "Plans awaiting agreement, the automatic follow-up list, AutoPay status and hardship requests." },
   khums: { title: "Khums & ledgers", spec: "khums.md", summary: "Sehme Imam and Sehme Sadaat collections, kept in separate ledgers." },
   institutions: { title: "Sehme Imam institutions", spec: "khums.md", summary: "Institutions with a verified ijazah, the only valid Sehme Imam recipients." },
   lawajam: { title: "Lawajam", spec: "lawajam.md", summary: "Dues paid and outstanding by household and area." },

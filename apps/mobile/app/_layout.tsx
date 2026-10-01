@@ -56,6 +56,8 @@ function RootLayoutNav() {
           <Stack.Screen name="applications" options={{ title: 'My applications' }} />
           <Stack.Screen name="cases/[category]" options={{ title: 'Support a case' }} />
           <Stack.Screen name="case/[id]" options={{ title: 'Case' }} />
+          <Stack.Screen name="loan" options={{ title: 'Education loan' }} />
+          <Stack.Screen name="loan-hardship" options={{ title: 'Pause or lower EMI' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'About' }} />
         </Stack>
       </ThemeProvider>

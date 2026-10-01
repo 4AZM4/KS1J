@@ -7,7 +7,7 @@ import { Banner, Button, Choice, Field } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { errorMessage, supabase } from '@/lib/supabase';
 
-const TYPES: CaseType[] = ['medical', 'education', 'ration', 'scholarship'];
+const TYPES: CaseType[] = ['medical', 'education', 'ration', 'scholarship', 'education_loan'];
 
 export default function ApplyScreen() {
   const params = useLocalSearchParams<{ type?: CaseType }>();
@@ -73,7 +73,11 @@ export default function ApplyScreen() {
       />
       <Field
         label="Tell us about the need"
-        hint="Private to the committee. Donors never see your name or this text."
+        hint={
+          type === 'education_loan'
+            ? 'Course, college, when it ends, and who will repay (you or a family member). Private to the committee.'
+            : 'Private to the committee. Donors never see your name or this text.'
+        }
         value={details}
         onChangeText={setDetails}
         multiline
