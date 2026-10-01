@@ -68,8 +68,11 @@ export default function Home() {
           <a href="#money" className="hidden rounded-lg px-3 py-2 hover:bg-card sm:inline-block">
             Where money goes
           </a>
-          <Link href="/login" className="rounded-lg border border-border px-3 py-2 font-bold hover:bg-card">
-            Committee sign in
+          <Link href="/login" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
+            Sign in
+          </Link>
+          <Link href="/signup" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110">
+            Create account
           </Link>
         </nav>
       </header>
@@ -95,9 +98,9 @@ export default function Home() {
                   >
                     Open the member app
                   </a>
-                  <a href="#how" className="rounded-xl border border-white/40 px-6 py-4 text-lg font-bold hover:bg-white/10">
-                    How a request is handled
-                  </a>
+                  <Link href="/signup" className="rounded-xl border border-white/40 px-6 py-4 text-lg font-bold hover:bg-white/10">
+                    Create an account
+                  </Link>
                 </div>
                 <p className="mt-6 text-base text-white/70">Android and iPhone apps for members. This website for everyone.</p>
               </div>

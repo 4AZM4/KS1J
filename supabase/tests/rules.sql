@@ -398,6 +398,75 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
 select pg_temp.expect_ok($$select public.create_lawajam_period('2027-28', 1200)$$,
   'Finance can raise a year''s dues for every household');
 
+-- 17. Fraud flag reviews and announcements record the real person.
+select pg_temp.as_system();
+insert into public.fraud_flags (id, case_id, reason)
+values ('90000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000004', 'Test flag');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_error($$update public.fraud_flags set status = 'cleared' where id = '90000000-0000-0000-0000-000000000001'$$,
+  'A trustee cannot review fraud flags (verifiers do)');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_error($$update public.fraud_flags set reason = 'changed' where id = '90000000-0000-0000-0000-000000000001'$$,
+  'A flag''s reason cannot be rewritten');
+select pg_temp.expect_ok($$update public.fraud_flags set status = 'cleared', reviewed_by = '00000000-0000-0000-0000-000000000003'
+  where id = '90000000-0000-0000-0000-000000000001'$$,
+  'A verifier can clear a flag');
+select pg_temp.expect_error($$update public.fraud_flags set status = 'confirmed' where id = '90000000-0000-0000-0000-000000000001'$$,
+  'A reviewed flag cannot be changed again');
+select pg_temp.as_system();
+do $$ begin
+  if (select reviewed_by from public.fraud_flags where id = '90000000-0000-0000-0000-000000000001') <> '00000000-0000-0000-0000-000000000002' then
+    raise exception 'FAIL  the reviewer should be recorded as the verifier who actually reviewed';
+  end if;
+  raise notice 'PASS  a flag review records the verifier who actually reviewed';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$insert into public.announcements (title, body, published_at) values ('x', 'y', now())$$,
+  'Members cannot post announcements');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_ok($$insert into public.announcements (id, title, body, published_at, created_by)
+  values ('91000000-0000-0000-0000-000000000001', 'Test', 'Body', now(), '00000000-0000-0000-0000-000000000001')$$,
+  'A trustee can post an announcement');
+select pg_temp.as_system();
+do $$ begin
+  if (select created_by from public.announcements where id = '91000000-0000-0000-0000-000000000001') <> '00000000-0000-0000-0000-000000000003' then
+    raise exception 'FAIL  the author should be the trustee who posted';
+  end if;
+  raise notice 'PASS  an announcement records the trustee who posted it';
+end $$;
+
+-- 18. Signup creates an unverified profile with no household; members cannot join a household themselves.
+select pg_temp.as_system();
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000099', 'new@ks1j.test',
+   '{"full_name": "New Member", "phone": "+91 90000 00099", "area": "Byculla", "address": "Flat 1"}');
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000098', 'dupe@ks1j.test', '{"full_name": "Same Phone", "phone": "910000000010"}');
+do $$ begin
+  if not exists (select 1 from public.members where id = '00000000-0000-0000-0000-000000000099'
+                 and phone = '919000000099' and area = 'Byculla' and not membership_verified and household_id is null) then
+    raise exception 'FAIL  signup should create an unverified profile with no household';
+  end if;
+  if not exists (select 1 from public.members where id = '00000000-0000-0000-0000-000000000098' and phone is null) then
+    raise exception 'FAIL  a signup with an already-registered mobile should still create the account';
+  end if;
+  raise notice 'PASS  signup creates an unverified profile, even when the mobile is already registered';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000099');
+select pg_temp.expect_error($$update public.members set household_id = '10000000-0000-0000-0000-000000000001'
+  where id = '00000000-0000-0000-0000-000000000099'$$,
+  'A new member cannot put themselves in a household');
+do $$ begin
+  if exists (select 1 from public.lawajam_dues) then
+    raise exception 'FAIL  a member without a household should see no household dues';
+  end if;
+  raise notice 'PASS  an unverified member sees no household data';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_ok($$update public.members set household_id = '10000000-0000-0000-0000-000000000002', membership_verified = true
+  where id = '00000000-0000-0000-0000-000000000099'$$,
+  'A verifier links the new member to a household and verifies them');
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,

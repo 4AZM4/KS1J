@@ -1,16 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@ks1j/shared";
 import { DEMO_MODE, errorMessage, supabase } from "@/lib/supabase";
 import { Alert, Button, Card, inputClass } from "@/components/ui";
 
+// Text-message codes need an SMS provider in Supabase; off until the Jamaat sets one up.
+const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,11 +37,41 @@ export default function LoginPage() {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
       <h1 className="text-2xl font-bold">Sign in to KS1J</h1>
-      <p className="mt-2 text-muted">Use the phone number registered with the Jamaat.</p>
+      <p className="mt-2 text-muted">
+        New to KS1J? <Link href="/signup" className="font-semibold text-brand underline">Create an account</Link>
+      </p>
 
       {error ? <div className="mt-4"><Alert>{error}</Alert></div> : null}
 
       <Card className="mt-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void run("email", async () => {
+              const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password });
+              if (error) throw error;
+              router.push("/admin");
+            });
+          }}
+          className="space-y-3"
+        >
+          <label className="block text-sm font-semibold" htmlFor="email">Email</label>
+          <input id="email" type="email" autoComplete="email" className={inputClass} value={email}
+            onChange={(e) => setEmail(e.target.value)} />
+          <label className="block text-sm font-semibold" htmlFor="password">Password</label>
+          <input id="password" type="password" autoComplete="current-password" className={inputClass} value={password}
+            onChange={(e) => setPassword(e.target.value)} />
+          <Button type="submit" disabled={busy !== null || !email || !password}>
+            {busy === "email" ? "Signing in…" : "Sign in"}
+          </Button>
+        </form>
+      </Card>
+
+      {PHONE_LOGIN ? (
+        <>
+      <p className="mt-6 text-sm text-muted">Or with your mobile number:</p>
+
+      <Card className="mt-2">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -67,6 +103,8 @@ export default function LoginPage() {
           </Button>
         </form>
       </Card>
+        </>
+      ) : null}
 
       {DEMO_MODE ? (
         <section className="mt-8">

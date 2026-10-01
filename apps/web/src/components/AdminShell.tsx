@@ -10,6 +10,7 @@ import { Button, Card } from "@/components/ui";
 const adminNav = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/cases", label: "Cases" },
+  { href: "/admin/members", label: "Members to verify" },
   { href: "/admin/loans", label: "Education loans" },
   { href: "/admin/khums", label: "Khums & ledgers" },
   { href: "/admin/institutions", label: "Sehme Imam institutions" },
@@ -37,10 +38,19 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return (
       <main className="mx-auto max-w-md p-8">
         <Card>
-          <h1 className="text-xl font-bold">Committee members only</h1>
+          <h1 className="text-xl font-bold">Salaam{member ? `, ${member.full_name}` : ""}</h1>
           <p className="mt-2 text-muted">
-            You are signed in as {member?.full_name ?? "a member"}. Use the KS1J app to apply for help, give and pay dues.
+            {member?.membership_verified
+              ? "Your membership is verified."
+              : "Your account is created. A Jamaat verifier will confirm your membership and link you to your household."}{" "}
+            Use the KS1J member app to apply for help, give and pay dues. This dashboard is for committee members.
           </p>
+          <a
+            href={process.env.NEXT_PUBLIC_MEMBER_APP_URL ?? "https://4azm4.github.io/KS1J/app/"}
+            className="mt-4 inline-block rounded-lg bg-brand px-4 py-2 font-semibold text-background"
+          >
+            Open the member app
+          </a>
           <Button className="mt-4" variant="secondary" onClick={() => void signOut()}>Sign out</Button>
         </Card>
       </main>

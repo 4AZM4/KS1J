@@ -52,6 +52,7 @@ function RootLayoutNav() {
         <Stack screenOptions={{ headerTitleStyle: { fontSize: 18 }, headerBackTitle: 'Back' }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ title: 'Sign in', headerBackVisible: false }} />
+          <Stack.Screen name="signup" options={{ title: 'Create an account' }} />
           <Stack.Screen name="apply" options={{ title: 'Apply for help' }} />
           <Stack.Screen name="applications" options={{ title: 'My applications' }} />
           <Stack.Screen name="cases/[category]" options={{ title: 'Support a case' }} />
