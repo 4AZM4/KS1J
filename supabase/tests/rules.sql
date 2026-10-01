@@ -489,6 +489,35 @@ do $$ begin
   raise notice 'PASS  donors never see case documents';
 end $$;
 
+-- 20. Sehme Imam remittances: finance only, never more than is held, and recorded in the ledger.
+select pg_temp.as_system();
+insert into public.donations (id, donor_id, fund, institution_id, amount)
+values ('40000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-000000000020', 'sehme_imam', '30000000-0000-0000-0000-000000000001', 10000);
+update public.donations set status = 'paid' where id = '40000000-0000-0000-0000-0000000000b1';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_error($$insert into public.institution_remittances (institution_id, amount, reference)
+  values ('30000000-0000-0000-0000-000000000001', 1000, 'NEFT-1')$$,
+  'Trustees cannot record remittances (finance does)');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select public.institution_sehme_imam_balance('30000000-0000-0000-0000-000000000001')$$,
+  'Members cannot see an institution''s fund balance');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.institution_remittances (institution_id, amount, reference)
+  values ('30000000-0000-0000-0000-000000000001', 10001, 'NEFT-2')$$,
+  'Finance cannot remit more Sehme Imam than is held for the institution');
+select pg_temp.expect_ok($$insert into public.institution_remittances (institution_id, amount, reference)
+  values ('30000000-0000-0000-0000-000000000001', 6000, 'NEFT-3')$$,
+  'Finance can remit Sehme Imam that is held');
+do $$ begin
+  if public.institution_sehme_imam_balance('30000000-0000-0000-0000-000000000001') <> 4000 then
+    raise exception 'FAIL  after remitting 6,000 of 10,000, 4,000 should still be held';
+  end if;
+  raise notice 'PASS  a remittance is taken off the institution''s Sehme Imam in the ledger';
+end $$;
+select pg_temp.expect_error($$insert into public.institution_remittances (institution_id, amount, reference)
+  values ('30000000-0000-0000-0000-000000000001', 4001, 'NEFT-4')$$,
+  'A second remittance cannot exceed what is left');
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,
