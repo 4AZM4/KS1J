@@ -12,6 +12,7 @@ import {
 } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Choice, Field } from '@/components/ui';
@@ -114,6 +115,7 @@ export default function KhumsScreen() {
               <Text style={[styles.small, { color: muted }]}>
                 {formatDate(p.paid_at)} · Receipt {p.gateway_ref ?? p.id.slice(0, 8)}
               </Text>
+              <ReceiptLink kind="donation" id={p.id} />
             </View>
           ))}
         </>

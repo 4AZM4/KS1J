@@ -30,6 +30,7 @@ delete from public.income_declarations;
 delete from public.education_loans;
 delete from public.lawajam_payments;
 delete from public.lawajam_dues;
+delete from public.notifications;
 delete from public.case_documents;
 delete from public.case_events;
 delete from public.fraud_flags;

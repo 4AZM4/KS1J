@@ -2,21 +2,24 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
+import { useT } from '@/lib/i18n';
 
 const LEAP_URL = 'https://ksijleap.com/';
 
 export default function LearnScreen() {
+  const { t } = useT();
   return (
-    <Screen hero title="Learn" intro="Answers come only from Jamaat-approved texts, with the source shown.">
-      <SectionLabel>Ask</SectionLabel>
-      <FeatureCard icon="message-question" title="Jamaat helpdesk" description="Ask about loans, applications, giving and dues. Answers show their source." href="/helpdesk" />
-      <SectionLabel>Study</SectionLabel>
-      <FeatureCard icon="history" title="History of the Jamaat" description="Our story, heritage and milestones." badge="Coming soon" />
-      <FeatureCard icon="school" title="eMadressa" description="Online madressa lessons and progress for your children." badge="Coming soon" />
-      <SectionLabel>Careers</SectionLabel>
+    <Screen hero title={t('tab.learn')} intro={t('learn.intro')}>
+      <SectionLabel>{t('sec.ask')}</SectionLabel>
+      <FeatureCard icon="message-question" title={t('card.helpdesk.t')} description={t('card.helpdesk.d')} href="/helpdesk" />
+      <SectionLabel>{t('sec.study')}</SectionLabel>
+      <FeatureCard icon="history" title={t('card.history.t')} description={t('card.history.d')} badge="Coming soon" badgeLabel={t('common.comingSoon')} />
+      <FeatureCard icon="school" title={t('card.madressa.t')} description={t('card.madressa.d')} badge="Coming soon" badgeLabel={t('common.comingSoon')} />
+      <SectionLabel>{t('sec.careers')}</SectionLabel>
       <FeatureCard
-        icon="briefcase" title="Jobs & Careers (LEAP)"
-        description="Opens LEAP, the Jamaat's careers initiative."
+        icon="briefcase"
+        title={t('card.leap.t')}
+        description={t('card.leap.d')}
         onPress={() => WebBrowser.openBrowserAsync(LEAP_URL)}
       />
     </Screen>

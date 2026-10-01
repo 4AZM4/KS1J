@@ -9,3 +9,4 @@ export * from './reminders';
 export type { Database, Tables, TablesInsert, TablesUpdate, Enums, Json } from './database.types';
 export * from './documents';
 export * from './icons';
+export * from './i18n';

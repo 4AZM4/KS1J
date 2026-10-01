@@ -8,6 +8,7 @@
 // 2. Without it: the text of a PDF is read with simple rules (mirrors packages/shared/src/documents.ts).
 // 3. A photo with no AI key is left for the verifier to read and enter by hand.
 //
+// Every file (any kind) also gets a SHA-256 fingerprint; the same file on two cases raises a fraud flag.
 // Only someone who can see the document (applicant, submitter, staff) can ask for it to be checked.
 // Secrets (Supabase only, never in the apps): ANTHROPIC_API_KEY, optional ANTHROPIC_MODEL.
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
@@ -174,33 +175,50 @@ Deno.serve(async (req) => {
 
   try {
     // Read the document as the caller: RLS decides whether they may see it.
-    const docRes = await rest(`/rest/v1/case_documents?id=eq.${documentId}&select=id,kind,storage_path`, { asUser: auth });
-    const doc = ((await docRes.json()) as { id: string; kind: string; storage_path: string }[])[0];
+    const docRes = await rest(`/rest/v1/case_documents?id=eq.${documentId}&select=id,kind,storage_path,content_hash`, { asUser: auth });
+    const doc = ((await docRes.json()) as { id: string; kind: string; storage_path: string; content_hash: string | null }[])[0];
     if (!doc) return json({ error: 'Document not found' }, 404);
+
+    let bytes: Uint8Array | null = null;
+    let type = '';
+    const download = async (): Promise<Uint8Array> => {
+      if (bytes) return bytes;
+      const file = await rest(`/storage/v1/object/documents/${doc.storage_path.split('/').map(encodeURIComponent).join('/')}`, {
+        method: 'GET',
+      });
+      if (!file.ok) throw new Error(`download failed: ${file.status}`);
+      type = file.headers.get('content-type') ?? '';
+      bytes = new Uint8Array(await file.arrayBuffer());
+      return bytes;
+    };
+
+    // Every file gets a fingerprint, so the same file attached to two cases is flagged for a verifier.
+    if (!doc.content_hash) {
+      const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await download()));
+      const hex = [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
+      const h = await rest('/rest/v1/rpc/record_document_hash', { method: 'POST', body: JSON.stringify({ p_document: doc.id, p_hash: hex }) });
+      if (!h.ok) console.error('record_document_hash failed', h.status, await h.text());
+    }
+
     if (!CHECKED_KINDS.includes(doc.kind)) return json({ checked: false });
 
     // Already read (by the AI, the PDF rules or a verifier): keep that reading.
     const prev = await (await rest(`/rest/v1/document_checks?document_id=eq.${doc.id}&select=outcome,method`)).json();
     if (prev[0] && prev[0].outcome !== 'unreadable') return json({ checked: true });
 
-    const file = await rest(`/storage/v1/object/documents/${doc.storage_path.split('/').map(encodeURIComponent).join('/')}`, {
-      method: 'GET',
-    });
-    if (!file.ok) return json({ error: 'The file could not be opened' }, 404);
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.length > MAX_BYTES) return json({ checked: false, reason: 'File too large to read' });
+    const data = await download();
+    if (data.length > MAX_BYTES) return json({ checked: false, reason: 'File too large to read' });
 
-    const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46; // %PDF
-    const type = file.headers.get('content-type') ?? '';
+    const isPdf = data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46; // %PDF
     const imageType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].find((t) => type.startsWith(t));
 
     let found: Found;
     let method: 'ai' | 'pdf_text';
     if (Deno.env.get('ANTHROPIC_API_KEY') && (isPdf || imageType)) {
-      found = await askClaude(bytes, isPdf ? 'application/pdf' : imageType!);
+      found = await askClaude(data, isPdf ? 'application/pdf' : imageType!);
       method = 'ai';
     } else if (isPdf) {
-      const text = await pdfText(bytes);
+      const text = await pdfText(data);
       found = {
         amount: doc.kind === 'marksheet' ? null : findReceiptAmount(text),
         name: findDocumentName(text),

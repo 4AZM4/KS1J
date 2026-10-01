@@ -13,6 +13,7 @@ import {
 } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Field, Progress } from '@/components/ui';
@@ -271,7 +272,10 @@ function ActiveLoan({ loan, onChange }: { loan: Loan; onChange: () => void }) {
       <SectionLabel>Receipts</SectionLabel>
       {repayments.length === 0 ? <Text style={[styles.body, { color: muted }]}>No payments yet.</Text> : null}
       {repayments.map((r) => (
-        <Row key={r.id} label={formatDate(r.paid_at)} value={rupees(r.amount)} />
+        <View key={r.id} lightColor="transparent" darkColor="transparent">
+          <Row label={formatDate(r.paid_at)} value={rupees(r.amount)} />
+          <ReceiptLink kind="loan" id={r.id} />
+        </View>
       ))}
     </>
   );

@@ -23,7 +23,7 @@ export type Database = {
         Relationships: Rel[]
       }
       case_documents: {
-        Row: { case_id: string; created_at: string; id: string; kind: string; storage_path: string; uploaded_by: string }
+        Row: { case_id: string; content_hash: string | null; created_at: string; id: string; kind: string; storage_path: string; uploaded_by: string }
         Insert: { case_id: string; created_at?: string; id?: string; kind: string; storage_path: string; uploaded_by: string }
         Update: { case_id?: string; created_at?: string; id?: string; kind?: string; storage_path?: string; uploaded_by?: string }
         Relationships: Rel[]
@@ -197,6 +197,12 @@ export type Database = {
         Update: { marja?: string | null; member_id?: string; updated_at?: string; year_end_day?: number; year_end_month?: number }
         Relationships: Rel[]
       }
+      notifications: {
+        Row: { body: string; case_id: string | null; created_at: string; id: string; kind: string; member_id: string; read_at: string | null; title: string }
+        Insert: never
+        Update: { read_at?: string | null }
+        Relationships: Rel[]
+      }
       lawajam_dues: {
         Row: { amount: number; created_at: string; household_id: string; id: string; period: string; status: Database["public"]["Enums"]["payment_status"] }
         Insert: { amount: number; created_at?: string; household_id: string; id?: string; period: string; status?: Database["public"]["Enums"]["payment_status"] }
@@ -271,6 +277,7 @@ export type Database = {
       }
       loan_followup_stage: { Args: { p_next_due: string; p_pending_hardship: boolean }; Returns: string }
       my_household: { Args: never; Returns: string }
+      my_household_members: { Args: never; Returns: { full_name: string; is_me: boolean; membership_verified: boolean }[] }
       record_document_check: {
         Args: { p_amount?: number; p_document: string; p_institution?: string; p_method: string; p_name?: string }
         Returns: Database["public"]["Tables"]["document_checks"]["Row"]

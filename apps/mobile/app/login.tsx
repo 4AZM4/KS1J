@@ -6,6 +6,8 @@ import { DEMO_ACCOUNTS, DEMO_PASSWORD } from '@ks1j/shared';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Field } from '@/components/ui';
+import { LanguagePicker } from '@/components/LanguagePicker';
+import { useT } from '@/lib/i18n';
 import { DEMO_MODE, errorMessage, supabase } from '@/lib/supabase';
 
 // Text-message codes need an SMS provider in Supabase; off until the Jamaat sets one up.
@@ -22,6 +24,7 @@ export default function LoginScreen() {
   const card = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
+  const { t } = useT();
 
   const e164 = () => (phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`);
 
@@ -39,19 +42,20 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen hero title="Salaam" intro="Sign in to KS1J, or create an account if you are new.">
+    <Screen hero title={t('home.salaam')} intro={t('login.intro')}>
+      <LanguagePicker />
       {error ? <Banner>{error}</Banner> : null}
       <Field
-        label="Email"
+        label={t('login.email')}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
       />
-      <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+      <Field label={t('login.password')} value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
       <Button
-        title="Sign in"
+        title={t('login.signIn')}
         disabled={!email || !password}
         busy={busy === 'email'}
         onPress={() =>
@@ -61,8 +65,8 @@ export default function LoginScreen() {
           })
         }
       />
-      <Button title="Create an account" variant="secondary" onPress={() => router.push('/signup')} />
-      <Button title="See cases without signing in" variant="secondary" onPress={() => router.push('/cases/non_sadaat')} />
+      <Button title={t('login.create')} variant="secondary" onPress={() => router.push('/signup')} />
+      <Button title={t('login.browse')} variant="secondary" onPress={() => router.push('/cases/non_sadaat')} />
 
       {PHONE_LOGIN ? (
         <>

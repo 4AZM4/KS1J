@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider } from '@/lib/auth';
+import { LanguageProvider } from '@/lib/i18n';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,6 +49,7 @@ function RootLayoutNav() {
 
   return (
     <AuthProvider>
+      <LanguageProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerTitleStyle: { fontSize: 18 }, headerBackTitle: 'Back' }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -64,9 +66,12 @@ function RootLayoutNav() {
           <Stack.Screen name="khums-imam" options={{ title: 'Pay Sehme Imam' }} />
           <Stack.Screen name="lawajam" options={{ title: 'Lawajam' }} />
           <Stack.Screen name="helpdesk" options={{ title: 'Helpdesk' }} />
+          <Stack.Screen name="profile" options={{ title: 'Profile' }} />
+          <Stack.Screen name="receipt" options={{ title: 'Receipt' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'About' }} />
         </Stack>
       </ThemeProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

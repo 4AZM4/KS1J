@@ -3,6 +3,7 @@ import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, G, Path, Pattern, Polygon, Rect } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
+import { useT } from '@/lib/i18n';
 
 /** Jamaat palette used by the artwork. Text on it stays high-contrast for elders. */
 export const ART = {
@@ -69,6 +70,8 @@ export function Arch({ width, height, color = ART.gold, strokeWidth = 3 }: { wid
  * and the screen's title in large, high-contrast text.
  */
 export function Hero({ title, intro, id, children }: { title: string; intro?: string; id: string; children?: ReactNode }) {
+  const { rtl } = useT();
+  const align = rtl ? ({ textAlign: 'right', writingDirection: 'rtl' } as const) : null;
   return (
     <View style={styles.hero} lightColor={ART.deep} darkColor={ART.deep}>
       <Lattice id={`lat-${id}`} />
@@ -79,10 +82,10 @@ export function Hero({ title, intro, id, children }: { title: string; intro?: st
         </View>
       </View>
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
-        <Text accessibilityRole="header" style={styles.heroTitle}>
+        <Text accessibilityRole="header" style={[styles.heroTitle, align]}>
           {title}
         </Text>
-        {intro ? <Text style={styles.heroIntro}>{intro}</Text> : null}
+        {intro ? <Text style={[styles.heroIntro, align]}>{intro}</Text> : null}
         {children}
       </View>
     </View>

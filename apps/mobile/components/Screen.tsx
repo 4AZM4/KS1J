@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { Hero } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
+import { useT } from '@/lib/i18n';
 
 /** A scrolling page. `hero` shows the title on the deep green Jamaat banner (used on the four tabs and sign-in). */
 export function Screen({ title, intro, hero, children }: { title: string; intro?: string; hero?: boolean; children: ReactNode }) {
@@ -27,7 +28,8 @@ export function Screen({ title, intro, hero, children }: { title: string; intro?
 
 export function SectionLabel({ children }: { children: string }) {
   const muted = useThemeColor({}, 'mutedText');
-  return <Text style={[styles.section, { color: muted }]}>{children.toUpperCase()}</Text>;
+  const { rtl } = useT();
+  return <Text style={[styles.section, { color: muted }, rtl ? { textAlign: 'right' } : null]}>{children.toUpperCase()}</Text>;
 }
 
 const styles = StyleSheet.create({

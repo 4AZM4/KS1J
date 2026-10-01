@@ -14,6 +14,7 @@ import {
   type FundType,
 } from '@ks1j/shared';
 
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Choice, Field, Progress } from '@/components/ui';
@@ -33,6 +34,7 @@ export default function CaseScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState<string | null>(null);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
   const card = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
@@ -74,6 +76,7 @@ export default function CaseScreen() {
         const { error: payError } = await supabase.rpc('demo_confirm_payment', { p_kind: 'donation', p_id: data.id });
         if (payError) throw payError;
         setThanks(`Thank you. ${rupees(amountNumber)} as ${FUND_LABEL[fund]} is recorded in the Jamaat ledger.`);
+        setReceiptId(data.id);
       } else {
         setThanks('Your donation is waiting for payment confirmation.');
       }
@@ -104,6 +107,7 @@ export default function CaseScreen() {
       </View>
 
       {thanks ? <Banner tone="good">{thanks}</Banner> : null}
+      {receiptId ? <ReceiptLink kind="donation" id={receiptId} /> : null}
       {error ? <Banner>{error}</Banner> : null}
 
       {!session && !closed ? (

@@ -3,7 +3,6 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import {
-  CHECKED_DOCUMENT_KINDS,
   DOCUMENT_KINDS,
   DOCUMENT_KIND_LABEL,
   SUGGESTED_DOCUMENTS,
@@ -68,10 +67,9 @@ export default function CaseDocsScreen() {
         .select('id')
         .single();
       if (error) throw error;
-      // Ask the server to read receipts and bills for the verifier. The result is shown to staff only.
-      if ((CHECKED_DOCUMENT_KINDS as readonly string[]).includes(kind)) {
-        void supabase.functions.invoke('check-document', { body: { document_id: doc.id } });
-      }
+      // The server fingerprints every file (same file on two cases is flagged) and reads receipts and
+      // bills for the verifier. Results are shown to staff only.
+      void supabase.functions.invoke('check-document', { body: { document_id: doc.id } });
       setNotice(`${DOCUMENT_KIND_LABEL[kind]} added.`);
       setKind(null);
       load();

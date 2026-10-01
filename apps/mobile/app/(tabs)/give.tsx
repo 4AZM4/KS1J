@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
-import { KHUMS_GUIDANCE, calculateKhums } from '@ks1j/shared';
+import { calculateKhums } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { ART } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
+import { useT } from '@/lib/i18n';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -22,23 +23,24 @@ function KhumsQuickCalc() {
   const border = useThemeColor({}, 'border');
   const card = useThemeColor({}, 'card');
   const muted = useThemeColor({}, 'mutedText');
+  const { t } = useT();
   const result = calculateKhums({ savings: toAmount(savings), unusedGoods: 0, businessSurplus: 0, exempt: 0 });
 
   return (
     <View style={[styles.calc, { backgroundColor: card, borderColor: border }]}>
-      <Text style={styles.calcTitle}>Khums estimate</Text>
-      <Text style={[styles.label, { color: muted }]}>Savings left at your Khums year-end</Text>
+      <Text style={styles.calcTitle}>{t('khums.estimate')}</Text>
+      <Text style={[styles.label, { color: muted }]}>{t('khums.savings')}</Text>
       <TextInput
         value={savings}
         onChangeText={setSavings}
         keyboardType="number-pad"
         placeholder="0"
         placeholderTextColor={muted}
-        accessibilityLabel="Savings left at your Khums year-end, in rupees"
+        accessibilityLabel={`${t('khums.savings')} (₹)`}
         style={[styles.input, { color: text, borderColor: border }]}
       />
       <View style={styles.resultRow} lightColor="transparent" darkColor="transparent">
-        <Text style={styles.resultLabel}>Khums due (20%)</Text>
+        <Text style={styles.resultLabel}>{t('khums.due')}</Text>
         <Text style={styles.resultValue}>{rupees(result.khumsDue)}</Text>
       </View>
       {result.khumsDue > 0 ? (
@@ -47,43 +49,44 @@ function KhumsQuickCalc() {
           lightColor="transparent"
           darkColor="transparent"
           accessible
-          accessibilityLabel={`Split in two: Sehme Imam ${rupees(result.sehmeImam)}, Sehme Sadaat ${rupees(result.sehmeSadaat)}`}>
+          accessibilityLabel={`${t('khums.imam')} ${rupees(result.sehmeImam)}, ${t('khums.sadaat')} ${rupees(result.sehmeSadaat)}`}>
           <View style={[styles.splitPart, { flex: result.sehmeImam || 1, backgroundColor: ART.lapis }]}>
-            <Text style={styles.splitText}>Imam</Text>
+            <Text style={styles.splitText}>{t('khums.imam')}</Text>
           </View>
           <View style={[styles.splitPart, { flex: result.sehmeSadaat || 1, backgroundColor: ART.gold }]}>
-            <Text style={[styles.splitText, { color: ART.darkest }]}>Sadaat</Text>
+            <Text style={[styles.splitText, { color: ART.darkest }]}>{t('khums.sadaat')}</Text>
           </View>
         </View>
       ) : null}
       <View style={styles.resultRow} lightColor="transparent" darkColor="transparent">
-        <Text style={[styles.resultLabel, { color: muted }]}>Sehme Imam</Text>
+        <Text style={[styles.resultLabel, { color: muted }]}>{t('khums.imam')}</Text>
         <Text style={[styles.resultLabel, { color: muted }]}>{rupees(result.sehmeImam)}</Text>
       </View>
       <View style={styles.resultRow} lightColor="transparent" darkColor="transparent">
-        <Text style={[styles.resultLabel, { color: muted }]}>Sehme Sadaat</Text>
+        <Text style={[styles.resultLabel, { color: muted }]}>{t('khums.sadaat')}</Text>
         <Text style={[styles.resultLabel, { color: muted }]}>{rupees(result.sehmeSadaat)}</Text>
       </View>
       <Text style={[styles.note, { color: muted }]}>
-        {KHUMS_GUIDANCE}
+        {t('khums.guidance')}
       </Text>
     </View>
   );
 }
 
 export default function GiveScreen() {
+  const { t } = useT();
   return (
-    <Screen hero title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
-      <SectionLabel>Khums</SectionLabel>
+    <Screen hero title={t('tab.give')} intro={t('give.intro')}>
+      <SectionLabel>{t('sec.khums')}</SectionLabel>
       <KhumsQuickCalc />
-      <FeatureCard icon="calculator" title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
-      <FeatureCard accent="lapis" icon="building-bank" title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
-      <FeatureCard accent="gold" icon="heart-handshake" title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
-      <SectionLabel>Support a case</SectionLabel>
-      <FeatureCard accent="gold" icon="users" title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
-      <FeatureCard accent="green" icon="users-group" title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
-      <SectionLabel>Dues</SectionLabel>
-      <FeatureCard icon="receipt" title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
+      <FeatureCard icon="calculator" title={t('card.khumsFull.t')} description={t('card.khumsFull.d')} href="/khums" />
+      <FeatureCard icon="building-bank" accent="lapis" title={t('card.payImam.t')} description={t('card.payImam.d')} href="/khums-imam" />
+      <FeatureCard icon="heart-handshake" accent="gold" title={t('card.paySadaat.t')} description={t('card.paySadaat.d')} href="/cases/sadaat" />
+      <SectionLabel>{t('sec.support')}</SectionLabel>
+      <FeatureCard icon="users" accent="gold" title={t('card.sadaatCases.t')} description={t('card.cases.d')} href="/cases/sadaat" />
+      <FeatureCard icon="users-group" accent="green" title={t('card.nonSadaatCases.t')} description={t('card.cases.d')} href="/cases/non_sadaat" />
+      <SectionLabel>{t('sec.dues')}</SectionLabel>
+      <FeatureCard icon="receipt" title={t('card.lawajam.t')} description={t('card.lawajam.d')} href="/lawajam" />
     </Screen>
   );
 }

@@ -95,8 +95,8 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
         .single();
       if (error) throw error;
       setFile(null);
-      if (isChecked(kind)) await read(doc.id);
-      else void load();
+      // Every file is fingerprinted on the server; receipts and bills are also read.
+      await read(doc.id);
     } catch (e) {
       setError(errorMessage(e));
     } finally {

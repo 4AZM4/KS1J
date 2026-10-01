@@ -672,4 +672,71 @@ select pg_temp.expect_error($$insert into public.document_checks (document_id, c
   values ('50000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'matches', 'manual')$$,
   'Nobody writes check results directly');
 
+-- 13. Notifications: applicants hear each step, donors hear when the need is met.
+select pg_temp.as_system();
+select set_config('test.left', (select (target_amount - raised_amount)::text from public.cases where id = '20000000-0000-0000-0000-000000000004'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$
+declare left_amount integer := current_setting('test.left')::integer;
+begin
+  insert into public.donations (id, donor_id, fund, case_id, amount)
+  values ('40000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000004', left_amount);
+end $$;
+select pg_temp.as_system();
+update public.donations set status = 'paid', gateway_ref = 'test_need_met' where id = '40000000-0000-0000-0000-0000000000f1';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if (select count(*) from public.notifications where kind = 'need_met' and case_id = '20000000-0000-0000-0000-000000000004') <> 1 then
+    raise exception 'FAIL  the donor who completed the case should hear the need is met, once';
+  end if;
+  if exists (select 1 from public.notifications where member_id <> '00000000-0000-0000-0000-000000000020') then
+    raise exception 'FAIL  members must only see their own notifications';
+  end if;
+  raise notice 'PASS  donors hear when a case they gave to is fully funded';
+end $$;
+select pg_temp.expect_error($$update public.notifications set body = 'changed' where case_id = '20000000-0000-0000-0000-000000000004'$$,
+  'Notification text cannot be changed by members');
+select pg_temp.expect_ok($$update public.notifications set read_at = now() where case_id = '20000000-0000-0000-0000-000000000004'$$,
+  'Members can mark their notifications read');
+select pg_temp.expect_error($$insert into public.notifications (member_id, kind, title, body) values ('00000000-0000-0000-0000-000000000020', 'need_met', 'x', 'y')$$,
+  'Members cannot create notifications');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+do $$ begin
+  if not exists (select 1 from public.notifications where kind = 'case_status' and case_id = '20000000-0000-0000-0000-000000000004'
+                 and body like '%fully funded%') then
+    raise exception 'FAIL  the applicant should hear that the case is fully funded';
+  end if;
+  raise notice 'PASS  applicants hear each step of their case';
+end $$;
+
+-- 14. The same file on two different cases is flagged.
+select pg_temp.as_system();
+select public.record_document_hash('50000000-0000-0000-0000-000000000001', repeat('ab', 32));
+insert into public.case_documents (id, case_id, kind, storage_path, uploaded_by) values
+  ('50000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000002', 'fee_receipt',
+   '00000000-0000-0000-0000-000000000012/same.pdf', '00000000-0000-0000-0000-000000000012');
+select public.record_document_hash('50000000-0000-0000-0000-000000000003', repeat('ab', 32));
+do $$ begin
+  if not exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000003'
+                 and matched_case_id = '20000000-0000-0000-0000-000000000001' and reason like 'The same file is also attached to case #%') then
+    raise exception 'FAIL  a file reused on another case should be flagged';
+  end if;
+  raise notice 'PASS  the same file on two cases raises a flag';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_error($$select public.record_document_hash('50000000-0000-0000-0000-000000000003', repeat('cd', 32))$$,
+  'Only the server records file fingerprints');
+
+-- 15. Household page shows only your own household.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+do $$ begin
+  if (select count(*) from public.my_household_members()) <> 2 then
+    raise exception 'FAIL  Fatema should see the 2 people in her household (got %)', (select count(*) from public.my_household_members());
+  end if;
+  if exists (select 1 from public.my_household_members() where full_name like 'Zainab%') then
+    raise exception 'FAIL  another household must not appear';
+  end if;
+  raise notice 'PASS  members see only their own household';
+end $$;
+
 rollback;
