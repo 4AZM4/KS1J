@@ -84,7 +84,8 @@ export function Choice<T extends string>({
             <Pressable
               key={o.value}
               accessibilityRole="radio"
-              accessibilityState={{ selected }}
+              accessibilityState={{ checked: selected, selected }}
+              aria-checked={selected}
               onPress={() => onChange(o.value)}
               style={[styles.chip, { borderColor: selected ? tint : border, borderWidth: selected ? 2 : 1 }]}>
               <Text style={[styles.chipText, selected ? { color: tint, fontWeight: '700' } : null]}>{o.label}</Text>
@@ -106,7 +107,7 @@ export function Banner({ children, tone = 'bad' }: { children: ReactNode; tone?:
   );
 }
 
-export function Progress({ value, max }: { value: number; max: number }) {
+export function Progress({ value, max, label }: { value: number; max: number; label?: string }) {
   const tint = useThemeColor({}, 'tint');
   const border = useThemeColor({}, 'border');
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -114,6 +115,7 @@ export function Progress({ value, max }: { value: number; max: number }) {
     <View
       style={[styles.track, { backgroundColor: border }]}
       accessibilityRole="progressbar"
+      accessibilityLabel={label ?? `${pct}% complete`}
       accessibilityValue={{ min: 0, max: 100, now: pct }}>
       <View style={[styles.bar, { width: `${pct}%`, backgroundColor: tint }]} />
     </View>

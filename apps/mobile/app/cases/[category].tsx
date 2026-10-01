@@ -49,7 +49,7 @@ export default function CaseListScreen() {
             <Text style={[styles.meta, { color: muted }]}>
               Case #{c.case_no} · {CASE_TYPE_LABEL[c.type]} · Verified by two Jamaat admins
             </Text>
-            <Progress value={c.raised_amount} max={c.target_amount} />
+            <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
             <View style={styles.row} lightColor="transparent" darkColor="transparent">
               <Text style={styles.raised}>{rupees(c.raised_amount)} raised</Text>
               <Text style={[styles.meta, { color: muted }]}>

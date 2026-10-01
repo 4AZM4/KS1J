@@ -222,7 +222,7 @@ function ActiveLoan({ loan, onChange }: { loan: Loan; onChange: () => void }) {
     <>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <Text style={styles.title}>{LOAN_STATUS_LABEL[loan.status]}</Text>
-        <Progress value={repaid} max={loan.principal} />
+        <Progress value={repaid} max={loan.principal} label={`${rupees(repaid)} repaid of ${rupees(loan.principal)}`} />
         <Text style={styles.big}>{rupees(loan.outstanding)} left</Text>
         <Text style={[styles.body, { color: muted }]}>
           {rupees(repaid)} repaid of {rupees(loan.principal)}
