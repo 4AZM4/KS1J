@@ -60,11 +60,11 @@ export default function GiveScreen() {
     <Screen title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
       <SectionLabel>Khums</SectionLabel>
       <KhumsQuickCalc />
-      <FeatureCard title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases." />
+      <FeatureCard title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
       <FeatureCard title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." />
       <SectionLabel>Support a case</SectionLabel>
-      <FeatureCard title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." />
-      <FeatureCard title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." />
+      <FeatureCard title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
+      <FeatureCard title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
       <SectionLabel>Dues</SectionLabel>
       <FeatureCard title="Lawajam" description="See what is due, pay and download receipts." />
     </Screen>

@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider } from '@/lib/auth';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -46,11 +47,18 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerTitleStyle: { fontSize: 18 }, headerBackTitle: 'Back' }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ title: 'Sign in', headerBackVisible: false }} />
+          <Stack.Screen name="apply" options={{ title: 'Apply for help' }} />
+          <Stack.Screen name="applications" options={{ title: 'My applications' }} />
+          <Stack.Screen name="cases/[category]" options={{ title: 'Support a case' }} />
+          <Stack.Screen name="case/[id]" options={{ title: 'Case' }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'About' }} />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

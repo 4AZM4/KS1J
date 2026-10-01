@@ -1,0 +1,76 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
+import { ROLE_LABEL } from "@ks1j/shared";
+import { useAuth } from "@/components/auth";
+import { Button, Card } from "@/components/ui";
+
+const adminNav = [
+  { href: "/admin", label: "Overview" },
+  { href: "/admin/cases", label: "Cases" },
+  { href: "/admin/loans", label: "Education loans" },
+  { href: "/admin/khums", label: "Khums & ledgers" },
+  { href: "/admin/institutions", label: "Sehme Imam institutions" },
+  { href: "/admin/lawajam", label: "Lawajam" },
+  { href: "/admin/flags", label: "Fraud flags" },
+  { href: "/admin/announcements", label: "Announcements" },
+] as const;
+
+// Access is enforced by Supabase RLS on every query. This gate only keeps non-staff
+// from seeing an empty dashboard.
+export function AdminShell({ children }: { children: ReactNode }) {
+  const { loading, session, member, roles, isStaff, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!loading && !session) router.replace("/login");
+  }, [loading, session, router]);
+
+  if (loading || !session) {
+    return <p className="p-8 text-muted">Loading…</p>;
+  }
+
+  if (!isStaff) {
+    return (
+      <main className="mx-auto max-w-md p-8">
+        <Card>
+          <h1 className="text-xl font-bold">Committee members only</h1>
+          <p className="mt-2 text-muted">
+            You are signed in as {member?.full_name ?? "a member"}. Use the KS1J app to apply for help, give and pay dues.
+          </p>
+          <Button className="mt-4" variant="secondary" onClick={() => void signOut()}>Sign out</Button>
+        </Card>
+      </main>
+    );
+  }
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col sm:flex-row">
+      <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r">
+        <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-brand">KS1J Admin</Link>
+        <p className="mt-3 text-sm font-semibold">{member?.full_name}</p>
+        <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
+        <ul className="mt-4 flex gap-1 overflow-x-auto sm:flex-col">
+          {adminNav.map((item) => {
+            const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`block whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-background font-semibold text-brand" : "hover:bg-background"}`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        <button className="mt-4 text-sm text-muted underline" onClick={() => void signOut()}>Sign out</button>
+      </nav>
+      <main className="flex-1 p-4 sm:p-8">{children}</main>
+    </div>
+  );
+}

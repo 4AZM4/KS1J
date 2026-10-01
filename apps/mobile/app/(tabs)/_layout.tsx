@@ -1,10 +1,11 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { Redirect, Tabs } from 'expo-router';
+import { ActivityIndicator, View, type ColorValue } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { useAuth } from '@/lib/auth';
 
 type IconName = SymbolViewProps['name'];
 
@@ -15,6 +16,17 @@ function TabIcon({ name, color }: { name: IconName; color: ColorValue }) {
 // KS1J has exactly four tabs. New features go inside one of them, never as a fifth tab.
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { loading, session } = useAuth();
+  const clientOnlyHeader = useClientOnlyValue(false, true);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+  if (!session) return <Redirect href="/login" />;
 
   return (
     <Tabs
@@ -22,7 +34,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme].tint,
         tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
         // Disable the static render of the header on web to prevent a hydration error.
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: clientOnlyHeader,
       }}>
       <Tabs.Screen
         name="index"
