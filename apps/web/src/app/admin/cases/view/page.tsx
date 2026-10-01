@@ -9,6 +9,7 @@ import {
   CATEGORY_LABEL,
   FUND_LABEL,
   STATUS_LABEL,
+  SUGGESTED_DOCUMENTS,
   rupees,
   type CaseStatus,
   type Tables,
@@ -17,6 +18,7 @@ import {
 import { errorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
+import { CaseDocuments } from "@/components/CaseDocuments";
 
 type CaseRow = Tables<"cases"> & {
   applicant: { full_name: string; phone: string | null } | null;
@@ -165,6 +167,8 @@ function CaseDetail() {
           </dl>
         </Card>
       </div>
+
+      <CaseDocuments caseId={c.id} suggested={SUGGESTED_DOCUMENTS[c.type]} />
 
       {flags.length > 0 ? (
         <Card className="mt-4">
