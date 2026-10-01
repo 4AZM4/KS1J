@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import {
   KHUMS_GUIDANCE,
   MONTHS,
@@ -77,9 +77,9 @@ export default function KhumsScreen() {
           <Text style={[styles.body, { color: muted, flex: 1 }]}>
             {`Year-end ${profile.year_end_day} ${MONTHS[profile.year_end_month - 1]} (next: ${formatDate(nextKhumsYearEnd(profile.year_end_month, profile.year_end_day))})${profile.marja ? ` · Marja': ${profile.marja}` : ''}`}
           </Text>
-          <Text accessibilityRole="button" onPress={() => setEditing(true)} style={styles.link}>
-            Change
-          </Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Change your Khums year" onPress={() => setEditing(true)} style={styles.change}>
+            <Text style={styles.link}>Change</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
   small: { fontSize: 14, lineHeight: 20 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   link: { fontSize: 16, textDecorationLine: 'underline', fontWeight: '600' },
+  change: { minHeight: 48, minWidth: 64, justifyContent: 'center', alignItems: 'center' },
   result: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 8 },
   line: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   strong: { fontSize: 18, fontWeight: '700' },
