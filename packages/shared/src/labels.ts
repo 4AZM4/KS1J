@@ -100,3 +100,18 @@ export function formatDate(d: string | null | undefined): string {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${day} ${months[m - 1]} ${y}`;
 }
+
+/** Shown on every Khums screen (CLAUDE.md rule 8). Wording to be approved by the Jamaat's alim. */
+export const KHUMS_GUIDANCE = "This is a guide only. Confirm with your Marja' or the Jamaat's alim.";
+
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** The next Khums year-end on or after today, as YYYY-MM-DD. */
+export function nextKhumsYearEnd(month: number, day: number, today = new Date()): string {
+  const y = today.getFullYear();
+  const lastDay = (yr: number) => new Date(yr, month, 0).getDate();
+  const make = (yr: number) => new Date(yr, month - 1, Math.min(day, lastDay(yr)));
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const d = make(y) >= t ? make(y) : make(y + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

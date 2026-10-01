@@ -14,6 +14,10 @@ Members calculate Khums, see it split into Sehme Imam and Sehme Sadaat, and pay 
 - Every Khums screen shows: "This is a guide only. Confirm with your Marja' or the Jamaat's alim."
 - Helper text wording must be approved by the Jamaat's scholar before launch.
 
+## Built
+
+App: Give → Full Khums calculator (`/khums`: year-end and Marja', calculator, saved calculation, what is left per share, receipts), `/khums-imam` (verified institutions only). Web: `/admin/institutions` (add with ijazah upload; a different trustee verifies, enforced by `protect_institution_verification`), `/admin/khums` (ledger by fund, Sehme Imam by institution). Not yet: the year-end reminder (needs push notifications) and recording Sehme Imam remittances to institutions.
+
 ## Screens
 
 1. **Setup:** Khums year-end date and Marja' (free text for now).

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
-import { calculateKhums } from '@ks1j/shared';
+import { KHUMS_GUIDANCE, calculateKhums } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
@@ -49,7 +49,7 @@ function KhumsQuickCalc() {
         <Text style={[styles.resultLabel, { color: muted }]}>{rupees(result.sehmeSadaat)}</Text>
       </View>
       <Text style={[styles.note, { color: muted }]}>
-        This is a guide only. Confirm with your Marja' or the Jamaat's alim.
+        {KHUMS_GUIDANCE}
       </Text>
     </View>
   );
@@ -60,13 +60,14 @@ export default function GiveScreen() {
     <Screen title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
       <SectionLabel>Khums</SectionLabel>
       <KhumsQuickCalc />
+      <FeatureCard title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
+      <FeatureCard title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
       <FeatureCard title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
-      <FeatureCard title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." />
       <SectionLabel>Support a case</SectionLabel>
       <FeatureCard title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
       <FeatureCard title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
       <SectionLabel>Dues</SectionLabel>
-      <FeatureCard title="Lawajam" description="See what is due, pay and download receipts." />
+      <FeatureCard title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
     </Screen>
   );
 }

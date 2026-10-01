@@ -3,8 +3,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
 
-// TODO(decision): replace with LEAP's real link once the Jamaat confirms it.
-const LEAP_URL = 'https://ksijamat.org/';
+const LEAP_URL = 'https://ksijleap.com/';
 
 export default function LearnScreen() {
   return (

@@ -11,6 +11,10 @@ Members see and pay their household's Lawajam in the Give tab and download recei
 - Amount and period (seed uses ₹1,200 for `2026-27`).
 - Per member or per household (schema is per household).
 
+## Built
+
+App: Give → Lawajam (`/lawajam`: due, pay, receipts). Payments only for your own household's pending due, for the full amount (RLS). Web: `/admin/lawajam` (raise a year's dues with `create_lawajam_period`, totals, by area, copy reminder list).
+
 ## Screens
 
 **App, Give → Lawajam:** amount due, period, pay, receipts for past periods.
