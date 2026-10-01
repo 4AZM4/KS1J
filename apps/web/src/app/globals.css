@@ -7,6 +7,12 @@
   --card: #f4f6f5;
   --border: #dde3e0;
   --brand: #0f6b4f;
+  /* Landing page: Jamaat green, lapis, and a gold for the star lattice. */
+  --paper: #f6f8f6;
+  --ink: #0e3b2e;
+  --deep: #0b4d3a;
+  --lapis: #27508f;
+  --gold: #c9a24a;
 }
 
 @theme inline {
@@ -16,6 +22,12 @@
   --color-card: var(--card);
   --color-border: var(--border);
   --color-brand: var(--brand);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-deep: var(--deep);
+  --color-lapis: var(--lapis);
+  --color-gold: var(--gold);
+  --font-sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,11 +38,30 @@
     --card: #161c19;
     --border: #2a332f;
     --brand: #6fd3a8;
+    --paper: #0d1714;
+    --ink: #e7efe9;
+    --deep: #0a3a2c;
+    --lapis: #8fb1ea;
+    --gold: #d9b866;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
