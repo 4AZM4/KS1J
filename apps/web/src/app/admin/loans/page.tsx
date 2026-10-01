@@ -198,7 +198,7 @@ export default function LoansPage() {
             <span>
               <span className="font-medium">{l.borrower?.full_name}</span>{" "}
               {l.case ? (
-                <Link href={`/admin/cases/${l.case_id}`} className="text-brand underline">
+                <Link href={`/admin/cases/view?id=${l.case_id}`} className="text-brand underline">
                   #{l.case.case_no}
                 </Link>
               ) : null}

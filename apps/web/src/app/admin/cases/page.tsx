@@ -81,7 +81,7 @@ export default function CasesPage() {
               {shown.map((r) => (
                 <tr key={r.id} className="border-t border-border">
                   <td className="px-4 py-3">
-                    <Link className="font-semibold text-brand underline" href={`/admin/cases/${r.id}`}>
+                    <Link className="font-semibold text-brand underline" href={`/admin/cases/view?id=${r.id}`}>
                       #{r.case_no} {r.title}
                     </Link>
                     {flags.has(r.id) ? <span className="ml-2"><Badge tone="warn">Flagged</Badge></span> : null}
