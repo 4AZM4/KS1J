@@ -336,6 +336,68 @@ do $$ begin
   raise notice 'PASS  a finished course moves the loan into its grace period';
 end $$;
 
+-- 16. Sehme Imam institutions need two trustees; Lawajam is paid only for your own household, in full.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_ok($$insert into public.institutions (id, name, marja, ijazah_document_path, ijazah_verified_by)
+  values ('30000000-0000-0000-0000-000000000009', 'Test Madrasa', 'Demo Marja', '00000000-0000-0000-0000-000000000001/ijazah.pdf',
+          '00000000-0000-0000-0000-000000000001')$$,
+  'A trustee can add an institution');
+select pg_temp.as_system();
+do $$ begin
+  if (select ijazah_verified_by from public.institutions where id = '30000000-0000-0000-0000-000000000009') is not null then
+    raise exception 'FAIL  a new institution must start unverified, whatever the client sends';
+  end if;
+  raise notice 'PASS  a new institution always starts unverified';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_error($$update public.institutions set ijazah_verified_by = '00000000-0000-0000-0000-000000000001'
+  where id = '30000000-0000-0000-0000-000000000009'$$,
+  'The trustee who added an institution cannot verify its ijazah');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$insert into public.donations (donor_id, fund, institution_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'sehme_imam', '30000000-0000-0000-0000-000000000009', 500)$$,
+  'Sehme Imam cannot go to an institution before a second trustee verifies it');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_ok($$update public.institutions set ijazah_verified_by = '00000000-0000-0000-0000-000000000001'
+  where id = '30000000-0000-0000-0000-000000000009'$$,
+  'A different trustee can verify the ijazah');
+select pg_temp.as_system();
+do $$ begin
+  if (select ijazah_verified_by from public.institutions where id = '30000000-0000-0000-0000-000000000009')
+     <> '00000000-0000-0000-0000-000000000003' then
+    raise exception 'FAIL  the verifier should be recorded as the trustee who actually verified';
+  end if;
+  raise notice 'PASS  verification records the trustee who actually verified';
+end $$;
+
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$insert into public.lawajam_payments (due_id, paid_by, amount)
+  select id, '00000000-0000-0000-0000-000000000010', amount from public.lawajam_dues
+  where household_id = '10000000-0000-0000-0000-000000000003'$$,
+  'Members cannot pay another household''s Lawajam');
+select pg_temp.expect_error($$insert into public.lawajam_payments (due_id, paid_by, amount)
+  select id, '00000000-0000-0000-0000-000000000010', 100 from public.lawajam_dues
+  where household_id = '10000000-0000-0000-0000-000000000001'$$,
+  'Lawajam must be paid for the full amount due');
+select pg_temp.expect_ok($$insert into public.lawajam_payments (id, due_id, paid_by, amount)
+  select '80000000-0000-0000-0000-000000000001', id, '00000000-0000-0000-0000-000000000010', amount from public.lawajam_dues
+  where household_id = '10000000-0000-0000-0000-000000000001'$$,
+  'A member can pay their household''s Lawajam');
+select pg_temp.expect_error($$select public.create_lawajam_period('2027-28', 1200)$$,
+  'Members cannot raise Lawajam dues');
+select pg_temp.as_system();
+update public.lawajam_payments set status = 'paid' where id = '80000000-0000-0000-0000-000000000001';
+do $$ begin
+  if (select status from public.lawajam_dues where household_id = '10000000-0000-0000-0000-000000000001' and period = '2026-27') <> 'paid'
+     or not exists (select 1 from public.ledger_entries where fund = 'lawajam' and amount = 1200) then
+    raise exception 'FAIL  a confirmed Lawajam payment should mark the due paid and go to the Lawajam ledger only';
+  end if;
+  raise notice 'PASS  a confirmed Lawajam payment marks the due paid, in the Lawajam ledger';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_ok($$select public.create_lawajam_period('2027-28', 1200)$$,
+  'Finance can raise a year''s dues for every household');
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,

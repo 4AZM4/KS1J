@@ -5,6 +5,7 @@ import {
   CASE_TYPE_LABEL,
   CATEGORY_LABEL,
   FUND_LABEL,
+  KHUMS_GUIDANCE,
   isDonationAllowed,
   rupees,
   type Database,
@@ -117,6 +118,7 @@ export default function CaseScreen() {
               note: f === 'sehme_sadaat' ? 'Part of your Khums' : 'Sadaqah or other giving',
             }))}
           />
+          {fund === 'sehme_sadaat' ? <Banner tone="info">{KHUMS_GUIDANCE}</Banner> : null}
           <Choice
             label="Amount"
             value={QUICK.includes(amountNumber) ? String(amountNumber) : null}

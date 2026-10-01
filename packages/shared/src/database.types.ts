@@ -140,9 +140,9 @@ export type Database = {
         Relationships: Rel[]
       }
       institutions: {
-        Row: { city: string | null; created_at: string; id: string; ijazah_document_path: string; ijazah_verified_at: string | null; ijazah_verified_by: string | null; is_active: boolean; marja: string; name: string }
-        Insert: { city?: string | null; created_at?: string; id?: string; ijazah_document_path: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja: string; name: string }
-        Update: { city?: string | null; created_at?: string; id?: string; ijazah_document_path?: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja?: string; name?: string }
+        Row: { added_by: string | null; city: string | null; created_at: string; id: string; ijazah_document_path: string; ijazah_verified_at: string | null; ijazah_verified_by: string | null; is_active: boolean; marja: string; name: string }
+        Insert: { added_by?: string | null; city?: string | null; created_at?: string; id?: string; ijazah_document_path: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja: string; name: string }
+        Update: { added_by?: string | null; city?: string | null; created_at?: string; id?: string; ijazah_document_path?: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja?: string; name?: string }
         Relationships: Rel[]
       }
       jamaat_settings: {
@@ -209,6 +209,7 @@ export type Database = {
     Views: { [_ in never]: never }
     Functions: {
       accept_loan_emi: { Args: { p_emi: number; p_loan: string }; Returns: Database["public"]["Tables"]["education_loans"]["Row"] }
+      create_lawajam_period: { Args: { p_amount: number; p_period: string }; Returns: number }
       demo_confirm_payment: { Args: { p_id: string; p_kind: string }; Returns: undefined }
       has_role: { Args: { r: Database["public"]["Enums"]["admin_role"] }; Returns: boolean }
       household_loan_overdue: { Args: { p_household: string }; Returns: boolean }
