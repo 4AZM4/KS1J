@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   CASE_STEPS,
   CASE_TYPE_LABEL,
@@ -24,8 +24,17 @@ type CaseRow = Tables<"cases"> & {
   approver: { full_name: string } | null;
 };
 
+// Uses ?id= rather than a dynamic segment so the admin can be exported as static files.
 export default function CaseDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  return (
+    <Suspense fallback={<p className="text-muted">Loading…</p>}>
+      <CaseDetail />
+    </Suspense>
+  );
+}
+
+function CaseDetail() {
+  const id = useSearchParams().get("id") ?? "";
   const { session, hasRole } = useAuth();
   const me = session?.user.id;
 
@@ -167,7 +176,7 @@ export default function CaseDetailPage() {
                 <span>
                   {f.reason}
                   {f.matched_case_id ? (
-                    <> (<Link className="underline" href={`/admin/cases/${f.matched_case_id}`}>matching case</Link>)</>
+                    <> (<Link className="underline" href={`/admin/cases/view?id=${f.matched_case_id}`}>matching case</Link>)</>
                   ) : null}{" "}
                   <Badge tone={f.status === "open" ? "warn" : "neutral"}>{f.status}</Badge>
                 </span>
