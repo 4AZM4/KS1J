@@ -33,3 +33,10 @@ export interface HelpdeskReply {
   answer: string | null;
   sources: HelpdeskSource[];
 }
+
+/** Starter questions shown in the app and on the website. */
+export const HELPDESK_EXAMPLES = [
+  'What happens if I cannot pay my loan EMI?',
+  'Who can see my application details?',
+  'Where can Sehme Imam go?',
+];

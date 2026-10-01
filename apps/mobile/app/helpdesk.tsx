@@ -1,17 +1,12 @@
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { isRulingQuestion, HELPDESK_RULING, type HelpdeskReply } from '@ks1j/shared';
+import { isRulingQuestion, HELPDESK_EXAMPLES, HELPDESK_RULING, type HelpdeskReply } from '@ks1j/shared';
 
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Choice, Field } from '@/components/ui';
 import { errorMessage, supabase } from '@/lib/supabase';
 
-const EXAMPLES = [
-  'What happens if I cannot pay my loan EMI?',
-  'Who can see my application details?',
-  'Where can Sehme Imam go?',
-];
 
 /** Answers only from Jamaat-approved texts, with the source shown, or says it does not know. */
 export default function HelpdeskScreen() {
@@ -64,7 +59,7 @@ export default function HelpdeskScreen() {
           label="Or try"
           value={null}
           onChange={(q) => ask(q)}
-          options={EXAMPLES.map((q) => ({ value: q, label: q }))}
+          options={HELPDESK_EXAMPLES.map((q) => ({ value: q, label: q }))}
         />
       ) : null}
 

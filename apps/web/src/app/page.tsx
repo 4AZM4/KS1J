@@ -57,17 +57,23 @@ const funds = [
 export default function Home() {
   return (
     <div className="flex-1 bg-paper text-ink">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
+      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
         <Link href="/" className="text-xl font-bold tracking-tight text-ink">
           KS1J
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-1 text-base sm:gap-2">
+        <nav aria-label="Main" className="flex flex-wrap items-center justify-end gap-1 text-base sm:gap-2">
           <a href="#what" className="hidden rounded-lg px-3 py-2 hover:bg-card sm:inline-block">
             What you can do
           </a>
           <a href="#money" className="hidden rounded-lg px-3 py-2 hover:bg-card sm:inline-block">
             Where money goes
           </a>
+          <Link href="/cases" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
+            Cases
+          </Link>
+          <Link href="/help" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
+            Helpdesk
+          </Link>
           <Link href="/login" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
             Sign in
           </Link>

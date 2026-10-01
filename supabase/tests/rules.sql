@@ -554,4 +554,39 @@ select pg_temp.expect_error($$insert into public.khums_calculations (member_id, 
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,
   'Khums shares that do not add up are rejected');
 
+-- 11. Public case cards never identify the person who asked for help.
+select pg_temp.as_system();
+update public.cases
+   set public_summary = 'Zainab and her husband ZAINAB-son need ration. Call +91 98200 12345 or zainab@mail.test.'
+ where id = '20000000-0000-0000-0000-000000000004';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$
+declare
+  r record;
+begin
+  select * into r from public.list_public_cases() where id = '20000000-0000-0000-0000-000000000004';
+  if r.title = 'Monthly ration for a family of five' or r.title <> 'Monthly ration for a family' then
+    raise exception 'FAIL  the applicant''s own title must not be shown publicly (got %)', r.title;
+  end if;
+  if r.public_summary ~* 'zainab|98200|@' then
+    raise exception 'FAIL  name, phone or email leaked: %', r.public_summary;
+  end if;
+  if r.public_summary not like '%need ration%' then
+    raise exception 'FAIL  the useful part of the summary should stay: %', r.public_summary;
+  end if;
+  raise notice 'PASS  public cards hide the applicant''s name, phone and email but keep the need';
+end $$;
+select pg_temp.expect_error($$select * from public.preview_public_case('20000000-0000-0000-0000-000000000004', 'x')$$,
+  'Members cannot use the staff preview');
+select pg_temp.expect_error($$select public.public_case_summary('20000000-0000-0000-0000-000000000004', 'x')$$,
+  'The masking helper is not callable from the API');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+do $$ begin
+  if (select public_summary from public.preview_public_case('20000000-0000-0000-0000-000000000004', 'For Zainab today.'))
+     <> 'For [name hidden] today.' then
+    raise exception 'FAIL  staff preview should mask the same way';
+  end if;
+  raise notice 'PASS  staff see exactly what donors will see before approving';
+end $$;
+
 rollback;

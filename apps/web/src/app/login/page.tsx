@@ -10,6 +10,16 @@ import { Alert, Button, Card, inputClass } from "@/components/ui";
 // Text-message codes need an SMS provider in Supabase; off until the Jamaat sets one up.
 const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
 
+/** Back to the page that sent them here; otherwise staff go to the dashboard and members to the cases. */
+async function afterSignIn(): Promise<string> {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  const db = supabase();
+  const { data: user } = await db.auth.getUser();
+  const { data: roles } = await db.from("member_roles").select("role").eq("member_id", user.user?.id ?? "");
+  return roles && roles.length > 0 ? "/admin" : "/cases";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
@@ -50,7 +60,7 @@ export default function LoginPage() {
             void run("email", async () => {
               const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password });
               if (error) throw error;
-              router.push("/admin");
+              router.push(await afterSignIn());
             });
           }}
           className="space-y-3"
@@ -83,7 +93,7 @@ export default function LoginPage() {
               } else {
                 const { error } = await supabase().auth.verifyOtp({ phone: phoneE164(), token: otp, type: "sms" });
                 if (error) throw error;
-                router.push("/admin");
+                router.push(await afterSignIn());
               }
             });
           }}
@@ -120,7 +130,7 @@ export default function LoginPage() {
                     run(a.email, async () => {
                       const { error } = await supabase().auth.signInWithPassword({ email: a.email, password: DEMO_PASSWORD });
                       if (error) throw error;
-                      router.push("/admin");
+                      router.push(await afterSignIn());
                     })
                   }
                 >

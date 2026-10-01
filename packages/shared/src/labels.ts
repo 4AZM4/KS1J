@@ -138,3 +138,9 @@ export function nextKhumsYearEnd(month: number, day: number, today = new Date())
   const d = make(y) >= t ? make(y) : make(y + 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+/** Shown on every public case card. The database hides names, phones, emails and addresses. */
+export const CASE_PRIVACY_NOTE =
+  "To protect the family's dignity, their name and contact details are hidden. The Jamaat knows who they are and has checked the need.";
+/** Used when staff did not write a public summary. */
+export const CASE_SUMMARY_FALLBACK = 'Checked by a Jamaat verifier and approved by a different trustee.';

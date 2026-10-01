@@ -1,7 +1,7 @@
-import { Link, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
+import { Link, router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { CASE_TYPE_LABEL, CATEGORY_LABEL, rupees, type CaseCategory, type Database } from '@ks1j/shared';
+import { CASE_PRIVACY_NOTE, CASE_TYPE_LABEL, CATEGORY_LABEL, rupees, type CaseCategory, type Database } from '@ks1j/shared';
 
 import { Screen } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
@@ -17,8 +17,10 @@ export default function CaseListScreen() {
   const card = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
+  const tint = useThemeColor({}, 'tint');
 
   const valid = category === 'sadaat' || category === 'non_sadaat';
+  const other: CaseCategory = category === 'sadaat' ? 'non_sadaat' : 'sadaat';
 
   useEffect(() => {
     if (valid) navigation.setOptions({ title: `${CATEGORY_LABEL[category]} cases` });
@@ -59,6 +61,15 @@ export default function CaseListScreen() {
           </Pressable>
         </Link>
       ))}
+      {valid ? (
+        <Text
+          accessibilityRole="link"
+          onPress={() => router.replace({ pathname: '/cases/[category]', params: { category: other } })}
+          style={[styles.switch, { color: tint }]}>
+          {`See ${CATEGORY_LABEL[other]} cases`}
+        </Text>
+      ) : null}
+      <Text style={[styles.meta, { color: muted, marginTop: 12 }]}>{CASE_PRIVACY_NOTE}</Text>
     </Screen>
   );
 }
@@ -69,4 +80,5 @@ const styles = StyleSheet.create({
   meta: { fontSize: 15, marginTop: 4 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 },
   raised: { fontSize: 17, fontWeight: '700' },
+  switch: { fontSize: 17, fontWeight: '600', textDecorationLine: 'underline', paddingVertical: 12 },
 });

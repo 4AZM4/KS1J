@@ -240,8 +240,8 @@ export type Database = {
       list_public_cases: {
         Args: { p_category?: Database["public"]["Enums"]["case_category"] }
         Returns: {
-          case_no: number; category: Database["public"]["Enums"]["case_category"]; id: string; public_summary: string
-          raised_amount: number; status: Database["public"]["Enums"]["case_status"]; target_amount: number; title: string
+          case_no: number; category: Database["public"]["Enums"]["case_category"]; id: string
+          public_summary: string | null; raised_amount: number; status: Database["public"]["Enums"]["case_status"]; target_amount: number; title: string
           type: Database["public"]["Enums"]["case_type"]
         }[]
       }
@@ -254,6 +254,10 @@ export type Database = {
       }
       loan_followup_stage: { Args: { p_next_due: string; p_pending_hardship: boolean }; Returns: string }
       my_household: { Args: never; Returns: string }
+      preview_public_case: {
+        Args: { p_case: string; p_summary: string }
+        Returns: { public_summary: string | null; title: string }[]
+      }
       refresh_loan_statuses: { Args: never; Returns: number }
       start_autopay: { Args: { p_loan: string }; Returns: string }
     }

@@ -62,6 +62,7 @@ export default function LoginScreen() {
         }
       />
       <Button title="Create an account" variant="secondary" onPress={() => router.push('/signup')} />
+      <Button title="See cases without signing in" variant="secondary" onPress={() => router.push('/cases/non_sadaat')} />
 
       {PHONE_LOGIN ? (
         <>

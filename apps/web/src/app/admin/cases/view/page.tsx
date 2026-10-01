@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import {
+  CASE_SUMMARY_FALLBACK,
   CASE_STEPS,
   CASE_TYPE_LABEL,
   CATEGORY_LABEL,
@@ -231,6 +232,7 @@ function CaseDetail() {
               <input id="target" className={inputClass} inputMode="numeric" value={target} onChange={(e) => setTarget(e.target.value.replace(/\D/g, ""))} />
               <label className="block text-sm font-semibold" htmlFor="summary">What donors will see (no names, phones or addresses)</label>
               <textarea id="summary" className={inputClass} rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} />
+              <PublicPreview caseId={c.id} summary={summary} />
               <div className="flex gap-2">
                 <Button disabled={busy || !target || !summary.trim()}
                   onClick={() => setStatus("approved", { target_amount: Number(target), public_summary: summary.trim() })}>Approve</Button>
@@ -322,6 +324,28 @@ function CaseDetail() {
           ))}
         </ul>
       </Card>
+    </div>
+  );
+}
+
+/** Exactly what donors will see, masked by the database the same way the public list is. */
+function PublicPreview({ caseId, summary }: { caseId: string; summary: string }) {
+  const [preview, setPreview] = useState<{ title: string; public_summary: string | null } | null>(null);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      supabase()
+        .rpc("preview_public_case", { p_case: caseId, p_summary: summary.trim() })
+        .then(({ data }) => setPreview(data?.[0] ?? null));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [caseId, summary]);
+  if (!preview) return null;
+  return (
+    <div className="rounded-xl border border-dashed border-border p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">Public card preview</p>
+      <p className="mt-1 font-semibold">{preview.title}</p>
+      <p className="mt-1 text-sm">{preview.public_summary || CASE_SUMMARY_FALLBACK}</p>
+      <p className="mt-2 text-xs text-muted">Names, phones, emails and addresses of the family are hidden automatically.</p>
     </div>
   );
 }
