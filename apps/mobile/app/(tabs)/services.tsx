@@ -8,7 +8,7 @@ export default function ServicesScreen() {
       <SectionLabel>Apply</SectionLabel>
       <FeatureCard title="Welfare assistance" description="Medical, education or ration support. Upload documents and track your case." />
       <FeatureCard title="Scholarship" description="Fees paid directly to your school or college once approved." />
-      <FeatureCard title="Education loan" description="Interest-free. Repay monthly only after you start earning well." />
+      <FeatureCard title="Education loan" description="Interest-free. Agree a monthly EMI with your family; repayment starts after a grace period." />
       <SectionLabel>Your account</SectionLabel>
       <FeatureCard title="My applications" description="See status: Submitted, Verified, Approved, Disbursed." />
       <FeatureCard title="Profile and household" description="Your membership details and family members." />

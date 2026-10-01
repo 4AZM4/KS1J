@@ -51,7 +51,8 @@ Add mobile packages with `pnpm --filter mobile exec expo install <pkg>`, never p
 7. **AI only flags and suggests.** It never approves, rejects, pays or gives religious rulings.
    Helpdesk answers cite a Jamaat-approved source or say it does not know.
 8. **Religious guidance.** Khums screens always show "Confirm with your Marja' or the Jamaat's alim".
-   Loans have no interest and no late fees.
+   Loans have no interest and no late fees. A loan is never paid out before the family and a trustee
+   agree the EMI (`accept_loan_emi`); follow-up is automatic (`loan_followup_list`).
 9. **Elder-friendly UI.** Body text at least 16, tappable cards, plain words, 4 tabs only.
 
 ## Conventions

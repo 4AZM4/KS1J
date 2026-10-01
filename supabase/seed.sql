@@ -71,12 +71,35 @@ insert into public.institutions (id, name, city, marja, ijazah_document_path, ij
   ('30000000-0000-0000-0000-000000000002', 'Demo Education Institute', 'Mumbai', 'Demo Marja''', 'ijazah/demo-institute.pdf',
    null, null); -- not yet verified: must not appear to donors
 
-insert into public.education_loans
-  (case_id, borrower_id, principal, outstanding, status, income_threshold, share_of_excess, minimum_instalment,
-   current_instalment, guarantor_name, guarantor_phone, course_end_date)
+-- A second loan, approved but not yet paid out: the family and committee still have to agree the EMI.
+insert into public.cases
+  (id, applicant_id, submitted_by, type, category, status, title, requested_amount, target_amount,
+   lineage_verified, verified_by, verified_at, approved_by, approved_at)
 values
-  ('20000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000011', 80000, 64000, 'repaying',
-   30000, 0.200, 1000, 2000, 'Demo Guarantor', '910000000099', current_date - 200);
+  ('20000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000013', '00000000-0000-0000-0000-000000000013',
+   'education_loan', 'sadaat', 'approved', 'Education loan: Diploma in nursing', 60000, 60000, true,
+   '00000000-0000-0000-0000-000000000002', now() - interval '3 days',
+   '00000000-0000-0000-0000-000000000003', now() - interval '2 days');
+
+-- Hussain's loan: plan agreed, AutoPay on, repaying on time. Fatema (same household) pays the EMI.
+insert into public.education_loans
+  (id, case_id, borrower_id, payer_member_id, principal, outstanding, status, guarantor_name, guarantor_phone,
+   course_end_date, family_accepted_emi, committee_accepted_emi, agreed_emi, plan_agreed_at, plan_agreed_by,
+   next_due_date, autopay_status)
+values
+  ('60000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006',
+   '00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000010',
+   80000, 64000, 'repaying', 'Demo Guarantor', '910000000099', current_date - 200,
+   2000, 2000, 2000, now() - interval '800 days', '00000000-0000-0000-0000-000000000003',
+   current_date + 10, 'active');
+
+-- Abbas's loan: plan not yet agreed, so it cannot be paid out.
+insert into public.education_loans
+  (id, case_id, borrower_id, principal, outstanding, status, guarantor_name, guarantor_phone, course_end_date)
+values
+  ('60000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000007',
+   '00000000-0000-0000-0000-000000000013', 60000, 60000, 'studying', 'Demo Guarantor 2', '910000000098',
+   current_date + 365);
 
 insert into public.lawajam_dues (household_id, period, amount, status) values
   ('10000000-0000-0000-0000-000000000001', '2026-27', 1200, 'pending'),

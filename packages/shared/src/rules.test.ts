@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { isDonationAllowed, canTransition } from './domain.ts';
 import { calculateKhums } from './khums.ts';
-import { monthlyInstalment } from './loans.ts';
+import { checkEmiProposal, followUpStage, minimumEmi, monthsToRepay } from './loans.ts';
 
 test('Sehme Sadaat only reaches Sadaat cases', () => {
   assert.equal(isDonationAllowed('sehme_sadaat', { kind: 'case', category: 'sadaat' }), true);
@@ -37,10 +37,22 @@ test('Khums is 20% of surplus, split into two shares that add up', () => {
   assert.throws(() => calculateKhums({ savings: -1, unusedGoods: 0, businessSurplus: 0, exempt: 0 }));
 });
 
-test('Loan instalment is zero below the income threshold and never exceeds the balance', () => {
-  const terms = { outstanding: 5000, incomeThreshold: 30000, shareOfExcessIncome: 0.2, minimumInstalment: 1000 };
-  assert.equal(monthlyInstalment(25000, terms), 0);
-  assert.equal(monthlyInstalment(40000, terms), 2000);
-  assert.equal(monthlyInstalment(31000, terms), 1000);
-  assert.equal(monthlyInstalment(200000, terms), 5000);
+test('EMI can be budget-friendly but must finish within the maximum tenure', () => {
+  assert.equal(minimumEmi(80000, 48), 1667);
+  const low = checkEmiProposal(80000, 1000, 48);
+  assert.equal(low.ok, false);
+  const ok = checkEmiProposal(80000, 2000, 48);
+  assert.deepEqual(ok, { ok: true, emi: 2000, months: 40 });
+  assert.equal(checkEmiProposal(80000, 1667, 48).ok, true);
+  assert.equal(monthsToRepay(64000, 2000), 32);
+});
+
+test('Follow-up escalates automatically and stops for a pending hardship request', () => {
+  assert.equal(followUpStage(-10, false), 'none');
+  assert.equal(followUpStage(-3, false), 'upcoming_reminder');
+  assert.equal(followUpStage(1, false), 'missed_reminder');
+  assert.equal(followUpStage(7, false), 'notify_guarantor');
+  assert.equal(followUpStage(15, false), 'officer_follow_up');
+  assert.equal(followUpStage(30, false), 'committee_review');
+  assert.equal(followUpStage(45, true), 'paused_for_review');
 });
