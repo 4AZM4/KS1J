@@ -1,0 +1,97 @@
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from '@ks1j/shared';
+
+import { Screen, SectionLabel } from '@/components/Screen';
+import { Text, View, useThemeColor } from '@/components/Themed';
+import { Banner, Button, Field } from '@/components/ui';
+import { DEMO_MODE, errorMessage, supabase } from '@/lib/supabase';
+
+export default function LoginScreen() {
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const card = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'border');
+  const muted = useThemeColor({}, 'mutedText');
+
+  const e164 = () => (phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`);
+
+  async function run(key: string, fn: () => Promise<void>) {
+    setBusy(key);
+    setError(null);
+    try {
+      await fn();
+      router.replace('/');
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <Screen title="Salaam" intro="Sign in with the mobile number registered with the Jamaat.">
+      {error ? <Banner>{error}</Banner> : null}
+      <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="98765 43210" editable={!sent} />
+      {sent ? <Field label="6-digit code" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
+      <Button
+        title={sent ? 'Verify and sign in' : 'Send code'}
+        disabled={!phone || (sent && code.length < 6)}
+        busy={busy === 'phone'}
+        onPress={() => {
+          if (!sent) {
+            setBusy('phone');
+            setError(null);
+            supabase.auth
+              .signInWithOtp({ phone: e164() })
+              .then(({ error }) => (error ? setError(errorMessage(error)) : setSent(true)))
+              .finally(() => setBusy(null));
+          } else {
+            void run('phone', async () => {
+              const { error } = await supabase.auth.verifyOtp({ phone: e164(), token: code, type: 'sms' });
+              if (error) throw error;
+            });
+          }
+        }}
+      />
+
+      {DEMO_MODE ? (
+        <>
+          <SectionLabel>Demo accounts</SectionLabel>
+          <Text style={[styles.note, { color: muted }]}>Fictional people, for the hackathon demo only.</Text>
+          {DEMO_ACCOUNTS.map((a) => (
+            <Pressable
+              key={a.email}
+              accessibilityRole="button"
+              accessibilityLabel={`Sign in as ${a.name}, ${a.role}`}
+              disabled={busy !== null}
+              onPress={() =>
+                run(a.email, async () => {
+                  const { error } = await supabase.auth.signInWithPassword({ email: a.email, password: DEMO_PASSWORD });
+                  if (error) throw error;
+                })
+              }
+              style={({ pressed }) => [styles.demo, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
+              <View style={styles.demoRow} lightColor="transparent" darkColor="transparent">
+                <Text style={styles.demoName}>{a.name}</Text>
+                <Text style={[styles.demoRole, { color: muted }]}>{busy === a.email ? 'Signing in…' : a.role}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  note: { fontSize: 15, marginBottom: 10 },
+  demo: { borderWidth: 1, borderRadius: 12, padding: 16, marginBottom: 10 },
+  demoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  demoName: { fontSize: 18, fontWeight: '600' },
+  demoRole: { fontSize: 14, flexShrink: 1, textAlign: 'right' },
+});

@@ -271,6 +271,30 @@ do $$ begin
   raise notice 'PASS  an approved pause moves the due date';
 end $$;
 
+-- 14. Demo payments: off by default; when on, only your own pending payment, with the real triggers.
+select pg_temp.as_system();
+insert into public.donations (id, donor_id, fund, case_id, amount)
+values ('40000000-0000-0000-0000-000000000009', '00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000004', 3000);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select public.demo_confirm_payment('donation', '40000000-0000-0000-0000-000000000009')$$,
+  'Demo payments are refused while demo mode is off');
+select pg_temp.as_system();
+update public.jamaat_settings set demo_mode = true;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$select public.demo_confirm_payment('donation', '40000000-0000-0000-0000-000000000009')$$,
+  'Nobody can demo-confirm someone else''s payment');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select public.demo_confirm_payment('donation', '40000000-0000-0000-0000-000000000009');
+select pg_temp.as_system();
+do $$ begin
+  if (select status from public.donations where id = '40000000-0000-0000-0000-000000000009') <> 'paid'
+     or (select raised_amount from public.cases where id = '20000000-0000-0000-0000-000000000004') <> 15000 then
+    raise exception 'FAIL  a demo-confirmed donation should be paid and counted';
+  end if;
+  raise notice 'PASS  demo mode confirms your own donation through the normal triggers';
+end $$;
+update public.jamaat_settings set demo_mode = false;
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,

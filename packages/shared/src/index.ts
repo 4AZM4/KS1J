@@ -1,4 +1,6 @@
 export * from './domain';
 export * from './khums';
 export * from './loans';
+export * from './labels';
 export * from './supabase';
+export type { Database, Tables, TablesInsert, TablesUpdate, Enums, Json } from './database.types';
