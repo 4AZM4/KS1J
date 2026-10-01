@@ -17,6 +17,7 @@ const adminNav = [
   { href: "/admin/lawajam", label: "Lawajam" },
   { href: "/admin/flags", label: "Fraud flags" },
   { href: "/admin/announcements", label: "Announcements" },
+  { href: "/admin/helpdesk", label: "Helpdesk" },
 ] as const;
 
 // Access is enforced by Supabase RLS on every query. This gate only keeps non-staff

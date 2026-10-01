@@ -518,6 +518,66 @@ select pg_temp.expect_error($$insert into public.institution_remittances (instit
   values ('30000000-0000-0000-0000-000000000001', 4001, 'NEFT-4')$$,
   'A second remittance cannot exceed what is left');
 
+-- 21. Helpdesk: only approved texts are searchable; two trustees per document; approved text cannot be edited.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if not exists (select 1 from public.search_help('how do I pay back my education loan')) then
+    raise exception 'FAIL  a member should find approved help about loans';
+  end if;
+  if (select title from public.search_help('interest late fee') limit 1) <> 'Education loans (Qard-e-Hasana)' then
+    raise exception 'FAIL  "interest late fee" should find the loans document first';
+  end if;
+  raise notice 'PASS  members can search approved help texts';
+end $$;
+select pg_temp.expect_error($$insert into public.kb_documents (title, source_ref) values ('Fake', 'Made up')$$,
+  'Members cannot add help documents');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_ok($$insert into public.kb_documents (id, title, source_ref) values
+  ('a1000000-0000-0000-0000-000000000001', 'Hall booking', 'Jamaat office circular (test)')$$,
+  'A trustee can add a draft document');
+select pg_temp.expect_ok($$insert into public.kb_chunks (document_id, heading, body) values
+  ('a1000000-0000-0000-0000-000000000001', 'Booking the hall', 'Book the hall for a majlis at the Jamaat office.')$$,
+  'A trustee can add sections to a draft');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.search_help('majlis hall booking')) then
+    raise exception 'FAIL  a draft must not be searchable';
+  end if;
+  raise notice 'PASS  drafts are never used for answers';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000001');
+select pg_temp.expect_error($$update public.kb_documents set status = 'approved' where id = 'a1000000-0000-0000-0000-000000000001'$$,
+  'The trustee who added a document cannot approve it');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_ok($$update public.kb_documents set status = 'approved' where id = 'a1000000-0000-0000-0000-000000000001'$$,
+  'A different trustee can approve it');
+select pg_temp.expect_error($$update public.kb_chunks set body = 'Changed after approval' where document_id = 'a1000000-0000-0000-0000-000000000001'$$,
+  'Approved text cannot be edited');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if (select title from public.search_help('book the hall for a majlis') limit 1) <> 'Hall booking' then
+    raise exception 'FAIL  an approved document should be searchable';
+  end if;
+  raise notice 'PASS  once approved by a second trustee, the document answers questions';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.search_help('What time does the mosque library open?')) then
+    raise exception 'FAIL  one shared word should not make an unrelated text an answer';
+  end if;
+  if (select heading from public.search_help('What happens if I cannot pay my loan EMI?') limit 1) <> 'If you cannot pay' then
+    raise exception 'FAIL  the hardship section should come first for "cannot pay my loan EMI"';
+  end if;
+  if (select heading from public.search_help('When does my loan repayment start?') limit 1) <> 'When repayment starts' then
+    raise exception 'FAIL  a matching heading should rank first';
+  end if;
+  raise notice 'PASS  search finds the right section and ignores one-word coincidences';
+end $$;
+
+select public.log_helpdesk_question('Where is the hall?', 'answered', '{}');
+select pg_temp.expect_error($$select 1/count(*) from public.helpdesk_questions$$,
+  'Members cannot read the question log');
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,

@@ -38,6 +38,9 @@ delete from public.institutions;
 delete from public.khums_calculations;
 delete from public.khums_profiles;
 delete from public.announcements;
+-- Only the demo help texts (kb_demo.sql); texts the committee added stay.
+delete from public.kb_documents where id::text like 'a0000000-0000-0000-0000-%';
+delete from public.helpdesk_questions;
 
 alter table public.ledger_entries enable trigger ledger_append_only;
 
