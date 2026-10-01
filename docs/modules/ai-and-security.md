@@ -12,7 +12,13 @@ AI and rules only flag and suggest. A person always approves, rejects or pays.
 
 ## AI document check
 
-Reads an uploaded fee receipt or marksheet, extracts name, amount and institution, and shows mismatches with the application next to the case for the verifier. Runs server-side. Never changes case status.
+Reads an uploaded fee receipt, bill or mark sheet, extracts name, amount and institution, and shows mismatches with the application next to the case for the verifier. Runs server-side. Never changes case status.
+
+- Built: `check-document` edge function, called after every upload of those kinds (app and website).
+  With `ANTHROPIC_API_KEY` set, Claude reads the PDF or photo. Without it, the text of a PDF is read with
+  simple rules (`packages/shared/src/documents.ts`); photos wait for a verifier.
+- `record_document_check` (SQL) compares with the application and raises a fraud flag per problem.
+  Verifiers and trustees can also type what a document says. Results are visible to staff only.
 
 ## Automation
 
@@ -25,6 +31,6 @@ RLS on every table · two-admin approval trigger · fund-separation trigger · a
 ## Acceptance tests
 
 - [ ] A second case from the same household appears in `/admin/flags`.
-- [ ] Uploading a fee receipt whose amount differs from the application shows a mismatch warning.
-- [ ] No AI output changes a case status by itself.
+- [x] Uploading a fee receipt whose amount differs from the application shows a mismatch warning.
+- [x] No AI output changes a case status by itself.
 - [ ] `supabase/tests/rules.sql` passes in CI.

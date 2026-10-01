@@ -79,6 +79,16 @@ export type Database = {
         Update: { amount?: number; case_id?: string; created_at?: string; fund?: Database["public"]["Enums"]["fund_type"]; id?: string; payee?: string; proof_path?: string | null; recorded_by?: string }
         Relationships: Rel[]
       }
+      document_checks: {
+        Row: {
+          case_id: string; checked_at: string; checked_by: string | null; document_id: string; expected_amount: number | null
+          found_amount: number | null; found_institution: string | null; found_name: string | null; method: string
+          mismatches: string[]; outcome: string
+        }
+        Insert: never
+        Update: never
+        Relationships: Rel[]
+      }
       donations: {
         Row: {
           amount: number; case_id: string | null; created_at: string; donor_id: string; fund: Database["public"]["Enums"]["fund_type"]
@@ -122,9 +132,9 @@ export type Database = {
         Relationships: Rel[]
       }
       fraud_flags: {
-        Row: { case_id: string; created_at: string; id: string; matched_case_id: string | null; reason: string; reviewed_at: string | null; reviewed_by: string | null; status: string }
-        Insert: { case_id: string; created_at?: string; id?: string; matched_case_id?: string | null; reason: string; reviewed_at?: string | null; reviewed_by?: string | null; status?: string }
-        Update: { case_id?: string; created_at?: string; id?: string; matched_case_id?: string | null; reason?: string; reviewed_at?: string | null; reviewed_by?: string | null; status?: string }
+        Row: { case_id: string; created_at: string; document_id: string | null; id: string; matched_case_id: string | null; reason: string; reviewed_at: string | null; reviewed_by: string | null; status: string }
+        Insert: { case_id: string; created_at?: string; document_id?: string | null; id?: string; matched_case_id?: string | null; reason: string; reviewed_at?: string | null; reviewed_by?: string | null; status?: string }
+        Update: { case_id?: string; created_at?: string; document_id?: string | null; id?: string; matched_case_id?: string | null; reason?: string; reviewed_at?: string | null; reviewed_by?: string | null; status?: string }
         Relationships: Rel[]
       }
       households: {
@@ -261,6 +271,10 @@ export type Database = {
       }
       loan_followup_stage: { Args: { p_next_due: string; p_pending_hardship: boolean }; Returns: string }
       my_household: { Args: never; Returns: string }
+      record_document_check: {
+        Args: { p_amount?: number; p_document: string; p_institution?: string; p_method: string; p_name?: string }
+        Returns: Database["public"]["Tables"]["document_checks"]["Row"]
+      }
       preview_public_case: {
         Args: { p_case: string; p_summary: string }
         Returns: { public_summary: string | null; title: string }[]
