@@ -1,6 +1,7 @@
-import { Link, type Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
+import { accentStyle } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
 
 type Props = {
@@ -9,10 +10,12 @@ type Props = {
   href?: Href;
   onPress?: () => void;
   badge?: 'Coming soon' | 'Roadmap';
+  /** Fund colour on the left edge: gold for Sehme Sadaat, lapis for Sehme Imam. */
+  accent?: 'gold' | 'lapis' | 'green';
 };
 
 /** A large tappable card. Every feature entry point in the app uses this, so sizes stay elder-friendly. */
-export function FeatureCard({ title, description, href, onPress, badge }: Props) {
+export function FeatureCard({ title, description, href, onPress, badge, accent }: Props) {
   const card = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
@@ -22,8 +25,9 @@ export function FeatureCard({ title, description, href, onPress, badge }: Props)
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={badge ? `${title}, ${badge}` : title}
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
+      // router.push rather than <Link asChild>: Link drops the card's style function on the web build.
+      onPress={href ? () => router.push(href) : onPress}
+      style={({ pressed }) => [styles.card, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.7 : 1 }, accentStyle(accent)]}>
       <View style={styles.row} lightColor="transparent" darkColor="transparent">
         <Text style={styles.title}>{title}</Text>
         {badge ? <Text style={[styles.badge, { color: tint, borderColor: tint }]}>{badge}</Text> : null}
@@ -32,13 +36,7 @@ export function FeatureCard({ title, description, href, onPress, badge }: Props)
     </Pressable>
   );
 
-  return href ? (
-    <Link href={href} asChild>
-      {body}
-    </Link>
-  ) : (
-    body
-  );
+  return body;
 }
 
 const styles = StyleSheet.create({

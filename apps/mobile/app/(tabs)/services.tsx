@@ -4,7 +4,7 @@ import { Screen, SectionLabel } from '@/components/Screen';
 // Each card becomes a flow. Specs: docs/modules/cases.md and docs/modules/loans.md.
 export default function ServicesScreen() {
   return (
-    <Screen title="Services" intro="Apply once and track every step. Your details are only seen by the assigned committee.">
+    <Screen hero title="Services" intro="Apply once and track every step. Your details are only seen by the assigned committee.">
       <SectionLabel>Apply</SectionLabel>
       <FeatureCard title="Welfare assistance" description="Medical, education or ration support. Tell us the need and track your case." href="/apply" />
       <FeatureCard title="Scholarship" description="Fees paid directly to your school or college once approved." href="/apply?type=scholarship" />

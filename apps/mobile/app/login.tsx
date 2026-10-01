@@ -39,7 +39,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen title="Salaam" intro="Sign in to KS1J, or create an account if you are new.">
+    <Screen hero title="Salaam" intro="Sign in to KS1J, or create an account if you are new.">
       {error ? <Banner>{error}</Banner> : null}
       <Field
         label="Email"

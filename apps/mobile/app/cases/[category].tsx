@@ -1,8 +1,9 @@
-import { Link, router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { CASE_PRIVACY_NOTE, CASE_TYPE_LABEL, CATEGORY_LABEL, rupees, type CaseCategory, type Database } from '@ks1j/shared';
 
+import { accentStyle } from '@/components/Art';
 import { Screen } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Progress } from '@/components/ui';
@@ -43,23 +44,23 @@ export default function CaseListScreen() {
       {cases === null ? <Text style={{ color: muted }}>Loading…</Text> : null}
       {cases?.length === 0 ? <Text style={{ color: muted, fontSize: 16 }}>No open cases right now.</Text> : null}
       {cases?.map((c) => (
-        <Link key={c.id} href={{ pathname: '/case/[id]', params: { id: c.id } }} asChild>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.card, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
-            <Text style={styles.title}>{c.title}</Text>
+        <Pressable
+          key={c.id}
+          onPress={() => router.push({ pathname: '/case/[id]', params: { id: c.id } })}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.card, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.7 : 1 }, accentStyle(c.category === 'sadaat' ? 'gold' : 'green')]}>
+          <Text style={styles.title}>{c.title}</Text>
+          <Text style={[styles.meta, { color: muted }]}>
+            Case #{c.case_no} · {CASE_TYPE_LABEL[c.type]} · Verified by two Jamaat admins
+          </Text>
+          <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
+          <View style={styles.row} lightColor="transparent" darkColor="transparent">
+            <Text style={styles.raised}>{rupees(c.raised_amount)} raised</Text>
             <Text style={[styles.meta, { color: muted }]}>
-              Case #{c.case_no} · {CASE_TYPE_LABEL[c.type]} · Verified by two Jamaat admins
+              {c.status === 'funded' ? 'Fully funded' : `of ${rupees(c.target_amount)}`}
             </Text>
-            <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
-            <View style={styles.row} lightColor="transparent" darkColor="transparent">
-              <Text style={styles.raised}>{rupees(c.raised_amount)} raised</Text>
-              <Text style={[styles.meta, { color: muted }]}>
-                {c.status === 'funded' ? 'Fully funded' : `of ${rupees(c.target_amount)}`}
-              </Text>
-            </View>
-          </Pressable>
-        </Link>
+          </View>
+        </Pressable>
       ))}
       {valid ? (
         <Text

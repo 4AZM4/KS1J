@@ -7,7 +7,7 @@ const LEAP_URL = 'https://ksijleap.com/';
 
 export default function LearnScreen() {
   return (
-    <Screen title="Learn" intro="Answers come only from Jamaat-approved texts, with the source shown.">
+    <Screen hero title="Learn" intro="Answers come only from Jamaat-approved texts, with the source shown.">
       <SectionLabel>Ask</SectionLabel>
       <FeatureCard title="Jamaat helpdesk" description="Ask about loans, applications, giving and dues. Answers show their source." href="/helpdesk" />
       <SectionLabel>Study</SectionLabel>
