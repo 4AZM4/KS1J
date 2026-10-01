@@ -26,7 +26,7 @@ pnpm dev:mobile                           # scan the QR code with Expo Go
 supabase init                              # once, creates supabase/config.toml
 supabase start                             # local stack
 supabase db reset                          # applies migrations + seed.sql
-psql "$DATABASE_URL" -f supabase/tests/rules.sql   # 116 rule tests
+psql "$DATABASE_URL" -f supabase/tests/rules.sql   # 117 rule tests
 ```
 
 Demo day: run `supabase/demo_reset.sql` then `supabase/seed_data.sql` to put the demo back to a clean start

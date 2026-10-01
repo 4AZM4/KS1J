@@ -739,4 +739,24 @@ do $$ begin
   raise notice 'PASS  members see only their own household';
 end $$;
 
+-- 16. A second open request from the same applicant or household is flagged, never blocked.
+select pg_temp.as_system();
+do $$
+declare v_case uuid;
+begin
+  select id into v_case from public.cases
+   where applicant_id = '00000000-0000-0000-0000-000000000010' and title = 'Hospital bill';
+  if v_case is null then
+    raise exception 'FAIL  the medical request from test 12 should exist';
+  end if;
+  if not exists (select 1 from public.fraud_flags where case_id = v_case and matched_case_id is not null
+                 and reason in ('Same applicant already has an open case', 'Same household already has an open case')) then
+    raise exception 'FAIL  a second open request from the same household should be flagged';
+  end if;
+  if (select status from public.cases where id = v_case) <> 'submitted' then
+    raise exception 'FAIL  a duplicate flag must not change the case status';
+  end if;
+  raise notice 'PASS  a second open request from the same household is flagged for a verifier';
+end $$;
+
 rollback;
