@@ -1,7 +1,9 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import {
+  CASE_PRIVACY_NOTE,
+  CASE_SUMMARY_FALLBACK,
   CASE_TYPE_LABEL,
   CATEGORY_LABEL,
   FUND_LABEL,
@@ -89,7 +91,7 @@ export default function CaseScreen() {
   return (
     <Screen title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
-        <Text style={styles.summary}>{c.public_summary}</Text>
+        <Text style={styles.summary}>{c.public_summary || CASE_SUMMARY_FALLBACK}</Text>
         <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
         <Text style={styles.raised}>
           {rupees(c.raised_amount)} raised of {rupees(c.target_amount)}
@@ -98,12 +100,19 @@ export default function CaseScreen() {
           Verified and approved by two different Jamaat admins. Money goes to the Jamaat, which pays the hospital, school or
           family directly and records proof.
         </Text>
+        <Text style={[styles.meta, { color: muted }]}>{CASE_PRIVACY_NOTE}</Text>
       </View>
 
       {thanks ? <Banner tone="good">{thanks}</Banner> : null}
       {error ? <Banner>{error}</Banner> : null}
 
-      {closed ? (
+      {!session && !closed ? (
+        <>
+          <Banner tone="info">Sign in to give to this case. Anyone can read about it.</Banner>
+          <Button title="Sign in to give" onPress={() => router.push('/login')} />
+        </>
+      ) : null}
+      {!session ? null : closed ? (
         <Banner tone="info">This case is fully funded. Thank you to everyone who gave.</Banner>
       ) : (
         <>
