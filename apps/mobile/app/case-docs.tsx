@@ -3,6 +3,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import {
+  CHECKED_DOCUMENT_KINDS,
   DOCUMENT_KINDS,
   DOCUMENT_KIND_LABEL,
   SUGGESTED_DOCUMENTS,
@@ -61,10 +62,16 @@ export default function CaseDocsScreen() {
     setNotice(null);
     try {
       const path = await uploadToMyFolder(session.user.id, result.assets[0], `case-${c.case_no}-${kind}`);
-      const { error } = await supabase
+      const { data: doc, error } = await supabase
         .from('case_documents')
-        .insert({ case_id: c.id, kind, storage_path: path, uploaded_by: session.user.id });
+        .insert({ case_id: c.id, kind, storage_path: path, uploaded_by: session.user.id })
+        .select('id')
+        .single();
       if (error) throw error;
+      // Ask the server to read receipts and bills for the verifier. The result is shown to staff only.
+      if ((CHECKED_DOCUMENT_KINDS as readonly string[]).includes(kind)) {
+        void supabase.functions.invoke('check-document', { body: { document_id: doc.id } });
+      }
       setNotice(`${DOCUMENT_KIND_LABEL[kind]} added.`);
       setKind(null);
       load();

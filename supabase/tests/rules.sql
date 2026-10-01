@@ -618,4 +618,58 @@ do $$ begin
   raise notice 'PASS  staff see exactly what donors will see before approving';
 end $$;
 
+-- 12. Document checks: a receipt that disagrees with the application raises a flag; nothing changes the case.
+select pg_temp.as_system();
+insert into public.case_documents (id, case_id, kind, storage_path, uploaded_by) values
+  ('50000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'fee_receipt',
+   '00000000-0000-0000-0000-000000000010/receipt.pdf', '00000000-0000-0000-0000-000000000010'),
+  ('50000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000001', 'fee_receipt',
+   '00000000-0000-0000-0000-000000000010/receipt2.pdf', '00000000-0000-0000-0000-000000000010');
+select set_config('test.case1_status', (select status::text from public.cases where id = '20000000-0000-0000-0000-000000000001'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$select public.record_document_check('50000000-0000-0000-0000-000000000001', 'manual', 36000)$$,
+  'An applicant cannot mark their own receipt as checked');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_error($$select public.record_document_check('50000000-0000-0000-0000-000000000001', 'ai', 36000)$$,
+  'Staff cannot pretend a manual reading came from the AI');
+select public.record_document_check('50000000-0000-0000-0000-000000000001', 'manual', 40000, 'Fatema Hussain', 'Demo School');
+select public.record_document_check('50000000-0000-0000-0000-000000000002', 'manual', 36000, 'Someone Else');
+do $$ begin
+  if (select outcome from public.document_checks where document_id = '50000000-0000-0000-0000-000000000001') <> 'mismatch' then
+    raise exception 'FAIL  a receipt for a different amount should be a mismatch';
+  end if;
+  if not exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000001'
+                 and reason like '%₹40,000%₹36,000%' and status = 'open') then
+    raise exception 'FAIL  the amount mismatch should raise an open flag';
+  end if;
+  if not exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002'
+                 and reason like '%does not match the applicant%') then
+    raise exception 'FAIL  a different name on the receipt should raise a flag';
+  end if;
+  if exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002' and reason like '%₹%') then
+    raise exception 'FAIL  a matching amount should not raise an amount flag';
+  end if;
+  if (select status::text from public.cases where id = '20000000-0000-0000-0000-000000000001') <> current_setting('test.case1_status') then
+    raise exception 'FAIL  a document check must never change the case status';
+  end if;
+  raise notice 'PASS  receipt mismatches raise flags for the verifier and leave the case alone';
+end $$;
+select public.record_document_check('50000000-0000-0000-0000-000000000001', 'manual', 40000, 'Fatema Hussain');
+do $$ begin
+  if (select count(*) from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000001' and status = 'open') <> 1 then
+    raise exception 'FAIL  checking again should not duplicate the open flag';
+  end if;
+  raise notice 'PASS  checking a document again does not duplicate flags';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.document_checks) then
+    raise exception 'FAIL  members must not see document checks';
+  end if;
+  raise notice 'PASS  only staff see document checks';
+end $$;
+select pg_temp.expect_error($$insert into public.document_checks (document_id, case_id, outcome, method)
+  values ('50000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'matches', 'manual')$$,
+  'Nobody writes check results directly');
+
 rollback;

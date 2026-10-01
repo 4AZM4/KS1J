@@ -7,3 +7,4 @@ export * from './signup';
 export * from './helpdesk';
 export * from './reminders';
 export type { Database, Tables, TablesInsert, TablesUpdate, Enums, Json } from './database.types';
+export * from './documents';

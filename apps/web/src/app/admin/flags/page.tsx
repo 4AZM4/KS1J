@@ -55,7 +55,7 @@ export default function FlagsPage() {
       <div>
         <h1 className="text-2xl font-bold">Fraud flags</h1>
         <p className="mt-1 text-muted">
-          Raised automatically when the same person or household already has an open case. A flag is a question, not a
+          Raised automatically when the same person or household already has an open case, or when an uploaded receipt, bill or mark sheet does not match the application. A flag is a question, not a
           verdict: a verifier compares the cases and decides.
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function FlagsPage() {
                 </Badge>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <CaseBox label="New case" c={f.case} id={f.case_id} />
+                <CaseBox label={f.document_id ? "Case" : "New case"} c={f.case} id={f.case_id} />
                 {f.matched_case_id ? <CaseBox label="Matches" c={f.matched} id={f.matched_case_id} /> : null}
               </div>
               <p className="mt-3 text-sm text-muted">
@@ -90,7 +90,7 @@ export default function FlagsPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button onClick={() => decide(f, "cleared")}>Not a problem: clear</Button>
                   <Button variant="danger" onClick={() => decide(f, "confirmed")}>
-                    Confirm duplicate
+                    {f.document_id ? "Confirm problem" : "Confirm duplicate"}
                   </Button>
                 </div>
               ) : null}
