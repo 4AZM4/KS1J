@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { KHUMS_GUIDANCE } from "@ks1j/shared";
 import { Announcements } from "@/components/landing/Announcements";
+import { FundFlow } from "@/components/landing/FundFlow";
+import { KS1JLockup } from "@/components/landing/Mark";
+import { MihrabFrame } from "@/components/landing/MihrabFrame";
 import { StarLattice } from "@/components/landing/StarLattice";
 
 // The member app (Expo, built for the web). Defaults to the public preview.
@@ -58,8 +61,8 @@ export default function Home() {
   return (
     <div className="flex-1 bg-paper text-ink">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-        <Link href="/" className="text-xl font-bold tracking-tight text-ink">
-          KS1J
+        <Link href="/" aria-label="KS1J home">
+          <KS1JLockup />
         </Link>
         <nav aria-label="Main" className="flex items-center gap-1 text-base sm:gap-2">
           <a href="#what" className="hidden rounded-lg px-3 py-2 hover:bg-card sm:inline-block">
@@ -81,7 +84,7 @@ export default function Home() {
         {/* Hero: the live member app, inside the Jamaat's star lattice */}
         <section className="px-4 sm:px-6">
           <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-deep text-white">
-            <StarLattice className="pointer-events-none absolute inset-0 text-gold opacity-25" />
+            <StarLattice draw className="ks-lattice pointer-events-none absolute inset-0 text-gold opacity-25" />
             <div className="relative grid items-center gap-10 px-6 py-12 sm:px-12 sm:py-16 lg:grid-cols-[1.15fr_auto] lg:gap-16">
               <div>
                 <h1 className="max-w-[16ch] text-[2.6rem] font-bold leading-[1.05] tracking-tight sm:text-6xl">
@@ -105,19 +108,19 @@ export default function Home() {
                 <p className="mt-6 text-base text-white/70">Android and iPhone apps for members. This website for everyone.</p>
               </div>
 
-              {/* A real, working copy of the app. Hidden on small screens, where the button is enough. */}
-              <figure className="mx-auto hidden w-[300px] lg:block">
-                <div className="rounded-[2.6rem] border-[10px] border-[#0a1f18] bg-[#0a1f18] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)]">
-                  <iframe
-                    title="KS1J member app, live demo"
-                    src={MEMBER_APP_URL}
-                    className="block h-[600px] w-full rounded-[2rem] bg-white"
-                    loading="lazy"
-                  />
-                </div>
-                <figcaption className="mt-4 text-center text-sm text-white/75">
-                  Try it: sign in with a demo member.
-                </figcaption>
+              {/* A real, working copy of the app, inside a mihrab arch. Hidden on small screens, where the button is enough. */}
+              <figure className="hidden lg:block">
+                <MihrabFrame>
+                  <div className="ks-rise rounded-[2.2rem] border-[8px] border-[#0a1f18] bg-[#0a1f18] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)]">
+                    <iframe
+                      title="KS1J member app, live demo"
+                      src={MEMBER_APP_URL}
+                      className="block h-[540px] w-full rounded-[1.7rem] bg-white"
+                      loading="lazy"
+                    />
+                  </div>
+                </MihrabFrame>
+                <figcaption className="ks-fade -mt-1 text-center text-sm text-white/75">Try it: sign in with a demo member.</figcaption>
               </figure>
             </div>
           </div>
@@ -186,7 +189,7 @@ export default function Home() {
         </section>
 
         <section id="money" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.5fr] lg:items-center lg:gap-14">
             <div>
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Where your money goes</h2>
               <p className="mt-3 max-w-[48ch] text-lg text-muted">
@@ -198,7 +201,8 @@ export default function Home() {
                 new entry everyone can trace.
               </p>
             </div>
-            <dl className="divide-y divide-border border-y border-border">
+            <FundFlow />
+            <dl className="divide-y divide-border border-y border-border md:hidden">
               {funds.map((f) => (
                 <div key={f.fund} className="grid gap-1 py-5 sm:grid-cols-[12rem_1fr] sm:items-baseline sm:gap-6">
                   <dt className="text-lg font-bold text-lapis">{f.fund}</dt>
@@ -221,7 +225,7 @@ export default function Home() {
         <StarLattice id="khatam-footer" className="pointer-events-none absolute inset-0 text-gold opacity-15" />
         <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr]">
           <div>
-            <p className="text-2xl font-bold">KS1J</p>
+            <KS1JLockup tone="light" />
             <p className="mt-2 max-w-[52ch] text-base text-white/80">
               For KSI Jamaat Mumbai members. On Khums: {KHUMS_GUIDANCE}
             </p>
