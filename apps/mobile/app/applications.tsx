@@ -1,6 +1,6 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { CASE_STEPS, CASE_TYPE_LABEL, STATUS_LABEL, rupees, type Tables } from '@ks1j/shared';
 
 import { Screen } from '@/components/Screen';
@@ -9,7 +9,7 @@ import { Banner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
-type CaseWithEvents = Tables<'cases'> & { case_events: Tables<'case_events'>[] };
+type CaseWithEvents = Tables<'cases'> & { case_events: Tables<'case_events'>[]; case_documents: { id: string }[] };
 
 export default function ApplicationsScreen() {
   const { submitted } = useLocalSearchParams<{ submitted?: string }>();
@@ -25,7 +25,7 @@ export default function ApplicationsScreen() {
       if (!session) return;
       supabase
         .from('cases')
-        .select('*, case_events(*)')
+        .select('*, case_events(*), case_documents(id)')
         .eq('applicant_id', session.user.id)
         .order('created_at', { ascending: false })
         .then(({ data }) => setCases((data ?? []) as unknown as CaseWithEvents[]));
@@ -59,6 +59,19 @@ export default function ApplicationsScreen() {
                 ))}
               </View>
             )}
+            {c.status !== 'closed' && c.status !== 'rejected' ? (
+              <Link href={{ pathname: '/case-docs', params: { id: c.id } }} asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  style={({ pressed }) => [styles.docs, { borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
+                  <Text style={[styles.docsText, { color: tint }]}>
+                    {c.case_documents.length === 0
+                      ? 'Add documents'
+                      : `Documents (${c.case_documents.length}): view or add`}
+                  </Text>
+                </Pressable>
+              </Link>
+            ) : null}
           </View>
         );
       })}
@@ -67,6 +80,8 @@ export default function ApplicationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  docs: { marginTop: 14, borderTopWidth: 1, paddingTop: 12 },
+  docsText: { fontSize: 16, fontWeight: '600' },
   empty: { fontSize: 16 },
   card: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 12 },
   title: { fontSize: 18, fontWeight: '600' },

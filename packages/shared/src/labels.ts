@@ -15,6 +15,29 @@ export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   other: 'Other',
 };
 
+export const DOCUMENT_KINDS = ['fee_receipt', 'marksheet', 'income_proof', 'medical_report', 'lineage_proof', 'id_proof', 'other'] as const;
+export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
+
+export const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
+  fee_receipt: 'Fee receipt',
+  marksheet: 'Mark sheet',
+  income_proof: 'Income proof',
+  medical_report: 'Medical report or bill',
+  lineage_proof: 'Sadaat lineage proof',
+  id_proof: 'ID proof',
+  other: 'Other',
+};
+
+/** Documents that help the verifier most, by case type. Shown first. */
+export const SUGGESTED_DOCUMENTS: Record<CaseType, DocumentKind[]> = {
+  medical: ['medical_report', 'income_proof', 'id_proof'],
+  education: ['fee_receipt', 'marksheet', 'income_proof'],
+  ration: ['income_proof', 'id_proof'],
+  scholarship: ['fee_receipt', 'marksheet', 'income_proof'],
+  education_loan: ['fee_receipt', 'marksheet', 'income_proof'],
+  other: ['income_proof', 'id_proof'],
+};
+
 export const CATEGORY_LABEL: Record<CaseCategory, string> = {
   sadaat: 'Sadaat',
   non_sadaat: 'Non-Sadaat',

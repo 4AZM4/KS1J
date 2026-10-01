@@ -467,6 +467,28 @@ select pg_temp.expect_ok($$update public.members set household_id = '10000000-00
   where id = '00000000-0000-0000-0000-000000000099'$$,
   'A verifier links the new member to a household and verifies them');
 
+-- 19. Case documents: only your own files, only on cases you can see.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$insert into public.case_documents (case_id, kind, storage_path, uploaded_by)
+  values ('20000000-0000-0000-0000-000000000001', 'fee_receipt', '00000000-0000-0000-0000-000000000010/fees.pdf',
+          '00000000-0000-0000-0000-000000000010')$$,
+  'An applicant can attach a document from their own folder to their case');
+select pg_temp.expect_error($$insert into public.case_documents (case_id, kind, storage_path, uploaded_by)
+  values ('20000000-0000-0000-0000-000000000001', 'fee_receipt', '00000000-0000-0000-0000-000000000011/x.pdf',
+          '00000000-0000-0000-0000-000000000010')$$,
+  'Nobody can attach a file from someone else''s folder');
+select pg_temp.expect_error($$insert into public.case_documents (case_id, kind, storage_path, uploaded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'fee_receipt', '00000000-0000-0000-0000-000000000010/y.pdf',
+          '00000000-0000-0000-0000-000000000010')$$,
+  'Nobody can attach documents to another family''s case');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.case_documents) then
+    raise exception 'FAIL  a donor should not see any case documents';
+  end if;
+  raise notice 'PASS  donors never see case documents';
+end $$;
+
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)
   values ('00000000-0000-0000-0000-000000000020', 2026, 100000, 20000, 10000, 9000)$$,

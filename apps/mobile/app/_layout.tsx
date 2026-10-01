@@ -55,6 +55,7 @@ function RootLayoutNav() {
           <Stack.Screen name="signup" options={{ title: 'Create an account' }} />
           <Stack.Screen name="apply" options={{ title: 'Apply for help' }} />
           <Stack.Screen name="applications" options={{ title: 'My applications' }} />
+          <Stack.Screen name="case-docs" options={{ title: 'Documents' }} />
           <Stack.Screen name="cases/[category]" options={{ title: 'Support a case' }} />
           <Stack.Screen name="case/[id]" options={{ title: 'Case' }} />
           <Stack.Screen name="loan" options={{ title: 'Education loan' }} />

@@ -38,11 +38,12 @@ export default function ApplyScreen() {
         requested_amount: amountNumber,
         details: details.trim() || null,
       })
-      .select('case_no')
+      .select('id, case_no')
       .single();
     setBusy(false);
     if (error) return setError(errorMessage(error));
-    router.replace({ pathname: '/applications', params: { submitted: String(data.case_no) } });
+    // Next step: attach documents (fee receipt, medical bill, income proof...).
+    router.replace({ pathname: '/case-docs', params: { id: data.id, submitted: String(data.case_no) } });
   }
 
   return (
