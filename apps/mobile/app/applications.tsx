@@ -1,4 +1,4 @@
-import { Link, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { CASE_STEPS, CASE_TYPE_LABEL, STATUS_LABEL, rupees, type Tables } from '@ks1j/shared';
@@ -60,17 +60,14 @@ export default function ApplicationsScreen() {
               </View>
             )}
             {c.status !== 'closed' && c.status !== 'rejected' ? (
-              <Link href={{ pathname: '/case-docs', params: { id: c.id } }} asChild>
-                <Pressable
-                  accessibilityRole="button"
-                  style={({ pressed }) => [styles.docs, { borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
-                  <Text style={[styles.docsText, { color: tint }]}>
-                    {c.case_documents.length === 0
-                      ? 'Add documents'
-                      : `Documents (${c.case_documents.length}): view or add`}
-                  </Text>
-                </Pressable>
-              </Link>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/case-docs', params: { id: c.id } })}
+                style={({ pressed }) => [styles.docs, { borderColor: border, opacity: pressed ? 0.7 : 1 }]}>
+                <Text style={[styles.docsText, { color: tint }]}>
+                  {c.case_documents.length === 0 ? 'Add documents' : `Documents (${c.case_documents.length}): view or add`}
+                </Text>
+              </Pressable>
             ) : null}
           </View>
         );
@@ -80,7 +77,7 @@ export default function ApplicationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  docs: { marginTop: 14, borderTopWidth: 1, paddingTop: 12 },
+  docs: { marginTop: 14, borderTopWidth: 1, minHeight: 52, justifyContent: 'center' },
   docsText: { fontSize: 16, fontWeight: '600' },
   empty: { fontSize: 16 },
   card: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 12 },

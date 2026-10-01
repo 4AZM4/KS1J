@@ -82,7 +82,8 @@ export default function KhumsImamScreen() {
           <Pressable
             key={i.id}
             accessibilityRole="radio"
-            accessibilityState={{ selected }}
+            accessibilityState={{ checked: selected, selected }}
+              aria-checked={selected}
             onPress={() => setChosen(i.id)}
             style={[styles.card, { backgroundColor: card, borderColor: selected ? tint : border, borderWidth: selected ? 2 : 1 }]}>
             <Text style={[styles.title, selected ? { color: tint } : null]}>{i.name}</Text>

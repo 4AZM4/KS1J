@@ -31,8 +31,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        // Elder-friendly: larger labels, and inactive tabs dark enough to read (WCAG AA contrast).
         tabBarActiveTintColor: Colors[colorScheme].tint,
-        tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
+        tabBarInactiveTintColor: Colors[colorScheme].mutedText,
+        tabBarLabelStyle: { fontSize: 15, fontWeight: '600' },
+        tabBarStyle: { height: 72, paddingTop: 6, paddingBottom: 10 },
         // Disable the static render of the header on web to prevent a hydration error.
         headerShown: clientOnlyHeader,
       }}>

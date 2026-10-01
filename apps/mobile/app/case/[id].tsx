@@ -90,7 +90,7 @@ export default function CaseScreen() {
     <Screen title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <Text style={styles.summary}>{c.public_summary}</Text>
-        <Progress value={c.raised_amount} max={c.target_amount} />
+        <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
         <Text style={styles.raised}>
           {rupees(c.raised_amount)} raised of {rupees(c.target_amount)}
         </Text>

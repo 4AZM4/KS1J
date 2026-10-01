@@ -23,6 +23,7 @@ alter table public.ledger_entries disable trigger ledger_append_only;
 delete from public.ledger_entries;
 delete from public.disbursements;
 delete from public.donations;
+delete from public.institution_remittances;
 delete from public.loan_repayments;
 delete from public.loan_hardship_requests;
 delete from public.income_declarations;
