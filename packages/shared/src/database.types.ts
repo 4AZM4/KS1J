@@ -200,9 +200,9 @@ export type Database = {
         Relationships: Rel[]
       }
       members: {
-        Row: { created_at: string; full_name: string; household_id: string | null; id: string; language: string; membership_verified: boolean; phone: string | null }
-        Insert: { created_at?: string; full_name: string; household_id?: string | null; id: string; language?: string; membership_verified?: boolean; phone?: string | null }
-        Update: { created_at?: string; full_name?: string; household_id?: string | null; id?: string; language?: string; membership_verified?: boolean; phone?: string | null }
+        Row: { address: string | null; area: string | null; created_at: string; full_name: string; household_id: string | null; id: string; jamaat_number: string | null; language: string; membership_verified: boolean; phone: string | null }
+        Insert: { address?: string | null; area?: string | null; created_at?: string; full_name: string; household_id?: string | null; id: string; jamaat_number?: string | null; language?: string; membership_verified?: boolean; phone?: string | null }
+        Update: { address?: string | null; area?: string | null; created_at?: string; full_name?: string; household_id?: string | null; id?: string; jamaat_number?: string | null; language?: string; membership_verified?: boolean; phone?: string | null }
         Relationships: Rel[]
       }
     }

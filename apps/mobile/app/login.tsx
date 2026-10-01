@@ -8,10 +8,15 @@ import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Field } from '@/components/ui';
 import { DEMO_MODE, errorMessage, supabase } from '@/lib/supabase';
 
+// Text-message codes need an SMS provider in Supabase; off until the Jamaat sets one up.
+const PHONE_LOGIN = process.env.EXPO_PUBLIC_PHONE_LOGIN === 'true';
+
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const card = useThemeColor({}, 'card');
@@ -34,8 +39,33 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen title="Salaam" intro="Sign in with the mobile number registered with the Jamaat.">
+    <Screen title="Salaam" intro="Sign in to KS1J, or create an account if you are new.">
       {error ? <Banner>{error}</Banner> : null}
+      <Field
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+      />
+      <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" />
+      <Button
+        title="Sign in"
+        disabled={!email || !password}
+        busy={busy === 'email'}
+        onPress={() =>
+          run('email', async () => {
+            const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+            if (error) throw error;
+          })
+        }
+      />
+      <Button title="Create an account" variant="secondary" onPress={() => router.push('/signup')} />
+
+      {PHONE_LOGIN ? (
+        <>
+      <SectionLabel>Or with your mobile number</SectionLabel>
       <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="98765 43210" editable={!sent} />
       {sent ? <Field label="6-digit code" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
       <Button
@@ -58,6 +88,8 @@ export default function LoginScreen() {
           }
         }}
       />
+        </>
+      ) : null}
 
       {DEMO_MODE ? (
         <>
