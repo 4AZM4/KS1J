@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { KHUMS_GUIDANCE } from "@ks1j/shared";
+import { KHUMS_GUIDANCE, type IconName } from "@ks1j/shared";
+import { Icon } from "@/components/Icon";
 import { Announcements } from "@/components/landing/Announcements";
 import { FundFlow } from "@/components/landing/FundFlow";
 import { KS1JLockup } from "@/components/landing/Mark";
@@ -11,9 +12,10 @@ import { ArchSteps, BeforeScraps, KhumsPicture, PhoneFan, Redaction } from "@/co
 const MEMBER_APP_URL = process.env.NEXT_PUBLIC_MEMBER_APP_URL ?? "https://4azm4.github.io/KS1J/app/";
 const LEAP_URL = "https://ksijleap.com/";
 
-const tabs = [
+const tabs: { name: string; icon: IconName; lead: string; items: string[] }[] = [
   {
     name: "Services",
+    icon: "lifebuoy",
     lead: "Ask for help and see where your request is.",
     items: [
       "Medical, education and ration assistance",
@@ -24,6 +26,7 @@ const tabs = [
   },
   {
     name: "Give",
+    icon: "heart-handshake",
     lead: "Pay what you owe and support families who need it.",
     items: [
       "Khums calculator, with Sehme Imam and Sehme Sadaat worked out for you",
@@ -33,6 +36,7 @@ const tabs = [
   },
   {
     name: "Learn",
+    icon: "book",
     lead: "Answers from the Jamaat's own sources.",
     items: [
       "Helpdesk that shows the source of every answer, or says it does not know",
@@ -42,12 +46,12 @@ const tabs = [
   },
 ];
 
-const steps = [
-  { title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
-  { title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
-  { title: "A different trustee approves", body: "The person who verified can never approve the same case." },
-  { title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
-  { title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },
+const steps: { title: string; body: string; icon: IconName }[] = [
+  { icon: "file-plus", title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
+  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
+  { icon: "rosette-discount-check", title: "A different trustee approves", body: "The person who verified can never approve the same case." },
+  { icon: "eye-off", title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
+  { icon: "building-bank", title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },
 ];
 
 const funds = [
@@ -164,7 +168,12 @@ export default function Home() {
             {tabs.map((t) => (
               <div key={t.name} className="grid gap-4 py-8 md:grid-cols-[14rem_1fr] md:gap-10">
                 <div>
-                  <h3 className="text-2xl font-bold">{t.name}</h3>
+                  <h3 className="flex items-center gap-3 text-2xl font-bold">
+                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-deep text-gold">
+                      <Icon name={t.icon} size={28} />
+                    </span>
+                    {t.name}
+                  </h3>
                   <p className="mt-1 text-base text-muted">{t.lead}</p>
                 </div>
                 <ul className="grid gap-x-10 gap-y-3 text-lg sm:grid-cols-2">

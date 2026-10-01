@@ -76,14 +76,14 @@ export default function GiveScreen() {
     <Screen hero title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
       <SectionLabel>Khums</SectionLabel>
       <KhumsQuickCalc />
-      <FeatureCard title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
-      <FeatureCard accent="lapis" title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
-      <FeatureCard accent="gold" title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
+      <FeatureCard icon="calculator" title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
+      <FeatureCard accent="lapis" icon="building-bank" title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
+      <FeatureCard accent="gold" icon="heart-handshake" title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
       <SectionLabel>Support a case</SectionLabel>
-      <FeatureCard accent="gold" title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
-      <FeatureCard accent="green" title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
+      <FeatureCard accent="gold" icon="users" title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
+      <FeatureCard accent="green" icon="users-group" title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
       <SectionLabel>Dues</SectionLabel>
-      <FeatureCard title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
+      <FeatureCard icon="receipt" title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
     </Screen>
   );
 }

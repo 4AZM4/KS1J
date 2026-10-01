@@ -1,4 +1,5 @@
-import { calculateKhums, rupees } from "@ks1j/shared";
+import { calculateKhums, rupees, type IconName } from "@ks1j/shared";
+import { Icon } from "@/components/Icon";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -76,7 +77,7 @@ export function PhoneFan() {
 
 /* ── How a request is handled: five arches ────────────────────────────────────────────────────── */
 
-export function ArchSteps({ steps }: { steps: { title: string; body: string }[] }) {
+export function ArchSteps({ steps }: { steps: { title: string; body: string; icon: IconName }[] }) {
   return (
     <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
       {steps.map((s, i) => {
@@ -88,12 +89,11 @@ export function ArchSteps({ steps }: { steps: { title: string; body: string }[] 
               last ? "border-gold bg-gold text-[#1d1a10]" : "border-gold/70 bg-paper"
             }`}
           >
-            <span
-              className={`grid h-12 w-12 place-items-center rounded-full text-xl font-bold ${last ? "bg-deep text-gold" : "bg-deep text-white"}`}
-            >
-              {i + 1}
+            <span className={`grid h-14 w-14 place-items-center rounded-full bg-deep ${last ? "text-gold" : "text-[#e8cc7a]"}`}>
+              <Icon name={s.icon} size={30} />
             </span>
-            <h3 className="mt-4 text-lg font-bold leading-snug">{s.title}</h3>
+            <span className={`mt-3 text-sm font-bold ${last ? "text-[#3b2f0e]" : "text-muted"}`}>Step {i + 1}</span>
+            <h3 className="mt-1 text-lg font-bold leading-snug">{s.title}</h3>
             <p className={`mt-2 text-base leading-relaxed ${last ? "text-[#3b2f0e]" : "text-muted"}`}>{s.body}</p>
           </li>
         );
