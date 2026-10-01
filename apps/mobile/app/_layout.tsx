@@ -63,6 +63,7 @@ function RootLayoutNav() {
           <Stack.Screen name="khums" options={{ title: 'Khums' }} />
           <Stack.Screen name="khums-imam" options={{ title: 'Pay Sehme Imam' }} />
           <Stack.Screen name="lawajam" options={{ title: 'Lawajam' }} />
+          <Stack.Screen name="helpdesk" options={{ title: 'Helpdesk' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'About' }} />
         </Stack>
       </ThemeProvider>

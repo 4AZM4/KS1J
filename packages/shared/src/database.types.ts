@@ -139,6 +139,24 @@ export type Database = {
         Update: { declared_at?: string; id?: string; loan_id?: string; monthly_income?: number; proof_path?: string | null }
         Relationships: Rel[]
       }
+      helpdesk_questions: {
+        Row: { asked_at: string; document_ids: string[]; id: string; outcome: string; question: string }
+        Insert: { asked_at?: string; document_ids?: string[]; id?: string; outcome: string; question: string }
+        Update: { asked_at?: string; document_ids?: string[]; id?: string; outcome?: string; question?: string }
+        Relationships: Rel[]
+      }
+      kb_chunks: {
+        Row: { body: string; document_id: string; heading: string | null; id: string; position: number }
+        Insert: { body: string; document_id: string; heading?: string | null; id?: string; position?: number }
+        Update: { body?: string; document_id?: string; heading?: string | null; id?: string; position?: number }
+        Relationships: Rel[]
+      }
+      kb_documents: {
+        Row: { added_by: string | null; approved_at: string | null; approved_by: string | null; created_at: string; id: string; source_ref: string; status: string; title: string }
+        Insert: { added_by?: string | null; approved_at?: string | null; approved_by?: string | null; created_at?: string; id?: string; source_ref: string; status?: string; title: string }
+        Update: { added_by?: string | null; approved_at?: string | null; approved_by?: string | null; created_at?: string; id?: string; source_ref?: string; status?: string; title?: string }
+        Relationships: Rel[]
+      }
       institutions: {
         Row: { added_by: string | null; city: string | null; created_at: string; id: string; ijazah_document_path: string; ijazah_verified_at: string | null; ijazah_verified_by: string | null; is_active: boolean; marja: string; name: string }
         Insert: { added_by?: string | null; city?: string | null; created_at?: string; id?: string; ijazah_document_path: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja: string; name: string }
@@ -214,6 +232,10 @@ export type Database = {
       has_role: { Args: { r: Database["public"]["Enums"]["admin_role"] }; Returns: boolean }
       household_loan_overdue: { Args: { p_household: string }; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      search_help: {
+        Args: { max_results?: number; q: string }
+        Returns: { body: string; chunk_id: string; document_id: string; heading: string | null; rank: number; source_ref: string; title: string }[]
+      }
       is_system: { Args: never; Returns: boolean }
       list_public_cases: {
         Args: { p_category?: Database["public"]["Enums"]["case_category"] }

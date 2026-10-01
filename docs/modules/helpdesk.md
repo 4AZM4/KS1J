@@ -6,6 +6,17 @@
 
 Members ask about Jamaat services, forms, timings and procedures. Answers come only from documents the Jamaat has approved, with the source cited.
 
+## Built
+
+- **Texts:** `kb_documents` + `kb_chunks` (migration 1400). One trustee adds, a different trustee approves. Approved text can't be edited, only retired. Search is Postgres full-text (`search_help`): all words first, then sections matching at least half the meaningful words, with headings weighted. pgvector can replace this later without changing the apps.
+- **Function:** `supabase/functions/helpdesk`, for signed-in members only.
+  - Ruling questions are redirected to the Marja' or the Jamaat's alim.
+  - No match gives "I don't know that yet".
+  - With `ANTHROPIC_API_KEY` set as a Supabase secret, Claude answers only from the found texts and must cite them. An answer without a citation is replaced by "I don't know".
+  - Without the key, it shows the approved passages.
+- **Log:** `helpdesk_questions` records the outcome with no member id. Gaps show on `/admin/helpdesk`.
+- **Demo texts:** `supabase/kb_demo.sql` describes how the app works. Replace these with Jamaat-approved documents before launch.
+
 ## Rules
 
 - Retrieve relevant chunks first; answer only from them; cite document title and page.
