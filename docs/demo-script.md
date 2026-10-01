@@ -41,7 +41,7 @@ Point out the **fraud flags** page: duplicate requests from the same household a
 
 ## 5. Education loans that get repaid (1.5 min)
 
-1. App, **Abbas** → Services → Education loan → propose ₹900 → refused (minimum ₹1,250) → propose ₹2,000 → "repaid in 30 months".
+1. App, **Abbas** → Home shows **For you: Agree your repayment plan** (and his Lawajam due) → tap it, or Services → Education loan → propose ₹900 → refused (minimum ₹1,250) → propose ₹2,000 → "repaid in 30 months".
 2. Admin, **Trustee** → Education loans → *Repayment plans to agree* → **Accept ₹2,000**. Only now can finance pay out.
 3. App, **Fatema** (she pays her brother Hussain's loan) → Education loan: balance, next due date, AutoPay on, **Pay ₹2,000**, receipt.
 4. Admin → Education loans → **Follow-up list** (automatic reminders, guarantor told at 7 days, committee at 30) and the **hardship request** waiting for a decision.
