@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { rupees, type Tables } from "@ks1j/shared";
 import { errorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
+import { downloadCsv } from "@/lib/csv";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
 
 type Due = Tables<"lawajam_dues"> & {
@@ -52,6 +53,22 @@ export default function LawajamAdminPage() {
     setError(null);
     setPeriod(newPeriod.trim());
     void load();
+  }
+
+  function exportPeriod() {
+    downloadCsv(
+      `ks1j-lawajam-${period}.csv`,
+      ["Area", "Household members", "Phone", "Address", "Period", "Amount (Rs)", "Status"],
+      shown.map((d) => [
+        d.household?.area ?? "",
+        d.household?.members.map((m) => m.full_name).join(", ") ?? "",
+        d.household?.members.find((m) => m.phone)?.phone ?? "",
+        d.household?.address ?? "",
+        d.period,
+        d.amount,
+        d.status === "paid" ? "Paid" : "Due",
+      ]),
+    );
   }
 
   async function copyReminderList() {
@@ -128,7 +145,10 @@ export default function LawajamAdminPage() {
         </Card>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="secondary" disabled={shown.length === 0} onClick={exportPeriod}>
+          Download {period} for Excel
+        </Button>
         <Button variant="secondary" disabled={outstanding.length === 0} onClick={copyReminderList}>
           Copy reminder list ({outstanding.length})
         </Button>

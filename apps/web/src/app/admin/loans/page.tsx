@@ -17,6 +17,7 @@ import {
 } from "@ks1j/shared";
 import { errorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
+import { downloadCsv, today } from "@/lib/csv";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
 
 type Loan = Tables<"education_loans"> & { borrower: { full_name: string } | null; case: { case_no: number } | null };
@@ -107,9 +108,35 @@ export default function LoansPage() {
           <h1 className="text-2xl font-bold">Education loans</h1>
           <p className="mt-1 text-muted">Qard-e-Hasana: no interest, no late fees. No payout until the plan is agreed.</p>
         </div>
-        <Button variant="secondary" onClick={refreshStatuses}>
-          Refresh statuses
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            disabled={followUp.length === 0}
+            onClick={() =>
+              downloadCsv(
+                `ks1j-loan-follow-up-${today()}.csv`,
+                ["Student", "Payer", "Next due", "Days late", "EMI (Rs)", "Left to repay (Rs)", "AutoPay", "Stage", "Guarantor", "Guarantor phone"],
+                followUp.map((r) => [
+                  r.borrower,
+                  r.payer,
+                  r.next_due_date,
+                  r.days_late,
+                  r.agreed_emi,
+                  r.outstanding,
+                  AUTOPAY_LABEL[r.autopay_status] ?? r.autopay_status,
+                  FOLLOW_UP_LABEL[r.stage as FollowUpStage] ?? r.stage,
+                  r.guarantor,
+                  r.guarantor_phone,
+                ]),
+              )
+            }
+          >
+            Download follow-up list for Excel
+          </Button>
+          <Button variant="secondary" onClick={refreshStatuses}>
+            Refresh statuses
+          </Button>
+        </div>
       </div>
 
       {error ? <Alert>{error}</Alert> : null}

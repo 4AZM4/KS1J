@@ -157,6 +157,12 @@ export type Database = {
         Update: { added_by?: string | null; approved_at?: string | null; approved_by?: string | null; created_at?: string; id?: string; source_ref?: string; status?: string; title?: string }
         Relationships: Rel[]
       }
+      institution_remittances: {
+        Row: { amount: number; created_at: string; id: string; institution_id: string; recorded_by: string | null; reference: string; remitted_on: string }
+        Insert: { amount: number; created_at?: string; id?: string; institution_id: string; recorded_by?: string | null; reference: string; remitted_on?: string }
+        Update: { amount?: number; created_at?: string; id?: string; institution_id?: string; recorded_by?: string | null; reference?: string; remitted_on?: string }
+        Relationships: Rel[]
+      }
       institutions: {
         Row: { added_by: string | null; city: string | null; created_at: string; id: string; ijazah_document_path: string; ijazah_verified_at: string | null; ijazah_verified_by: string | null; is_active: boolean; marja: string; name: string }
         Insert: { added_by?: string | null; city?: string | null; created_at?: string; id?: string; ijazah_document_path: string; ijazah_verified_at?: string | null; ijazah_verified_by?: string | null; is_active?: boolean; marja: string; name: string }
@@ -231,6 +237,7 @@ export type Database = {
       demo_confirm_payment: { Args: { p_id: string; p_kind: string }; Returns: undefined }
       has_role: { Args: { r: Database["public"]["Enums"]["admin_role"] }; Returns: boolean }
       household_loan_overdue: { Args: { p_household: string }; Returns: boolean }
+      institution_sehme_imam_balance: { Args: { p_institution: string }; Returns: number }
       is_staff: { Args: never; Returns: boolean }
       search_help: {
         Args: { max_results?: number; q: string }
