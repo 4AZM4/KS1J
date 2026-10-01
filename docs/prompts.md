@@ -9,7 +9,7 @@ Paste one per session, each on its own branch (`feat/<module>`). Always let Clau
 > Read CLAUDE.md and docs/modules/khums.md. Plan first. Build Khums setup, calculator (calculateKhums), pay Sehme Imam (verified institutions only) and pay Sehme Sadaat (Sadaat cases only), plus /admin/institutions and /admin/khums. Payments stay pending until a server confirms. Show the guidance line on every Khums screen.
 
 ## Education loans
-> Read CLAUDE.md and docs/modules/loans.md. Plan first. Build My loan, Declare income (monthlyInstalment), Pay instalment and Request pause in the app, and /admin/loans on the web. No interest or penalty anywhere.
+> Read CLAUDE.md and docs/modules/loans.md. Plan first. Build the repayment plan screen (checkEmiProposal, accept_loan_emi), AutoPay setup, My loan, Pay EMI and the hardship request in the app, and /admin/loans on the web (plans awaiting agreement, loan_followup_list by stage, hardship requests). No interest or penalty anywhere.
 
 ## Lawajam
 > Read CLAUDE.md and docs/modules/lawajam.md. Plan first. Build Give → Lawajam in the app and /admin/lawajam on the web.

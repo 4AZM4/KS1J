@@ -164,16 +164,111 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
 select pg_temp.expect_error($$update public.members set household_id = '10000000-0000-0000-0000-000000000001' where id = '00000000-0000-0000-0000-000000000020'$$,
   'Members cannot move themselves to another household');
 
--- 9. Loan repayment reduces the balance and funds the next student.
+-- 9. Loan repayment reduces the balance, moves the due date, and funds the next student.
 select pg_temp.as_system();
 insert into public.loan_repayments (id, loan_id, amount)
-select '50000000-0000-0000-0000-000000000001', id, 2000 from public.education_loans limit 1;
+values ('50000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', 2000);
 update public.loan_repayments set status = 'paid', gateway_ref = 'test_loan_1' where id = '50000000-0000-0000-0000-000000000001';
 do $$ begin
-  if (select outstanding from public.education_loans limit 1) <> 62000 then
+  if (select outstanding from public.education_loans where id = '60000000-0000-0000-0000-000000000001') <> 62000 then
     raise exception 'FAIL  outstanding should drop from 64000 to 62000';
   end if;
-  raise notice 'PASS  loan repayment reduces the balance and is recorded in the ledger';
+  if (select next_due_date from public.education_loans where id = '60000000-0000-0000-0000-000000000001')
+     <> (current_date + 10 + interval '1 month')::date then
+    raise exception 'FAIL  a full EMI should move the next due date by one month';
+  end if;
+  raise notice 'PASS  loan repayment reduces the balance, moves the due date and is recorded';
+end $$;
+
+-- 11. Repayment plan: the family and a trustee must agree the same EMI, above the floor.
+-- Abbas's loan: 60000 over at most 48 months → EMI floor 1250.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000007', 'general', 30000, 'Demo Nursing College', '00000000-0000-0000-0000-000000000004')$$,
+  'A loan cannot be paid out before the repayment plan is agreed');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_error($$select public.accept_loan_emi('60000000-0000-0000-0000-000000000002', 900)$$,
+  'An EMI below the floor is rejected');
+select public.accept_loan_emi('60000000-0000-0000-0000-000000000002', 1500);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select public.accept_loan_emi('60000000-0000-0000-0000-000000000002', 1500)$$,
+  'Someone outside the family or committee cannot agree the EMI');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select public.accept_loan_emi('60000000-0000-0000-0000-000000000002', 2000);
+do $$ begin
+  if (select agreed_emi from public.education_loans where id = '60000000-0000-0000-0000-000000000002') is not null then
+    raise exception 'FAIL  a counter-proposal must not count as agreement';
+  end if;
+  raise notice 'PASS  a trustee counter-proposal waits for the family';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select public.accept_loan_emi('60000000-0000-0000-0000-000000000002', 2000);
+select pg_temp.as_system();
+do $$ begin
+  if (select agreed_emi from public.education_loans where id = '60000000-0000-0000-0000-000000000002') <> 2000 then
+    raise exception 'FAIL  matching amounts should agree the plan';
+  end if;
+  if (select next_due_date from public.education_loans where id = '60000000-0000-0000-0000-000000000002')
+     <> (current_date + 365 + interval '6 months')::date then
+    raise exception 'FAIL  first EMI should fall due when the grace period ends';
+  end if;
+  raise notice 'PASS  family and trustee agree the EMI; first payment is due after the grace period';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_ok($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000007', 'general', 30000, 'Demo Nursing College', '00000000-0000-0000-0000-000000000004')$$,
+  'Once agreed, the loan can be paid out');
+
+-- 12. Follow-up ladder and pausing new non-emergency requests.
+select pg_temp.as_system();
+update public.education_loans set next_due_date = current_date - 35 where id = '60000000-0000-0000-0000-000000000001';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+do $$ begin
+  if (select stage from public.loan_followup_list() where loan_id = '60000000-0000-0000-0000-000000000001') <> 'committee_review' then
+    raise exception 'FAIL  a loan 35 days late should be at committee review';
+  end if;
+  raise notice 'PASS  follow-up list puts a 35-day overdue loan at committee review';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select * from public.loan_followup_list()$$,
+  'Members cannot see the follow-up list');
+-- Fatema is in Hussain's household.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$insert into public.cases (applicant_id, submitted_by, type, category, title, requested_amount)
+  values ('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000010', 'scholarship', 'sadaat', 'College fees', 50000)$$,
+  'New scholarship requests pause while a household loan is 30+ days overdue');
+select pg_temp.expect_ok($$insert into public.cases (applicant_id, submitted_by, type, category, title, requested_amount)
+  values ('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000010', 'medical', 'sadaat', 'Hospital bill', 20000)$$,
+  'Emergency medical requests are never paused');
+do $$ begin
+  if not exists (select 1 from public.education_loans where id = '60000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  the payer should be able to see the loan they pay';
+  end if;
+  raise notice 'PASS  the payer can see the loan they pay';
+end $$;
+
+-- 13. A hardship request (with proof) stops the ladder; an approved pause moves the due date.
+select pg_temp.expect_ok($$insert into public.loan_hardship_requests (id, loan_id, requested_by, kind, pause_months, reason, proof_path)
+  values ('70000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000010',
+          'pause', 3, 'Lost job', 'proof/demo-income.pdf')$$,
+  'The payer can request a hardship pause with proof');
+select pg_temp.expect_ok($$insert into public.cases (applicant_id, submitted_by, type, category, title, requested_amount)
+  values ('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000010', 'scholarship', 'sadaat', 'College fees', 50000)$$,
+  'A pending hardship review lifts the pause on new requests');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$update public.loan_hardship_requests set status = 'approved' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'Families cannot approve their own hardship request');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_ok($$update public.loan_hardship_requests set status = 'approved' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'A trustee approves the pause');
+select pg_temp.as_system();
+do $$ begin
+  if (select status from public.education_loans where id = '60000000-0000-0000-0000-000000000001') <> 'paused'
+     or (select next_due_date from public.education_loans where id = '60000000-0000-0000-0000-000000000001')
+        <> (current_date - 35 + interval '3 months')::date then
+    raise exception 'FAIL  an approved pause should pause the loan and move the due date by 3 months';
+  end if;
+  raise notice 'PASS  an approved pause moves the due date';
 end $$;
 
 -- 10. Khums shares must add up.
