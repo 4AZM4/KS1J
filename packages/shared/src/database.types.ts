@@ -231,6 +231,8 @@ export type Database = {
       }
       loan_followup_stage: { Args: { p_next_due: string; p_pending_hardship: boolean }; Returns: string }
       my_household: { Args: never; Returns: string }
+      refresh_loan_statuses: { Args: never; Returns: number }
+      start_autopay: { Args: { p_loan: string }; Returns: string }
     }
     Enums: {
       admin_role: "volunteer" | "verifier" | "trustee" | "finance" | "super_admin"

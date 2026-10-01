@@ -250,7 +250,7 @@ end $$;
 -- 13. A hardship request (with proof) stops the ladder; an approved pause moves the due date.
 select pg_temp.expect_ok($$insert into public.loan_hardship_requests (id, loan_id, requested_by, kind, pause_months, reason, proof_path)
   values ('70000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000010',
-          'pause', 3, 'Lost job', 'proof/demo-income.pdf')$$,
+          'pause', 3, 'Lost job', '00000000-0000-0000-0000-000000000010/demo-income.pdf')$$,
   'The payer can request a hardship pause with proof');
 select pg_temp.expect_ok($$insert into public.cases (applicant_id, submitted_by, type, category, title, requested_amount)
   values ('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000010', 'scholarship', 'sadaat', 'College fees', 50000)$$,
@@ -294,6 +294,47 @@ do $$ begin
   raise notice 'PASS  demo mode confirms your own donation through the normal triggers';
 end $$;
 update public.jamaat_settings set demo_mode = false;
+
+-- 15. Loans part 2: AutoPay needs an agreed plan; statuses follow dates; proofs must be your own files.
+select pg_temp.as_system();
+update public.education_loans set plan_agreed_at = null, agreed_emi = null where id = '60000000-0000-0000-0000-000000000002';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_error($$select public.start_autopay('60000000-0000-0000-0000-000000000002')$$,
+  'AutoPay cannot start before the repayment plan is agreed');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select public.start_autopay('60000000-0000-0000-0000-000000000001')$$,
+  'Someone who is not the student or payer cannot set up AutoPay');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$select public.start_autopay('60000000-0000-0000-0000-000000000001')$$,
+  'The payer can set up AutoPay once the plan is agreed');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$select public.refresh_loan_statuses()$$,
+  'Members cannot run the loan status job');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_error($$insert into public.loan_hardship_requests (loan_id, requested_by, kind, pause_months, reason, proof_path)
+  values ('60000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000010', 'pause', 2, 'x',
+          '00000000-0000-0000-0000-000000000011/someone-elses.pdf')$$,
+  'A hardship proof must be a file from your own folder');
+select pg_temp.expect_error($$insert into storage.objects (bucket_id, name) values ('documents', '00000000-0000-0000-0000-000000000011/x.pdf')$$,
+  'Nobody can upload into another member''s documents folder');
+select pg_temp.expect_ok($$insert into storage.objects (bucket_id, name) values ('documents', '00000000-0000-0000-0000-000000000010/x.pdf')$$,
+  'Members can upload into their own documents folder');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from storage.objects where name = '00000000-0000-0000-0000-000000000010/x.pdf') then
+    raise exception 'FAIL  another member should not see Fatema''s documents';
+  end if;
+  raise notice 'PASS  members cannot see other members'' documents';
+end $$;
+select pg_temp.as_system();
+update public.education_loans set course_end_date = current_date - 30 where id = '60000000-0000-0000-0000-000000000002';
+select public.refresh_loan_statuses();
+do $$ begin
+  if (select status from public.education_loans where id = '60000000-0000-0000-0000-000000000002') <> 'grace' then
+    raise exception 'FAIL  a loan whose course has ended should move to the grace period';
+  end if;
+  raise notice 'PASS  a finished course moves the loan into its grace period';
+end $$;
 
 -- 10. Khums shares must add up.
 select pg_temp.expect_error($$insert into public.khums_calculations (member_id, khums_year, surplus, khums_due, sehme_imam, sehme_sadaat)

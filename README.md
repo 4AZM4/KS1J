@@ -26,7 +26,7 @@ pnpm dev:mobile                           # scan the QR code with Expo Go
 supabase init                              # once, creates supabase/config.toml
 supabase start                             # local stack
 supabase db reset                          # applies migrations + seed.sql
-psql "$DATABASE_URL" -f supabase/tests/rules.sql   # 41 rule tests
+psql "$DATABASE_URL" -f supabase/tests/rules.sql   # 53 rule tests
 ```
 
 Migrations are owned by the backend lead. Add a new timestamped file; never edit one that is merged.
