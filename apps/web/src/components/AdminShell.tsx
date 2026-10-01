@@ -14,7 +14,7 @@ const adminNav: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin/cases", label: "Cases", icon: "users" },
   { href: "/admin/members", label: "Members to verify", icon: "user" },
   { href: "/admin/loans", label: "Education loans", icon: "cash" },
-  { href: "/admin/khums", label: "Khums & ledgers", icon: "report-money" },
+  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee" },
   { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank" },
   { href: "/admin/lawajam", label: "Lawajam", icon: "receipt" },
   { href: "/admin/flags", label: "Fraud flags", icon: "flag" },
