@@ -40,3 +40,4 @@ insert into public.member_roles (member_id, role) values
 
 -- Cases, institutions, loans, dues and announcements (also used by demo_reset.sql).
 \ir seed_data.sql
+\ir kb_demo.sql

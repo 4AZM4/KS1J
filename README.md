@@ -29,7 +29,7 @@ supabase db reset                          # applies migrations + seed.sql
 psql "$DATABASE_URL" -f supabase/tests/rules.sql   # 126 rule tests
 ```
 
-Demo day: run `supabase/demo_reset.sql` then `supabase/seed_data.sql` to put the demo back to a clean start
+Demo day: run `supabase/demo_reset.sql`, then `supabase/seed_data.sql`, then `supabase/kb_demo.sql` to put the demo back to a clean start
 (refuses unless demo mode is on). The walkthrough is in [`docs/demo-script.md`](docs/demo-script.md).
 
 Migrations are owned by the backend lead. Add a new timestamped file; never edit one that is merged.

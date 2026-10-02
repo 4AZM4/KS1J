@@ -2,6 +2,7 @@
 --
 -- 1. Run this file (Supabase SQL editor, or psql as the database owner).
 -- 2. Then run supabase/seed_data.sql to load the demo cases, loans and dues again.
+-- 3. Then run supabase/kb_demo.sql to load the demo helpdesk texts again.
 --
 -- It refuses to run unless jamaat_settings.demo_mode is on, so it can never touch a real
 -- Jamaat database. Member accounts (demo logins and anyone who signed up) are kept.

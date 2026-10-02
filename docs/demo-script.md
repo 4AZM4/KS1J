@@ -6,7 +6,7 @@ All people and amounts are fictional. Every demo account signs in with one tap o
 
 ## Before you start (10 minutes before judging)
 
-1. Reset the demo: run `supabase/demo_reset.sql`, then `supabase/seed_data.sql` (Supabase SQL editor).
+1. Reset the demo in the Supabase SQL editor: run `supabase/demo_reset.sql`, then `supabase/seed_data.sql`, then `supabase/kb_demo.sql` (the helpdesk texts).
    This clears test gifts, receipts, flags and notifications.
 2. Open two windows side by side: the **member app** on a phone (or a narrow browser window) and the **admin** on a laptop.
 3. Check the landing page loads and shows the "Welcome to KS1J" announcement.

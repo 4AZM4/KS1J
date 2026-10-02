@@ -1,4 +1,4 @@
--- Demo helpdesk texts: how the KS1J app works. Loaded by seed_data.sql.
+-- Demo helpdesk texts: how the KS1J app works. Run after seed_data.sql (seed.sql loads it for local tests).
 -- These are NOT Jamaat documents. Replace them with texts the Jamaat has approved before launch.
 -- Religious rulings are deliberately absent: the helpdesk sends those questions to the Marja' or the Jamaat's alim.
 
