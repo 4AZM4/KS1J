@@ -3,7 +3,7 @@
   <g transform="translate(10,10) scale(0.4688)">
     <rect width="512" height="512" rx="116" fill="#0B4D3A"/><polygon points="256.0,78.0 308.0,130.4 381.9,130.1 381.6,204.0 434.0,256.0 381.6,308.0 381.9,381.9 308.0,381.6 256.0,434.0 204.0,381.6 130.1,381.9 130.4,308.0 78.0,256.0 130.4,204.0 130.1,130.1 204.0,130.4" fill="#C9A24A"/>
   <polygon points="256.0,106.0 300.0,149.8 362.1,149.9 362.2,212.0 406.0,256.0 362.2,300.0 362.1,362.1 300.0,362.2 256.0,406.0 212.0,362.2 149.9,362.1 149.8,300.0 106.0,256.0 149.8,212.0 149.9,149.9 212.0,149.8" fill="none" stroke="#0B4D3A" stroke-width="6"/>
-  <path d="M264 150 H286 V334 H312 V356 H206 V334 H240 V196 L218 210 L206 190 Z" fill="#0B4D3A"/>
+  <path d="M236 171 H276 V323 H304 V341 H208 V323 H236 V205 L216 217 L208 201 Z" fill="#0B4D3A"/>
   </g>
   <g transform="translate(290,40)"><g fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linejoin="miter" stroke-linecap="butt"><path d="M11 0V112M74 0L13 66M38 50L80 112" /><path d="M166 22C158 9 145 2 129 2C110 2 97 13 97 29C97 62 170 50 170 83C170 100 155 110 135 110C117 110 103 102 95 88" /><path d="M342 0V76C342 98 329 110 309 110C292 110 281 101 276 88" /><path d="M210 22L232 6V112" stroke="#C9A24A" /></g></g>
   <text x="292" y="222" font-family="Atkinson Hyperlegible, DejaVu Sans, sans-serif" font-size="38" font-weight="700" fill="#CFE0D6" letter-spacing="1">One Jamaat. One app.</text>
