@@ -9,6 +9,9 @@ export const supabase = createKs1jClient(process.env.EXPO_PUBLIC_SUPABASE_URL, p
   auth: {
     // On web the browser's localStorage is used; on phones, AsyncStorage.
     storage: Platform.OS === 'web' ? undefined : AsyncStorage,
+    // Separate from the website's sign-in (same address on the web), so a staff login there
+    // never changes who is signed in to the app.
+    storageKey: 'ks1j-app-auth',
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

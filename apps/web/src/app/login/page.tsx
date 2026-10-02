@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@ks1j/shared";
 import { DEMO_MODE, errorMessage, supabase } from "@/lib/supabase";
 import { Alert, Button, Card, inputClass } from "@/components/ui";
+import { useAuth } from "@/components/auth";
 
 // Text-message codes need an SMS provider in Supabase; off until the Jamaat sets one up.
 const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
@@ -24,6 +25,7 @@ async function afterSignIn(): Promise<string> {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { session, member, isStaff, signOut } = useAuth();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -56,6 +58,22 @@ export default function LoginPage() {
       </p>
 
       {error ? <div className="mt-4"><Alert>{error}</Alert></div> : null}
+
+      {session ? (
+        <Card className="mt-6">
+          <p className="text-lg">
+            You are signed in as <strong>{member?.full_name ?? session.user.email}</strong>.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href={isStaff ? "/admin" : "/cases"} className="rounded-xl bg-deep px-5 py-3 text-base font-bold text-white">
+              {isStaff ? "Go to the dashboard" : "Go to cases"}
+            </Link>
+            <button onClick={() => void signOut()} className="rounded-xl border border-border px-5 py-3 text-base font-bold">
+              Sign in as someone else
+            </button>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="mt-6">
         <form

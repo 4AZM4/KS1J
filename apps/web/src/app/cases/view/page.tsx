@@ -22,8 +22,6 @@ import { DEMO_MODE, errorMessage, supabase } from "@/lib/supabase";
 
 const QUICK = [500, 1000, 5000];
 
-const MEMBER_APP_URL = process.env.NEXT_PUBLIC_MEMBER_APP_URL ?? "https://4azm4.github.io/KS1J/app/";
-
 export default function CaseViewPage() {
   return (
     <div className="flex-1 bg-paper text-ink">
@@ -134,9 +132,9 @@ function CaseView() {
         <div className="mt-6">
           <Alert tone="good">{thanks}</Alert>
           {receiptId ? (
-            <a href={`${MEMBER_APP_URL}receipt?kind=donation&id=${receiptId}`} className="mt-3 inline-block rounded-xl border border-border bg-card px-5 py-3 text-base font-bold text-brand hover:bg-paper">
+            <Link href={`/receipt?id=${receiptId}`} className="mt-3 inline-block rounded-xl border border-border bg-card px-5 py-3 text-base font-bold text-brand hover:bg-paper">
               View and print your receipt
-            </a>
+            </Link>
           ) : null}
         </div>
       ) : null}
