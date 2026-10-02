@@ -768,7 +768,9 @@ select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, a
   values ('20000000-0000-0000-0000-000000000003', 'general', 1000, 'Demo Hospital', '00000000-0000-0000-0000-000000000004')$$,
   'A case still raising money cannot be paid out');
 select pg_temp.as_system();
-select set_config('test.raised4', (select raised_amount::text from public.cases where id = '20000000-0000-0000-0000-000000000004'), false);
+-- What was actually given to case 4 from General (the seeded opening amount has no gifts behind it).
+select set_config('test.raised4', (select coalesce(sum(amount), 0)::text from public.donations
+  where case_id = '20000000-0000-0000-0000-000000000004' and fund = 'general' and status = 'paid'), false);
 select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
 do $$
 declare raised integer := current_setting('test.raised4')::integer;
@@ -776,13 +778,13 @@ begin
   begin
     insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
     values ('20000000-0000-0000-0000-000000000004', 'general', raised + 1, 'Demo Store', '00000000-0000-0000-0000-000000000004');
-    raise exception 'FAIL  paying out more than was raised should be refused';
+    raise exception 'FAIL  paying out more than was given should be refused';
   exception when others then
     if sqlerrm like 'FAIL%' then raise; end if;
   end;
   insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
   values ('20000000-0000-0000-0000-000000000004', 'general', raised, 'Demo Store', '00000000-0000-0000-0000-000000000004');
-  raise notice 'PASS  a funded case pays out up to what was raised, and no more';
+  raise notice 'PASS  a funded case pays out up to what was given, and no more';
 end $$;
 
 -- 18. An approved case cannot be quietly edited.
@@ -839,6 +841,40 @@ do $$ begin
       public.mask_identity('Lives at demo building a since 2026-09-14, call 98200 12345.', '{}', '{Demo Building A}');
   end if;
   raise notice 'PASS  addresses are hidden whatever their capitals; dates are not mistaken for phones';
+end $$;
+
+-- 22. Payouts come from the fund the money was given to.
+select pg_temp.as_system();
+do $$
+declare left_amount integer;
+begin
+  select target_amount - raised_amount into left_amount from public.cases where id = '20000000-0000-0000-0000-000000000003';
+  insert into public.donations (id, donor_id, fund, case_id, amount)
+  values ('40000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-000000000020', 'sehme_sadaat', '20000000-0000-0000-0000-000000000003', left_amount);
+  update public.donations set status = 'paid', gateway_ref = 'test_payout_fund' where id = '40000000-0000-0000-0000-0000000000f3';
+  if (select status from public.cases where id = '20000000-0000-0000-0000-000000000003') <> 'funded' then
+    raise exception 'FAIL  case 3 should now be funded';
+  end if;
+  perform set_config('test.sadaat3', (select sum(amount)::text from public.donations
+    where case_id = '20000000-0000-0000-0000-000000000003' and fund = 'sehme_sadaat' and status = 'paid'), false);
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'general', 1000, 'Demo Hospital', '00000000-0000-0000-0000-000000000004')$$,
+  'A case funded with Sehme Sadaat cannot be paid out from General');
+do $$
+declare given integer := current_setting('test.sadaat3')::integer;
+begin
+  begin
+    insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+    values ('20000000-0000-0000-0000-000000000003', 'sehme_sadaat', given + 1, 'Demo Hospital', '00000000-0000-0000-0000-000000000004');
+    raise exception 'FAIL  paying out more Sehme Sadaat than was given should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'sehme_sadaat', given, 'Demo Hospital', '00000000-0000-0000-0000-000000000004');
+  raise notice 'PASS  payouts come from the fund the money was given to, never another';
 end $$;
 
 rollback;

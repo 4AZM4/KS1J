@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Image, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, G, Path, Pattern, Polygon, Rect } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
@@ -92,15 +92,19 @@ export function Arch({ width, height, color = ART.gold, strokeWidth = 3 }: { wid
 export function Hero({ title, intro, id, children }: { title: string; intro?: string; id: string; children?: ReactNode }) {
   const { rtl } = useT();
   const align = rtl ? ({ textAlign: 'right', writingDirection: 'rtl' } as const) : null;
+  // On very narrow screens (small phones, the landing-page preview) the title needs the full width.
+  const narrow = useWindowDimensions().width < 360;
   return (
-    <View style={styles.hero} lightColor={ART.deep} darkColor={ART.deep}>
+    <View style={[styles.hero, narrow && styles.heroNarrow]} lightColor={ART.deep} darkColor={ART.deep}>
       <Lattice id={`lat-${id}`} />
-      <View style={styles.archWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
-        <Arch width={104} height={150} />
-        <View style={styles.archStar} lightColor="transparent" darkColor="transparent">
-          <Star size={30} />
+      {narrow ? null : (
+        <View style={styles.archWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
+          <Arch width={104} height={150} />
+          <View style={styles.archStar} lightColor="transparent" darkColor="transparent">
+            <Star size={30} />
+          </View>
         </View>
-      </View>
+      )}
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
         <Text accessibilityRole="header" style={[styles.heroTitle, align]}>
           {title}
@@ -121,6 +125,7 @@ export function accentStyle(accent?: 'gold' | 'lapis' | 'green'): StyleProp<View
 
 const styles = StyleSheet.create({
   hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 24, paddingLeft: 22, paddingRight: 120, minHeight: 150, marginBottom: 8 },
+  heroNarrow: { paddingRight: 22, minHeight: 0 },
   archWrap: { position: 'absolute', right: 14, bottom: -2, width: 104, height: 150 },
   archStar: { position: 'absolute', left: 37, top: 62 },
   heroText: { gap: 6 },

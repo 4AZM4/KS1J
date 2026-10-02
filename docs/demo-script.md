@@ -71,7 +71,7 @@ Landing page → **Create account** → the account starts *unverified* with no 
 ## Questions judges ask
 
 - **Is the money real?** Demo mode confirms payments instantly. In production, only the server marks a payment paid after the gateway (Razorpay) confirms it; apps can only create *pending* payments.
-- **What stops one person approving their own case?** A database trigger, tested by 126 automated rule tests that run on every change.
+- **What stops one person approving their own case?** A database trigger, tested by 128 automated rule tests that run on every change.
 - **Privacy?** Row-level security on every table. Public case cards come from one function with a generic title and a summary with names, phones and emails masked.
 - **Does the AI decide anything?** No. It reads receipts and flags mismatches, and the helpdesk only answers from approved sources. People verify, approve and pay.
 - **Elders?** Large text, plain words, four tabs, and Gujarati, Hindi and Urdu. Translations will be checked by native speakers before launch.

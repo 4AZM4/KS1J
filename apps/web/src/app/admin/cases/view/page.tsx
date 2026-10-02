@@ -87,6 +87,11 @@ function CaseDetail() {
     for (const d of dn.data ?? []) byFund[d.fund] = (byFund[d.fund] ?? 0) + d.amount;
     setPaidByFund(byFund);
     setPaidOut(ds.data ?? []);
+    // Start the payout form on the fund that still has money for this case (the database refuses any other).
+    const out: Record<string, number> = {};
+    for (const d of ds.data ?? []) out[d.fund] = (out[d.fund] ?? 0) + d.amount;
+    const left = (f: string) => (byFund[f] ?? 0) - (out[f] ?? 0);
+    setPayFund(left("sehme_sadaat") > left("general") ? "sehme_sadaat" : "general");
   }, [id]);
 
   useEffect(() => {
