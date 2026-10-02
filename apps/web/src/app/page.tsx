@@ -1,18 +1,21 @@
 import Link from "next/link";
-import { KHUMS_GUIDANCE } from "@ks1j/shared";
+import { KHUMS_GUIDANCE, type IconName } from "@ks1j/shared";
+import { Icon } from "@/components/Icon";
 import { Announcements } from "@/components/landing/Announcements";
 import { FundFlow } from "@/components/landing/FundFlow";
 import { KS1JLockup } from "@/components/landing/Mark";
 import { MihrabFrame } from "@/components/landing/MihrabFrame";
 import { StarLattice } from "@/components/landing/StarLattice";
+import { ArchSteps, BeforeScraps, KhumsPicture, PhoneFan, Redaction } from "@/components/landing/Visuals";
 
 // The member app (Expo, built for the web). Defaults to the public preview.
 const MEMBER_APP_URL = process.env.NEXT_PUBLIC_MEMBER_APP_URL ?? "https://4azm4.github.io/KS1J/app/";
 const LEAP_URL = "https://ksijleap.com/";
 
-const tabs = [
+const tabs: { name: string; icon: IconName; lead: string; items: string[] }[] = [
   {
     name: "Services",
+    icon: "lifebuoy",
     lead: "Ask for help and see where your request is.",
     items: [
       "Medical, education and ration assistance",
@@ -23,6 +26,7 @@ const tabs = [
   },
   {
     name: "Give",
+    icon: "heart-handshake",
     lead: "Pay what you owe and support families who need it.",
     items: [
       "Khums calculator, with Sehme Imam and Sehme Sadaat worked out for you",
@@ -32,6 +36,7 @@ const tabs = [
   },
   {
     name: "Learn",
+    icon: "book",
     lead: "Answers from the Jamaat's own sources.",
     items: [
       "Helpdesk that shows the source of every answer, or says it does not know",
@@ -41,12 +46,12 @@ const tabs = [
   },
 ];
 
-const steps = [
-  { title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
-  { title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
-  { title: "A different trustee approves", body: "The person who verified can never approve the same case." },
-  { title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
-  { title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },
+const steps: { title: string; body: string; icon: IconName }[] = [
+  { icon: "file-plus", title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
+  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
+  { icon: "rosette-discount-check", title: "A different trustee approves", body: "The person who verified can never approve the same case." },
+  { icon: "eye-off", title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
+  { icon: "building-bank", title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },
 ];
 
 const funds = [
@@ -132,17 +137,43 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Before and after: today's paper and messages, then one place */}
+        <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_1fr]">
+            <BeforeScraps />
+            <div>
+              <h2 className="max-w-[20ch] text-3xl font-bold tracking-tight sm:text-4xl">
+                Today, help travels on paper, office visits and forwarded messages.
+              </h2>
+              <p className="mt-4 max-w-[46ch] text-lg text-muted">
+                Families wait without knowing where their request is. Funds with strict rules sit in the same book.
+                KS1J puts every request, payment and answer in one place, with the rules checked every time.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section id="what" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <h2 className="max-w-[24ch] text-3xl font-bold tracking-tight sm:text-4xl">Four tabs. Nothing hidden in menus.</h2>
-          <p className="mt-3 max-w-[60ch] text-lg text-muted">
-            Large text, plain words and big buttons, so every member of the family can use it. Home shows Jamaat news;
-            the other three tabs are below.
-          </p>
+          <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]">
+            <div>
+              <h2 className="max-w-[24ch] text-3xl font-bold tracking-tight sm:text-4xl">Four tabs. Nothing hidden in menus.</h2>
+              <p className="mt-3 max-w-[52ch] text-lg text-muted">
+                Large text, plain words and big buttons, so every member of the family can use it. Home shows your
+                reminders and Jamaat news; the other three tabs are below.
+              </p>
+            </div>
+            <PhoneFan />
+          </div>
           <div className="mt-12 divide-y divide-border border-y border-border">
             {tabs.map((t) => (
               <div key={t.name} className="grid gap-4 py-8 md:grid-cols-[14rem_1fr] md:gap-10">
                 <div>
-                  <h3 className="text-2xl font-bold">{t.name}</h3>
+                  <h3 className="flex items-center gap-3 text-2xl font-bold">
+                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-deep text-gold">
+                      <Icon name={t.icon} size={28} />
+                    </span>
+                    {t.name}
+                  </h3>
                   <p className="mt-1 text-base text-muted">{t.lead}</p>
                 </div>
                 <ul className="grid gap-x-10 gap-y-3 text-lg sm:grid-cols-2">
@@ -177,20 +208,21 @@ export default function Home() {
             <p className="mt-3 max-w-[60ch] text-lg text-muted">
               No single person can approve help. The rule is enforced by the system itself, not just written down.
             </p>
-            <ol className="mt-12 grid gap-8 md:grid-cols-5 md:gap-6">
-              {steps.map((s, i) => (
-                <li key={s.title} className="relative">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-deep text-lg font-bold text-white">
-                      {i + 1}
-                    </span>
-                    {i < steps.length - 1 ? <span aria-hidden="true" className="hidden h-px flex-1 bg-border md:block" /> : null}
-                  </div>
-                  <h3 className="mt-4 text-lg font-bold">{s.title}</h3>
-                  <p className="mt-1 text-base leading-relaxed text-muted">{s.body}</p>
-                </li>
-              ))}
-            </ol>
+            <ArchSteps steps={steps} />
+          </div>
+        </section>
+
+        <section id="privacy" className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-14">
+            <div>
+              <h2 className="max-w-[20ch] text-3xl font-bold tracking-tight sm:text-4xl">Donors see the need, never the person</h2>
+              <p className="mt-3 max-w-[46ch] text-lg text-muted">
+                Before a case is shown to donors, the system hides the family&apos;s names, phone numbers, emails and
+                address, even if someone typed them by mistake. The committee sees the public card before it goes live.
+              </p>
+              <p className="mt-4 max-w-[46ch] text-base text-muted">The family in this example is made up.</p>
+            </div>
+            <Redaction />
           </div>
         </section>
 
@@ -219,7 +251,21 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        <section id="khums" className="bg-card">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-14">
+            <div>
+              <h2 className="max-w-[20ch] text-3xl font-bold tracking-tight sm:text-4xl">Khums, worked out for you</h2>
+              <p className="mt-3 max-w-[46ch] text-lg text-muted">
+                Enter what is left at your Khums year-end. The app works out each share and sends it only where it is
+                allowed to go, with a receipt.
+              </p>
+              <p className="mt-4 max-w-[46ch] rounded-xl border border-border bg-background px-4 py-3 text-base">{KHUMS_GUIDANCE}</p>
+            </div>
+            <KhumsPicture />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">From the Jamaat</h2>
           <div className="mt-8">
             <Announcements />

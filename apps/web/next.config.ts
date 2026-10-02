@@ -7,6 +7,8 @@ const pagesBasePath = process.env.PAGES_BASE_PATH;
 const nextConfig: NextConfig = {
   // The shared package ships TypeScript source; Next compiles it with the app.
   transpilePackages: ["@ks1j/shared"],
+  // Lets plain <img> tags find files in public/ when the site is served from a sub-path.
+  env: { NEXT_PUBLIC_BASE_PATH: pagesBasePath ?? "" },
   ...(pagesBasePath
     ? { output: "export" as const, basePath: pagesBasePath, trailingSlash: true, images: { unoptimized: true } }
     : {}),

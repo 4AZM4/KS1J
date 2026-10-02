@@ -1,16 +1,16 @@
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Redirect, Tabs } from 'expo-router';
-import { ActivityIndicator, View, type ColorValue } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import type { IconName } from '@ks1j/shared';
 
 import Colors from '@/constants/Colors';
+import { Icon } from '@/components/Icon';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useAuth } from '@/lib/auth';
 
-type IconName = SymbolViewProps['name'];
-
-function TabIcon({ name, color }: { name: IconName; color: ColorValue }) {
-  return <SymbolView name={name} tintColor={color} size={26} />;
+// Tabler icons, the same set as the website and the pitch deck.
+function TabIcon({ name, color }: { name: IconName; color: string }) {
+  return <Icon name={name} color={color} size={26} strokeWidth={2} />;
 }
 
 // KS1J has exactly four tabs. New features go inside one of them, never as a fifth tab.
@@ -44,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <TabIcon name={{ ios: 'house.fill', android: 'home', web: 'home' }} color={color} />
+            <TabIcon name="home" color={String(color)} />
           ),
         }}
       />
@@ -53,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: 'Services',
           tabBarIcon: ({ color }) => (
-            <TabIcon name={{ ios: 'hands.sparkles.fill', android: 'volunteer_activism', web: 'volunteer_activism' }} color={color} />
+            <TabIcon name="lifebuoy" color={String(color)} />
           ),
         }}
       />
@@ -62,7 +62,7 @@ export default function TabLayout() {
         options={{
           title: 'Give',
           tabBarIcon: ({ color }) => (
-            <TabIcon name={{ ios: 'heart.fill', android: 'favorite', web: 'favorite' }} color={color} />
+            <TabIcon name="heart-handshake" color={String(color)} />
           ),
         }}
       />
@@ -71,7 +71,7 @@ export default function TabLayout() {
         options={{
           title: 'Learn',
           tabBarIcon: ({ color }) => (
-            <TabIcon name={{ ios: 'book.fill', android: 'menu_book', web: 'menu_book' }} color={color} />
+            <TabIcon name="book" color={String(color)} />
           ),
         }}
       />

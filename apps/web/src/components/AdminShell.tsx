@@ -1,23 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import type { IconName } from "@ks1j/shared";
+import { Icon } from "@/components/Icon";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { ROLE_LABEL } from "@ks1j/shared";
 import { useAuth } from "@/components/auth";
 import { Button, Card } from "@/components/ui";
 
-const adminNav = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/cases", label: "Cases" },
-  { href: "/admin/members", label: "Members to verify" },
-  { href: "/admin/loans", label: "Education loans" },
-  { href: "/admin/khums", label: "Khums & ledgers" },
-  { href: "/admin/institutions", label: "Sehme Imam institutions" },
-  { href: "/admin/lawajam", label: "Lawajam" },
-  { href: "/admin/flags", label: "Fraud flags" },
-  { href: "/admin/announcements", label: "Announcements" },
-  { href: "/admin/helpdesk", label: "Helpdesk" },
+const adminNav: { href: string; label: string; icon: IconName }[] = [
+  { href: "/admin", label: "Overview", icon: "layout-dashboard" },
+  { href: "/admin/cases", label: "Cases", icon: "users" },
+  { href: "/admin/members", label: "Members to verify", icon: "user" },
+  { href: "/admin/loans", label: "Education loans", icon: "cash" },
+  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee" },
+  { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank" },
+  { href: "/admin/lawajam", label: "Lawajam", icon: "receipt" },
+  { href: "/admin/flags", label: "Fraud flags", icon: "flag" },
+  { href: "/admin/announcements", label: "Announcements", icon: "speakerphone" },
+  { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question" },
 ] as const;
 
 // Access is enforced by Supabase RLS on every query. This gate only keeps non-staff
@@ -71,8 +73,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`block whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-background font-semibold text-brand" : "hover:bg-background"}`}
+                  className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-background font-semibold text-brand" : "hover:bg-background"}`}
                 >
+                  <Icon name={item.icon} size={20} className={active ? "text-brand" : "text-muted"} />
                   {item.label}
                 </Link>
               </li>

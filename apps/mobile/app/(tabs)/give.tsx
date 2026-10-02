@@ -4,6 +4,7 @@ import { KHUMS_GUIDANCE, calculateKhums } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
+import { ART } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -40,6 +41,21 @@ function KhumsQuickCalc() {
         <Text style={styles.resultLabel}>Khums due (20%)</Text>
         <Text style={styles.resultValue}>{rupees(result.khumsDue)}</Text>
       </View>
+      {result.khumsDue > 0 ? (
+        <View
+          style={styles.split}
+          lightColor="transparent"
+          darkColor="transparent"
+          accessible
+          accessibilityLabel={`Split in two: Sehme Imam ${rupees(result.sehmeImam)}, Sehme Sadaat ${rupees(result.sehmeSadaat)}`}>
+          <View style={[styles.splitPart, { flex: result.sehmeImam || 1, backgroundColor: ART.lapis }]}>
+            <Text style={styles.splitText}>Imam</Text>
+          </View>
+          <View style={[styles.splitPart, { flex: result.sehmeSadaat || 1, backgroundColor: ART.gold }]}>
+            <Text style={[styles.splitText, { color: ART.darkest }]}>Sadaat</Text>
+          </View>
+        </View>
+      ) : null}
       <View style={styles.resultRow} lightColor="transparent" darkColor="transparent">
         <Text style={[styles.resultLabel, { color: muted }]}>Sehme Imam</Text>
         <Text style={[styles.resultLabel, { color: muted }]}>{rupees(result.sehmeImam)}</Text>
@@ -57,17 +73,17 @@ function KhumsQuickCalc() {
 
 export default function GiveScreen() {
   return (
-    <Screen title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
+    <Screen hero title="Give" intro="Every rupee goes through the Jamaat's account and is recorded.">
       <SectionLabel>Khums</SectionLabel>
       <KhumsQuickCalc />
-      <FeatureCard title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
-      <FeatureCard title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
-      <FeatureCard title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
+      <FeatureCard icon="calculator" title="Full Khums calculator" description="Set your year-end, save your calculation, track what is left to pay." href="/khums" />
+      <FeatureCard accent="lapis" icon="building-bank" title="Pay Sehme Imam" description="Goes only to institutions holding ijazah from a Marja'." href="/khums-imam" />
+      <FeatureCard accent="gold" icon="heart-handshake" title="Pay Sehme Sadaat" description="Goes only to verified Sadaat (Syed) cases. Pick a case to give." href="/cases/sadaat" />
       <SectionLabel>Support a case</SectionLabel>
-      <FeatureCard title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
-      <FeatureCard title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
+      <FeatureCard accent="gold" icon="users" title="Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/sadaat" />
+      <FeatureCard accent="green" icon="users-group" title="Non-Sadaat cases" description="Verified needs, approved by two Jamaat admins." href="/cases/non_sadaat" />
       <SectionLabel>Dues</SectionLabel>
-      <FeatureCard title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
+      <FeatureCard icon="receipt" title="Lawajam" description="See what is due, pay and see receipts." href="/lawajam" />
     </Screen>
   );
 }
@@ -81,4 +97,7 @@ const styles = StyleSheet.create({
   resultLabel: { fontSize: 16 },
   resultValue: { fontSize: 20, fontWeight: '700' },
   note: { fontSize: 14, marginTop: 12, lineHeight: 20 },
+  split: { flexDirection: 'row', height: 40, borderRadius: 12, overflow: 'hidden', marginTop: 12, gap: 3 },
+  splitPart: { justifyContent: 'center', alignItems: 'center' },
+  splitText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
 });

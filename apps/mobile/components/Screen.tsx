@@ -1,15 +1,23 @@
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
+import { Hero } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
 
-export function Screen({ title, intro, children }: { title: string; intro?: string; children: ReactNode }) {
+/** A scrolling page. `hero` shows the title on the deep green Jamaat banner (used on the four tabs and sign-in). */
+export function Screen({ title, intro, hero, children }: { title: string; intro?: string; hero?: boolean; children: ReactNode }) {
   const bg = useThemeColor({}, 'background');
   const muted = useThemeColor({}, 'mutedText');
   return (
     <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{title}</Text>
-      {intro ? <Text style={[styles.intro, { color: muted }]}>{intro}</Text> : null}
+      {hero ? (
+        <Hero title={title} intro={intro} id={title.toLowerCase().replace(/[^a-z0-9]+/g, '-')} />
+      ) : (
+        <>
+          <Text style={styles.title}>{title}</Text>
+          {intro ? <Text style={[styles.intro, { color: muted }]}>{intro}</Text> : null}
+        </>
+      )}
       <View style={styles.body} lightColor="transparent" darkColor="transparent">
         {children}
       </View>
