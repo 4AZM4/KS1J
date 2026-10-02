@@ -8,8 +8,7 @@ import {
   formatDate,
   rupees,
   type DocumentKind,
-  type Tables,
-} from "@ks1j/shared";
+  type Tables, uploadProblem } from "@ks1j/shared";
 import { errorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { Button, Card, inputClass } from "@/components/ui";
@@ -86,6 +85,8 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
 
   async function add() {
     if (!session || !file) return;
+    const problem = uploadProblem(file.size, file.type, file.name);
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
     try {

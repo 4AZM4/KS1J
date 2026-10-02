@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatDate, type Tables } from "@ks1j/shared";
+import { formatDate, type Tables, uploadProblem } from "@ks1j/shared";
 import { errorMessage, supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
@@ -166,9 +166,11 @@ function AddInstitution({ onDone, onError }: { onDone: (m: string) => void; onEr
 
   async function add() {
     if (!session || !file) return;
+    const problem = uploadProblem(file.size, file.type, file.name);
+    if (problem) return onError(new Error(problem));
     setBusy(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "pdf";
       const path = `${session.user.id}/ijazah-${Date.now()}.${ext}`;
       const up = await supabase().storage.from("documents").upload(path, file, { contentType: file.type || "application/pdf" });
       if (up.error) throw up.error;
