@@ -8,6 +8,7 @@ import { useEffect, type ReactNode } from "react";
 import { ROLE_LABEL } from "@ks1j/shared";
 import { useAuth } from "@/components/auth";
 import { Button, Card } from "@/components/ui";
+import { KS1JLockup } from "@/components/landing/Mark";
 
 const adminNav: { href: string; label: string; icon: IconName }[] = [
   { href: "/admin", label: "Overview", icon: "layout-dashboard" },
@@ -63,7 +64,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col sm:flex-row">
       <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-brand">KS1J Admin</Link>
+        <Link href="/" aria-label="KS1J home" className="flex items-center gap-2"><KS1JLockup size="sm" /><span className="text-sm font-semibold uppercase tracking-wide text-brand">Admin</span></Link>
         <p className="mt-3 text-sm font-semibold">{member?.full_name}</p>
         <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
         <ul className="mt-4 flex gap-1 overflow-x-auto sm:flex-col">

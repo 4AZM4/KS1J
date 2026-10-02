@@ -40,14 +40,43 @@ export function Lattice({ id, opacity = 0.18, color = ART.gold, size = 72 }: { i
   );
 }
 
-/** The KS1J eight-pointed star. */
-export function Star({ size = 48, color = ART.gold }: { size?: number; color?: string }) {
+const STAR =
+  '256.0,78.0 308.0,130.4 381.9,130.1 381.6,204.0 434.0,256.0 381.6,308.0 381.9,381.9 308.0,381.6 256.0,434.0 204.0,381.6 130.1,381.9 130.4,308.0 78.0,256.0 130.4,204.0 130.1,130.1 204.0,130.4';
+const STAR_LINE =
+  '256.0,106.0 300.0,149.8 362.1,149.9 362.2,212.0 406.0,256.0 362.2,300.0 362.1,362.1 300.0,362.2 256.0,406.0 212.0,362.2 149.9,362.1 149.8,300.0 106.0,256.0 149.8,212.0 149.9,149.9 212.0,149.8';
+const ONE = 'M264 150 H286 V334 H312 V356 H206 V334 H240 V196 L218 210 L206 190 Z';
+
+/** The KS1J star: a gold khatam with a "1" in the middle (one place for the whole Jamaat). See docs/brand/. */
+export function Star({ size = 48, color = ART.gold, ink = ART.deep }: { size?: number; color?: string; ink?: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 480 480" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Rect x={120} y={120} width={240} height={240} fill="none" stroke={color} strokeWidth={18} />
-      <Polygon points="240,70 410,240 240,410 70,240" fill="none" stroke={color} strokeWidth={18} />
-      <Circle cx={240} cy={240} r={34} fill={color} />
+    <Svg width={size} height={size} viewBox="78 78 356 356" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Polygon points={STAR} fill={color} />
+      <Polygon points={STAR_LINE} fill="none" stroke={ink} strokeWidth={6} />
+      <Path d={ONE} fill={ink} />
     </Svg>
+  );
+}
+
+/** The KS1J logo: the star on a green tile, then the letters with a gold "1". */
+export function Logo({ height = 40, tone = 'ink' }: { height?: number; tone?: 'ink' | 'light' }) {
+  const main = tone === 'light' ? '#FFFFFF' : ART.deep;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: height * 0.25 }} lightColor="transparent" darkColor="transparent" accessible accessibilityLabel="KS1J">
+      <Svg width={height} height={height} viewBox="0 0 512 512">
+        <Rect width={512} height={512} rx={116} fill={ART.deep} />
+        <Polygon points={STAR} fill={ART.gold} />
+        <Polygon points={STAR_LINE} fill="none" stroke={ART.deep} strokeWidth={6} />
+        <Path d={ONE} fill={ART.deep} />
+      </Svg>
+      <Svg width={height * 0.66 * (378 / 136)} height={height * 0.66} viewBox="-12 -12 378 136">
+        <G fill="none" stroke={main} strokeWidth={22}>
+          <Path d="M11 0V112M74 0L13 66M38 50L80 112" />
+          <Path d="M166 22C158 9 145 2 129 2C110 2 97 13 97 29C97 62 170 50 170 83C170 100 155 110 135 110C117 110 103 102 95 88" />
+          <Path d="M342 0V76C342 98 329 110 309 110C292 110 281 101 276 88" />
+          <Path d="M210 22L232 6V112" stroke={ART.gold} />
+        </G>
+      </Svg>
+    </View>
   );
 }
 
@@ -78,7 +107,7 @@ export function Hero({ title, intro, id, children }: { title: string; intro?: st
       <View style={styles.archWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
         <Arch width={104} height={150} />
         <View style={styles.archStar} lightColor="transparent" darkColor="transparent">
-          <Star size={38} />
+          <Star size={30} />
         </View>
       </View>
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
@@ -102,7 +131,7 @@ export function accentStyle(accent?: 'gold' | 'lapis' | 'green'): StyleProp<View
 const styles = StyleSheet.create({
   hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 24, paddingLeft: 22, paddingRight: 120, minHeight: 150, marginBottom: 8 },
   archWrap: { position: 'absolute', right: 14, bottom: -2, width: 104, height: 150 },
-  archStar: { position: 'absolute', left: 33, top: 58 },
+  archStar: { position: 'absolute', left: 37, top: 62 },
   heroText: { gap: 6 },
   heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', lineHeight: 36 },
   heroIntro: { color: ART.mint, fontSize: 17, lineHeight: 24 },

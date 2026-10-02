@@ -44,7 +44,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen hero title={t('home.salaam')} intro={t('login.intro')}>
+    <Screen hero logo title={t('home.salaam')} intro={t('login.intro')}>
       <LanguagePicker />
       {error ? <Banner>{error}</Banner> : null}
       <Field

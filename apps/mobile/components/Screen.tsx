@@ -1,18 +1,23 @@
 import { useId, type ReactNode } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
-import { Hero } from '@/components/Art';
+import { Hero, Logo } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { useT } from '@/lib/i18n';
 
 /** A scrolling page. `hero` shows the title on the deep green Jamaat banner (used on the four tabs and sign-in). */
-export function Screen({ title, intro, hero, children }: { title: string; intro?: string; hero?: boolean; children: ReactNode }) {
+export function Screen({ title, intro, hero, logo, children }: { title: string; intro?: string; hero?: boolean; logo?: boolean; children: ReactNode }) {
   const bg = useThemeColor({}, 'background');
   const muted = useThemeColor({}, 'mutedText');
   // A unique pattern id per screen: titles in Gujarati, Hindi or Urdu have no a-z letters to make one from.
   const heroId = `screen${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.content}>
+      {logo ? (
+        <View style={styles.logo} lightColor="transparent" darkColor="transparent">
+          <Logo height={44} />
+        </View>
+      ) : null}
       {hero ? (
         <Hero title={title} intro={intro} id={heroId} />
       ) : (
@@ -39,5 +44,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '700' },
   intro: { fontSize: 16, lineHeight: 22, marginTop: 6 },
   body: { marginTop: 20 },
+  logo: { marginBottom: 16 },
   section: { fontSize: 13, fontWeight: '600', letterSpacing: 0.6, marginTop: 12, marginBottom: 10 },
 });

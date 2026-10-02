@@ -135,7 +135,7 @@ export default function ReceiptScreen() {
       <View style={[styles.receipt, { borderColor: ART.gold }]}>
         <View style={styles.head} lightColor={ART.deep} darkColor={ART.deep}>
           <Lattice id="lat-receipt" opacity={0.16} />
-          <Star size={44} />
+          <Star size={38} />
           <View lightColor="transparent" darkColor="transparent" style={{ flex: 1 }}>
             <Text style={styles.org}>KSI Jamaat Mumbai</Text>
             <Text style={styles.orgSub}>Payment receipt{DEMO_MODE ? ' (demo)' : ''}</Text>
