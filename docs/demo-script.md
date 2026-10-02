@@ -10,7 +10,7 @@ All people and amounts are fictional. Every demo account signs in with one tap o
    This clears test gifts, receipts, flags and notifications.
 2. Open two windows side by side: the **member app** on a phone (or a narrow browser window) and the **admin** on a laptop.
 3. Check the landing page loads and shows the "Welcome to KS1J" announcement.
-4. Have a fee receipt PDF ready that says **₹36,000** (the request will say ₹40,000).
+4. Have `docs/demo/fee-receipt-36000.pdf` on the phone or laptop: a fictional receipt that says **₹36,000** (the request will say ₹40,000).
 
 ## 1. The problem, in one line (30 s)
 
