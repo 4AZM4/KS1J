@@ -1,4 +1,4 @@
 :HL["/KS1J/_next/static/chunks/2f5xrzmv___8b.css","style"]
 :HL["https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap","style"]
-:HL["/KS1J/brand/ks1j-badge.png","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"rjWA0BVArpy4J_Pg4ahu6"}
+:HL["/KS1J/brand/ks1j-logo.png","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}},"staleTime":300,"buildId":"xQJ9nju7BTK3QWMydvA8r"}
