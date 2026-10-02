@@ -55,12 +55,12 @@ export function Star({ size = 48, color = ART.gold, ink = ART.deep }: { size?: n
   );
 }
 
-/** The KS1J logo: the badge image, then the letters with a gold "1". See docs/brand/. */
+/** The KS1J logo: the star image, then the letters with a gold "1". See docs/brand/. */
 export function Logo({ height = 40, tone = 'ink' }: { height?: number; tone?: 'ink' | 'light' }) {
   const main = tone === 'light' ? '#FFFFFF' : ART.deep;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: height * 0.25 }} lightColor="transparent" darkColor="transparent" accessible accessibilityLabel="KS1J">
-      <Image source={require('@/assets/images/ks1j-badge.png')} style={{ width: height * 1.2, height: height * 1.2 }} accessibilityIgnoresInvertColors />
+      <Image source={require('@/assets/images/ks1j-logo.png')} style={{ width: height * 1.2, height: height * 1.2 }} accessibilityIgnoresInvertColors />
       <Svg width={height * 0.6 * (2258 / 696)} height={height * 0.6} viewBox="0 -682 2258 696">
         <Path transform="translate(-44 0)" d="M44 0V-668H202V-403L443 -668H636L372 -382L649 0H466L270 -272L202 -197V0Z" fill={main} />
         <Path transform="translate(-44 0)" d="M993 12Q884 12 809.5 -32.5Q735 -77 704 -157L848 -209Q862 -161 900.5 -138.0Q939 -115 994 -115Q1023 -115 1050.0 -121.5Q1077 -128 1095.0 -143.5Q1113 -159 1113 -185Q1113 -220 1079.0 -239.5Q1045 -259 991 -269L910 -285Q856 -296 809.5 -318.5Q763 -341 735.0 -378.5Q707 -416 707 -473Q707 -527 732.0 -566.0Q757 -605 798.5 -630.0Q840 -655 890.0 -667.5Q940 -680 990 -680Q1044 -680 1094.5 -665.0Q1145 -650 1185.0 -618.5Q1225 -587 1246 -535L1103 -483Q1090 -517 1056.5 -535.0Q1023 -553 976 -553Q930 -553 899.5 -536.5Q869 -520 869 -489Q869 -464 890.0 -446.0Q911 -428 945 -421L1035 -403Q1076 -395 1118.0 -382.5Q1160 -370 1195.5 -349.5Q1231 -329 1253.0 -295.0Q1275 -261 1275 -209Q1275 -156 1250.5 -114.5Q1226 -73 1185.5 -45.0Q1145 -17 1095.0 -2.5Q1045 12 993 12Z" fill={main} />

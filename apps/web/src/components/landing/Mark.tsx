@@ -1,13 +1,13 @@
 /**
- * KS1J logo: two open hands holding the Jamaat, with KS1J below, in a green ring.
- * The image is the team's logo file (docs/brand/ks1j-badge.png); keep this file and that one in step.
+ * KS1J logo: two open hands holding the Jamaat, with KS1J below, inside an eight-pointed star.
+ * The image is docs/brand/ks1j-logo.png; keep this file and that one in step.
  */
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export function KS1JMark({ className = "", title }: { className?: string; title?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={`${BASE}/brand/ks1j-badge.png`} alt={title ?? ""} aria-hidden={title ? undefined : true} className={`rounded-full bg-white ${className}`} />
+    <img src={`${BASE}/brand/ks1j-logo.png`} alt={title ?? ""} aria-hidden={title ? undefined : true} className={className} />
   );
 }
 
