@@ -1,10 +1,10 @@
 import * as Print from 'expo-print';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { Image, Platform, StyleSheet } from 'react-native';
 import { FUND_LABEL, KHUMS_GUIDANCE, formatDate, rupees } from '@ks1j/shared';
 
-import { ART, Lattice, Star } from '@/components/Art';
+import { ART, Lattice } from '@/components/Art';
 import { Screen } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button } from '@/components/ui';
@@ -135,7 +135,7 @@ export default function ReceiptScreen() {
       <View style={[styles.receipt, { borderColor: ART.gold }]}>
         <View style={styles.head} lightColor={ART.deep} darkColor={ART.deep}>
           <Lattice id="lat-receipt" opacity={0.16} />
-          <Star size={38} />
+          <Image source={require('@/assets/images/ks1j-badge.png')} style={styles.badge} accessibilityIgnoresInvertColors />
           <View lightColor="transparent" darkColor="transparent" style={{ flex: 1 }}>
             <Text style={styles.org}>KSI Jamaat Mumbai</Text>
             <Text style={styles.orgSub}>Payment receipt{DEMO_MODE ? ' (demo)' : ''}</Text>
@@ -173,6 +173,7 @@ function Line({ k, v, border, muted }: { k: string; v: string; border: string; m
 const styles = StyleSheet.create({
   receipt: { borderWidth: 3, borderRadius: 20, overflow: 'hidden', marginBottom: 16 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, overflow: 'hidden' },
+  badge: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#FFFFFF' },
   org: { color: '#FFFFFF', fontSize: 20, fontWeight: '700' },
   orgSub: { color: ART.mint, fontSize: 15, marginTop: 2 },
   inner: { padding: 18 },
