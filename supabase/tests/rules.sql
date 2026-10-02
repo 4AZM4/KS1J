@@ -456,6 +456,9 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000099');
 select pg_temp.expect_error($$update public.members set household_id = '10000000-0000-0000-0000-000000000001'
   where id = '00000000-0000-0000-0000-000000000099'$$,
   'A new member cannot put themselves in a household');
+select pg_temp.expect_error($$update public.members set membership_verified = true
+  where id = '00000000-0000-0000-0000-000000000099'$$,
+  'A new member cannot mark themselves verified');
 do $$ begin
   if exists (select 1 from public.lawajam_dues) then
     raise exception 'FAIL  a member without a household should see no household dues';
