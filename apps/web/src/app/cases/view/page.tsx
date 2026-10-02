@@ -22,6 +22,8 @@ import { DEMO_MODE, errorMessage, supabase } from "@/lib/supabase";
 
 const QUICK = [500, 1000, 5000];
 
+const MEMBER_APP_URL = process.env.NEXT_PUBLIC_MEMBER_APP_URL ?? "https://4azm4.github.io/KS1J/app/";
+
 export default function CaseViewPage() {
   return (
     <div className="flex-1 bg-paper text-ink">
@@ -43,6 +45,7 @@ function CaseView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState<string | null>(null);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const load = useCallback(() => {
     supabase()
@@ -82,6 +85,7 @@ function CaseView() {
     setBusy(true);
     setError(null);
     setThanks(null);
+    setReceiptId(null);
     try {
       const db = supabase();
       const { data, error } = await db
@@ -95,6 +99,7 @@ function CaseView() {
         const { error: payError } = await db.rpc("demo_confirm_payment", { p_kind: "donation", p_id: data.id });
         if (payError) throw payError;
         setThanks(`Thank you. ${rupees(amountNumber)} as ${FUND_LABEL[fund]} is recorded in the Jamaat ledger.`);
+        setReceiptId(data.id);
       } else {
         setThanks("Your donation is waiting for payment confirmation from the bank.");
       }
@@ -125,7 +130,16 @@ function CaseView() {
         <p className="mt-3 text-base text-muted">{CASE_PRIVACY_NOTE}</p>
       </Card>
 
-      {thanks ? <div className="mt-6"><Alert tone="good">{thanks}</Alert></div> : null}
+      {thanks ? (
+        <div className="mt-6">
+          <Alert tone="good">{thanks}</Alert>
+          {receiptId ? (
+            <a href={`${MEMBER_APP_URL}receipt?kind=donation&id=${receiptId}`} className="mt-3 inline-block rounded-xl border border-border bg-card px-5 py-3 text-base font-bold text-brand hover:bg-paper">
+              View and print your receipt
+            </a>
+          ) : null}
+        </div>
+      ) : null}
       {error ? <div className="mt-6"><Alert>{error}</Alert></div> : null}
 
       {closed ? (

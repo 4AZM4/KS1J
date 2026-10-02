@@ -4,7 +4,11 @@ import type { FollowUpStage } from './loans';
 
 type LoanStatus = Enums<'loan_status'>;
 
-export const rupees = (n: number | null | undefined) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
+/** ₹1,20,000 in the Indian grouping; a negative amount reads −₹500, never ₹-500. */
+export const rupees = (n: number | null | undefined) => {
+  const v = n ?? 0;
+  return `${v < 0 ? '−' : ''}₹${Math.abs(v).toLocaleString('en-IN')}`;
+};
 
 export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   medical: 'Medical',

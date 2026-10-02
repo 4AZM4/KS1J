@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@ks1j/shared";
@@ -46,7 +47,9 @@ export default function LoginPage() {
   const phoneE164 = () => (phone.startsWith("+") ? phone : `+91${phone.replace(/\D/g, "")}`);
 
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+    <div className="flex-1 bg-paper text-ink">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-md px-4 py-12">
       <h1 className="text-2xl font-bold">Sign in to KS1J</h1>
       <p className="mt-2 text-muted">
         New to KS1J? <Link href="/signup" className="font-semibold text-brand underline">Create an account</Link>
@@ -144,5 +147,6 @@ export default function LoginPage() {
         </section>
       ) : null}
     </main>
+    </div>
   );
 }

@@ -82,10 +82,11 @@ export default function Home() {
           <Link href="/help" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
             Helpdesk
           </Link>
-          <Link href="/login" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
+          <Link href="/login" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110 sm:bg-transparent sm:text-ink sm:hover:bg-card sm:hover:brightness-100">
             Sign in
           </Link>
-          <Link href="/signup" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110">
+          {/* On phones the hero already has "Create an account", so the header keeps to one row. */}
+          <Link href="/signup" className="hidden rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110 sm:inline-block">
             Create account
           </Link>
         </nav>
