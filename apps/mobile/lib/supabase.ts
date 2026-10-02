@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Platform } from 'react-native';
-import { createKs1jClient } from '@ks1j/shared';
+import { createKs1jClient, friendlyAuthError } from '@ks1j/shared';
 
 // One client for the app. Every query runs as the signed-in member, so Supabase RLS
 // decides what they can see. Only the public anon key is ever used here.
@@ -29,6 +29,6 @@ if (Platform.OS !== 'web') {
 export const DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 
 export function errorMessage(e: unknown): string {
-  if (e && typeof e === 'object' && 'message' in e) return String((e as { message: unknown }).message);
+  if (e && typeof e === 'object' && 'message' in e) return friendlyAuthError(String((e as { message: unknown }).message), DEMO_MODE);
   return 'Something went wrong. Please try again.';
 }

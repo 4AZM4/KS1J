@@ -165,3 +165,13 @@ export const CASE_PRIVACY_NOTE =
   "To protect the family's dignity, their name and contact details are hidden. The Jamaat knows who they are and has checked the need.";
 /** Used when staff did not write a public summary. */
 export const CASE_SUMMARY_FALLBACK = 'Checked by a Jamaat verifier and approved by a different trustee.';
+
+/** Sign-in errors from Supabase Auth, in plain words. Other messages pass through unchanged. */
+export function friendlyAuthError(message: string, demo = false): string {
+  if (/invalid login credentials/i.test(message)) {
+    return demo ? 'Wrong email or password. Try again, or tap a demo account below.' : 'Wrong email or password. Please try again.';
+  }
+  if (/email not confirmed/i.test(message)) return 'Please confirm your email first: open the link we sent you, then sign in.';
+  if (/rate limit|too many requests/i.test(message)) return 'Too many tries. Please wait a minute and try again.';
+  return message;
+}
