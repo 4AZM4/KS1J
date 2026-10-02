@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth";
 
@@ -13,6 +14,12 @@ const LINKS = [
 export function SiteHeader() {
   const { session, isStaff, signOut } = useAuth();
   const path = usePathname();
+  // Keep the query too (a case page is /cases/view?id=…), so signing in comes back to the same case.
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(window.location.search);
+  }, [path]);
   return (
     <header className="border-b border-border bg-paper">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-4 sm:px-6">
@@ -41,7 +48,7 @@ export function SiteHeader() {
             </button>
           ) : (
             <Link
-              href={`/login?next=${encodeURIComponent(path ?? "/cases")}`}
+              href={`/login?next=${encodeURIComponent(path ? path + search : "/cases")}`}
               className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110"
             >
               Sign in

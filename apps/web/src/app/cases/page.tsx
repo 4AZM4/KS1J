@@ -29,7 +29,10 @@ export default function CasesPage() {
   useEffect(() => {
     supabase()
       .rpc("list_public_cases", category ? { p_category: category } : {})
-      .then(({ data, error }) => (error ? setError(errorMessage(error)) : setCases(data ?? [])));
+      .then(({ data, error }) => {
+        setError(error ? errorMessage(error) : null);
+        if (!error) setCases(data ?? []);
+      });
   }, [category]);
 
   return (

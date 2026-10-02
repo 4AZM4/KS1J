@@ -92,7 +92,7 @@ export default function LawajamScreen() {
               {d.period} · {rupees(d.amount)} · Paid
             </Text>
             <Text style={[styles.small, { color: muted }]}>
-              {p ? `${formatDate(p.paid_at)} · Receipt ${p.gateway_ref ?? p.id.slice(0, 8)}` : 'Paid at the Jamaat office'}
+              {p ? `${formatDate(p.paid_at)} · Receipt ${p.gateway_ref ?? p.id.slice(0, 8)}` : 'Paid by your household'}
             </Text>
             {p ? <ReceiptLink kind="lawajam" id={p.id} /> : null}
           </View>

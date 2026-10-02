@@ -56,3 +56,11 @@ test('Follow-up escalates automatically and stops for a pending hardship request
   assert.equal(followUpStage(30, false), 'committee_review');
   assert.equal(followUpStage(45, true), 'paused_for_review');
 });
+
+test('dates show the day in India, not UTC', async () => {
+  const { formatDate, todayInIndia } = await import('./labels.ts');
+  assert.equal(formatDate('2026-10-01T20:00:00+00:00'), '2 Oct 2026');
+  assert.equal(formatDate('2026-10-01T10:00:00.123456+00:00'), '1 Oct 2026');
+  assert.equal(formatDate('2026-10-15'), '15 Oct 2026');
+  assert.equal(todayInIndia(new Date('2026-10-01T19:00:00Z')), '2026-10-02');
+});

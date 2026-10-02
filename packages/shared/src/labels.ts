@@ -116,12 +116,29 @@ export const AUTOPAY_LABEL: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
-/** "15 Oct 2026" for a YYYY-MM-DD date. */
+const IST_OFFSET_MS = 330 * 60 * 1000;
+
+/**
+ * "15 Oct 2026" for a YYYY-MM-DD date, or for a timestamp shown as the date in India.
+ * Timestamps arrive in UTC, so a payment at 11 pm IST must not show the day before.
+ */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—';
-  const [y, m, day] = d.slice(0, 10).split('-').map(Number);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (d.length > 10) {
+    const t = Date.parse(d);
+    if (!Number.isNaN(t)) {
+      const ist = new Date(t + IST_OFFSET_MS);
+      return `${ist.getUTCDate()} ${months[ist.getUTCMonth()]} ${ist.getUTCFullYear()}`;
+    }
+  }
+  const [y, m, day] = d.slice(0, 10).split('-').map(Number);
   return `${day} ${months[m - 1]} ${y}`;
+}
+
+/** Today's date in India as YYYY-MM-DD, whatever the phone's locale or time zone. */
+export function todayInIndia(now: Date = new Date()): string {
+  return new Date(now.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
 }
 
 /** Shown on every Khums screen (CLAUDE.md rule 8). Wording to be approved by the Jamaat's alim. */

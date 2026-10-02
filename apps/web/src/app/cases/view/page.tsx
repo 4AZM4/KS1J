@@ -37,7 +37,8 @@ function CaseView() {
   const id = useSearchParams().get("id") ?? "";
   const { session } = useAuth();
   const [c, setC] = useState<PublicCase | null | undefined>(undefined);
-  const [fund, setFund] = useState<FundType | null>(null);
+  const [chosenFund, setFund] = useState<FundType | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +47,10 @@ function CaseView() {
   const load = useCallback(() => {
     supabase()
       .rpc("list_public_cases", {})
-      .then(({ data }) => setC((data ?? []).find((x) => x.id === id) ?? null));
+      .then(({ data, error }) => {
+        setLoadError(error ? errorMessage(error) : null);
+        setC(error ? null : (data ?? []).find((x) => x.id === id) ?? null);
+      });
   }, [id]);
   useEffect(load, [load]);
 
@@ -54,7 +58,8 @@ function CaseView() {
   if (c === null) {
     return (
       <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-        <p className="text-lg">This case is not open for donations.</p>
+        {loadError ? <Alert>{loadError}</Alert> : null}
+        <p className="mt-2 text-lg">{loadError ? "Please check your connection and try again." : "This case is not open for donations."}</p>
         <Link href="/cases" className="mt-4 inline-block font-semibold text-brand underline">See open cases</Link>
       </main>
     );
@@ -67,10 +72,13 @@ function CaseView() {
   const amountNumber = Number(amount || 0);
   const remaining = Math.max(0, c.target_amount - c.raised_amount);
   const closed = c.status === "funded";
+  // With only one fund on offer (Non-Sadaat cases), it is chosen already.
+  const fund: FundType | null = chosenFund ?? (funds.length === 1 ? funds[0] : null);
+  const tooMuch = amountNumber > remaining;
   const quick = [...QUICK.filter((q) => q <= remaining), remaining].filter((v, i, a) => v > 0 && a.indexOf(v) === i);
 
   async function give() {
-    if (!session || !fund || amountNumber <= 0 || !c) return;
+    if (!session || !fund || amountNumber <= 0 || tooMuch || !c) return;
     setBusy(true);
     setError(null);
     setThanks(null);
@@ -161,7 +169,8 @@ function CaseView() {
           <label htmlFor="amount" className="mt-5 block text-base font-semibold">Or enter an amount (₹)</label>
           <input id="amount" inputMode="numeric" className={`${inputClass} mt-2 max-w-xs`} value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/\D/g, ""))} />
-          <button type="button" onClick={give} disabled={!fund || amountNumber <= 0 || busy}
+          {tooMuch ? <p className="mt-3 text-base text-muted">This case only needs {rupees(remaining)} more.</p> : null}
+          <button type="button" onClick={give} disabled={!fund || amountNumber <= 0 || tooMuch || busy}
             className="mt-5 block min-h-12 rounded-xl bg-deep px-6 py-3 text-lg font-bold text-white disabled:opacity-50">
             {busy ? "Giving…" : amountNumber > 0 && fund ? `Give ${rupees(amountNumber)}` : "Give"}
           </button>

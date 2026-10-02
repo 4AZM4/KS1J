@@ -1,7 +1,7 @@
 import * as Print from 'expo-print';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { FUND_LABEL, KHUMS_GUIDANCE, formatDate, rupees } from '@ks1j/shared';
 
 import { ART, Lattice, Star } from '@/components/Art';
@@ -86,6 +86,28 @@ ${r.khums ? `<p class="note">${esc(KHUMS_GUIDANCE)}</p>` : ''}
 <p class="note">Recorded in the Jamaat ledger. Records are never edited; a correction is a new entry.</p></div></body></html>`;
 }
 
+/** Opens the print dialog for just the receipt. On the web, expo-print would print the whole app page instead. */
+async function printReceipt(html: string) {
+  if (Platform.OS !== 'web') {
+    await Print.printAsync({ html });
+    return;
+  }
+  const frame = document.createElement('iframe');
+  frame.style.position = 'fixed';
+  frame.style.width = '0';
+  frame.style.height = '0';
+  frame.style.border = '0';
+  document.body.appendChild(frame);
+  const doc = frame.contentWindow?.document;
+  if (!doc || !frame.contentWindow) throw new Error('Printing is not available in this browser.');
+  doc.open();
+  doc.write(html);
+  doc.close();
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
+  setTimeout(() => frame.remove(), 1000);
+}
+
 export default function ReceiptScreen() {
   const { kind, id } = useLocalSearchParams<{ kind: Kind; id: string }>();
   const { member } = useAuth();
@@ -133,7 +155,7 @@ export default function ReceiptScreen() {
       {error ? <Banner>{error}</Banner> : null}
       <Button
         title="Save or print (PDF)"
-        onPress={() => Print.printAsync({ html: receiptHtml(r, name) }).catch((e) => setError(errorMessage(e)))}
+        onPress={() => printReceipt(receiptHtml(r, name)).catch((e) => setError(errorMessage(e)))}
       />
     </Screen>
   );

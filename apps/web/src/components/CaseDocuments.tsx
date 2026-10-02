@@ -58,12 +58,17 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
       const { data, error } = await supabase().functions.invoke<{ checked: boolean; reason?: string }>("check-document", {
         body: { document_id: documentId },
       });
-      if (error) throw error;
+      if (error) {
+        // Show the server's own message rather than "non-2xx status code".
+        const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
+        throw new Error(body?.error ?? "The document could not be read. Enter what it says below.");
+      }
       if (data && !data.checked && data.reason) setError(`${data.reason}. Enter what it says below.`);
-      await load();
     } catch (e) {
       setError(errorMessage(e));
     } finally {
+      // Always refresh, so a new upload shows even when reading it failed.
+      await load();
       setReading(null);
     }
   }

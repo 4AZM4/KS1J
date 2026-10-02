@@ -28,8 +28,9 @@ const QUICK = [500, 1000, 5000];
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
-  const [c, setC] = useState<PublicCase | null>(null);
-  const [fund, setFund] = useState<FundType | null>(null);
+  const [c, setC] = useState<PublicCase | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [chosenFund, setFund] = useState<FundType | null>(null);
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,14 +41,25 @@ export default function CaseScreen() {
   const muted = useThemeColor({}, 'mutedText');
 
   const load = useCallback(() => {
-    supabase.rpc('list_public_cases').then(({ data }) => setC((data ?? []).find((x) => x.id === id) ?? null));
+    supabase.rpc('list_public_cases').then(({ data, error }) => {
+      setLoadError(error ? errorMessage(error) : null);
+      setC(error ? null : (data ?? []).find((x) => x.id === id) ?? null);
+    });
   }, [id]);
   useFocusEffect(load);
 
+  if (c === undefined) {
+    return (
+      <Screen title="Case">
+        <Text style={{ color: muted, fontSize: 16 }}>Loading…</Text>
+      </Screen>
+    );
+  }
   if (!c) {
     return (
       <Screen title="Case">
-        <Text style={{ color: muted, fontSize: 16 }}>This case is not open for donations.</Text>
+        {loadError ? <Banner>{loadError}</Banner> : null}
+        <Text style={{ color: muted, fontSize: 16 }}>{loadError ? 'Please check your connection and try again.' : 'This case is not open for donations.'}</Text>
       </Screen>
     );
   }
@@ -58,9 +70,12 @@ export default function CaseScreen() {
   );
   const amountNumber = Number(amount.replace(/\D/g, ''));
   const remaining = Math.max(0, c.target_amount - c.raised_amount);
+  // With only one fund on offer (Non-Sadaat cases), it is chosen already.
+  const fund: FundType | null = chosenFund ?? (funds.length === 1 ? funds[0] : null);
+  const tooMuch = amountNumber > remaining;
 
   async function donate() {
-    if (!session || !fund || amountNumber <= 0) return;
+    if (!session || !fund || amountNumber <= 0 || tooMuch) return;
     setBusy(true);
     setError(null);
     setThanks(null);
@@ -141,10 +156,11 @@ export default function CaseScreen() {
               .map((q) => ({ value: String(q), label: q === remaining ? `${rupees(q)} (all that's left)` : rupees(q) }))}
           />
           <Field label="Or enter an amount (₹)" value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} keyboardType="number-pad" />
+          {tooMuch ? <Banner tone="info">{`This case only needs ${rupees(remaining)} more.`}</Banner> : null}
           <Button
             title={amountNumber > 0 && fund ? `Give ${rupees(amountNumber)}` : 'Give'}
             onPress={donate}
-            disabled={!fund || amountNumber <= 0}
+            disabled={!fund || amountNumber <= 0 || tooMuch}
             busy={busy}
           />
           {DEMO_MODE ? (

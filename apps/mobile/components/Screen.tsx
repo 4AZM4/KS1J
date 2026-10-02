@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { Hero } from '@/components/Art';
@@ -9,10 +9,12 @@ import { useT } from '@/lib/i18n';
 export function Screen({ title, intro, hero, children }: { title: string; intro?: string; hero?: boolean; children: ReactNode }) {
   const bg = useThemeColor({}, 'background');
   const muted = useThemeColor({}, 'mutedText');
+  // A unique pattern id per screen: titles in Gujarati, Hindi or Urdu have no a-z letters to make one from.
+  const heroId = `screen${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <ScrollView style={{ backgroundColor: bg }} contentContainerStyle={styles.content}>
       {hero ? (
-        <Hero title={title} intro={intro} id={title.toLowerCase().replace(/[^a-z0-9]+/g, '-')} />
+        <Hero title={title} intro={intro} id={heroId} />
       ) : (
         <>
           <Text style={styles.title}>{title}</Text>

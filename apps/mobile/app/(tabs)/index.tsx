@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { buildReminders, type Reminder, type Tables } from '@ks1j/shared';
+import { buildReminders, todayInIndia, type Reminder, type Tables } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
@@ -23,7 +23,7 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (session) void loadReminders(session.user.id).then(setReminders);
+      if (session) void loadReminders(session.user.id, member?.household_id ?? null).then(setReminders);
       if (session)
         supabase
           .from('notifications')
@@ -39,7 +39,7 @@ export default function HomeScreen() {
         .order('published_at', { ascending: false })
         .limit(5)
         .then(({ data }) => setNews(data ?? []));
-    }, [session]),
+    }, [session, member?.household_id]),
   );
 
   const first = member?.full_name?.split(' ')[0];
@@ -88,16 +88,22 @@ export default function HomeScreen() {
 }
 
 /** Everything a reminder needs, read with the member's own permissions (RLS). */
-async function loadReminders(me: string): Promise<Reminder[]> {
-  const [loans, hardship, khums, dues] = await Promise.all([
+async function loadReminders(me: string, householdId: string | null): Promise<Reminder[]> {
+  // Staff can read every household's dues and requests, so filter to this member's own.
+  const [loans, khums, dues] = await Promise.all([
     supabase.from('education_loans').select('*').or(`borrower_id.eq.${me},payer_member_id.eq.${me}`),
-    supabase.from('loan_hardship_requests').select('loan_id').eq('status', 'pending'),
     supabase.from('khums_profiles').select('year_end_month, year_end_day').eq('member_id', me).maybeSingle(),
-    supabase.from('lawajam_dues').select('period, amount').eq('status', 'pending'),
+    householdId
+      ? supabase.from('lawajam_dues').select('period, amount').eq('status', 'pending').eq('household_id', householdId)
+      : Promise.resolve({ data: [] as { period: string; amount: number }[] }),
   ]);
+  const loanIds = (loans.data ?? []).map((l) => l.id);
+  const hardship = loanIds.length
+    ? await supabase.from('loan_hardship_requests').select('loan_id').eq('status', 'pending').in('loan_id', loanIds)
+    : { data: [] as { loan_id: string }[] };
   const pending = new Set((hardship.data ?? []).map((h) => h.loan_id));
   return buildReminders({
-    today: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD in the phone's time zone
+    today: todayInIndia(),
     loans: (loans.data ?? []).map((l) => ({
       planAgreed: !!l.plan_agreed_at,
       status: l.status,

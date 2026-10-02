@@ -34,3 +34,9 @@ test('finds the student name and the school', () => {
   assert.equal(findDocumentName('No name here'), null);
   assert.equal(findDocumentName('Student name: Fatema Hussain Class: IX'), 'Fatema Hussain');
 });
+
+test('a parent, school or bank name is not taken as the student name', () => {
+  assert.equal(findDocumentName("Father's Name: Ali Khan\nName: Fatema Hussain"), 'Fatema Hussain');
+  assert.equal(findDocumentName('School Name: Demo School\nStudent Name: Zahra Ali'), 'Zahra Ali');
+  assert.equal(findDocumentName('Institute name: Demo College'), null);
+});

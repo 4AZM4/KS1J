@@ -33,7 +33,9 @@ export default function LoginScreen() {
     setError(null);
     try {
       await fn();
-      router.replace('/');
+      // Back to where they were (a case they wanted to give to), or Home on first sign-in.
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
     } catch (e) {
       setError(errorMessage(e));
     } finally {

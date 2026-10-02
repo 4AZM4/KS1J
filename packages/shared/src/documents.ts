@@ -39,7 +39,7 @@ export function findReceiptAmount(text: string): number | null {
 /** The person named on the document ("Student name: …", "Patient name: …", "Name: …"), or null. */
 export function findDocumentName(text: string): string | null {
   const m = text.match(
-    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
+    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|(?<!(?:father|mother|parent|guardian|school|college|institute|institution|hospital|doctor|bank|account)(?:'s)?\s+)name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
   );
   if (!m) return null;
   // Stop at the next label on the same line ("Fatema Hussain Class: IX").

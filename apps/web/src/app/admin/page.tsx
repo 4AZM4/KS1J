@@ -102,7 +102,7 @@ export default function AdminOverview() {
         <h2 className="text-lg font-semibold">Needs attention</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           {c.members !== null ? <Stat href="/admin/members" value={c.members} label="New members to verify" /> : null}
-          {c.flags !== null ? <Stat href="/admin/flags" value={c.flags} label="Open fraud flags" /> : null}
+          {c.flags !== null && (hasRole("verifier") || hasRole("trustee")) ? <Stat href="/admin/flags" value={c.flags} label="Open fraud flags" /> : null}
           {c.overdue !== null ? <Stat href="/admin/loans" value={c.overdue} label="Loans 15+ days late" /> : null}
           {c.hardship !== null ? <Stat href="/admin/loans" value={c.hardship} label="Hardship requests" /> : null}
           {/* Only finance can read dues; for other roles an empty list would wrongly read as ₹0. */}

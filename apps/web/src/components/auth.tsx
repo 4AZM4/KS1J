@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { AdminRole, Tables } from "@ks1j/shared";
 import { supabase } from "@/lib/supabase";
@@ -23,7 +23,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<Tables<"members"> | null>(null);
   const [roles, setRoles] = useState<AdminRole[]>([]);
 
+  const userId = useRef<string | null | undefined>(undefined);
+
   const loadProfile = useCallback(async (s: Session | null) => {
+    // A different person signed in: wait for their roles before showing staff or member pages.
+    const id = s?.user.id ?? null;
+    if (id !== userId.current) {
+      userId.current = id;
+      setLoading(true);
+    }
     setSession(s);
     if (!s) {
       setMember(null);

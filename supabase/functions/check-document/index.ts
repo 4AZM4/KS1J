@@ -17,6 +17,7 @@ import { extractText, getDocumentProxy } from 'npm:unpdf@0.12.1';
 
 const CHECKED_KINDS = ['fee_receipt', 'medical_report', 'marksheet'];
 const MAX_BYTES = 10 * 1024 * 1024;
+const AI_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -58,7 +59,7 @@ function findReceiptAmount(text: string): number | null {
 }
 function findDocumentName(text: string): string | null {
   const m = text.match(
-    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
+    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|(?<!(?:father|mother|parent|guardian|school|college|institute|institution|hospital|doctor|bank|account)(?:'s)?\s+)name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
   );
   if (!m) return null;
   // Stop at the next label on the same line ("Fatema Hussain Class: IX").
@@ -212,10 +213,20 @@ Deno.serve(async (req) => {
     const isPdf = data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46; // %PDF
     const imageType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].find((t) => type.startsWith(t));
 
-    let found: Found;
-    let method: 'ai' | 'pdf_text';
-    if (Deno.env.get('ANTHROPIC_API_KEY') && (isPdf || imageType)) {
-      found = await askClaude(data, isPdf ? 'application/pdf' : imageType!);
+    let found: Found | null = null;
+    let method: 'ai' | 'pdf_text' = 'ai';
+    // The AI reads photos up to 5 MB; bigger photos go to a verifier.
+    const aiCanRead = isPdf || (imageType && data.length <= AI_IMAGE_MAX_BYTES);
+    if (Deno.env.get('ANTHROPIC_API_KEY') && aiCanRead) {
+      try {
+        found = await askClaude(data, isPdf ? 'application/pdf' : imageType!);
+      } catch (e) {
+        // If the AI is unavailable, a PDF can still be read by its text; a photo waits for a verifier.
+        console.error('AI read failed', e);
+        if (!isPdf) return json({ checked: false, reason: 'This photo could not be read automatically' });
+      }
+    }
+    if (found) {
       method = 'ai';
     } else if (isPdf) {
       const text = await pdfText(data);
@@ -225,6 +236,10 @@ Deno.serve(async (req) => {
         institution: findInstitution(text),
       };
       method = 'pdf_text';
+    } else if (imageType && data.length > AI_IMAGE_MAX_BYTES) {
+      return json({ checked: false, reason: 'This photo is too large to read automatically' });
+    } else if (Deno.env.get('ANTHROPIC_API_KEY')) {
+      return json({ checked: false, reason: 'This type of photo cannot be read automatically' });
     } else {
       return json({ checked: false, reason: 'Photos are read by a verifier until the AI key is added' });
     }

@@ -13,7 +13,8 @@ const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
 /** Back to the page that sent them here; otherwise staff go to the dashboard and members to the cases. */
 async function afterSignIn(): Promise<string> {
   const next = new URLSearchParams(window.location.search).get("next");
-  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  // Only a page on this site: no "//other.site" or "/\\other.site" tricks.
+  if (next && /^\/(?![/\\])/.test(next) && !/[\\\s]/.test(next)) return next;
   const db = supabase();
   const { data: user } = await db.auth.getUser();
   const { data: roles } = await db.from("member_roles").select("role").eq("member_id", user.user?.id ?? "");

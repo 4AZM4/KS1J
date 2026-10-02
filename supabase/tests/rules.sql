@@ -759,4 +759,86 @@ begin
   raise notice 'PASS  a second open request from the same household is flagged for a verifier';
 end $$;
 
+-- 17. Payouts: only from a fully funded case, never more than was raised.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000001', 'sehme_sadaat', 36000, 'Demo School', '00000000-0000-0000-0000-000000000004')$$,
+  'A case that is only submitted cannot be paid out (and not from Sehme Sadaat before lineage is verified)');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'general', 1000, 'Demo Hospital', '00000000-0000-0000-0000-000000000004')$$,
+  'A case still raising money cannot be paid out');
+select pg_temp.as_system();
+select set_config('test.raised4', (select raised_amount::text from public.cases where id = '20000000-0000-0000-0000-000000000004'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+do $$
+declare raised integer := current_setting('test.raised4')::integer;
+begin
+  begin
+    insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+    values ('20000000-0000-0000-0000-000000000004', 'general', raised + 1, 'Demo Store', '00000000-0000-0000-0000-000000000004');
+    raise exception 'FAIL  paying out more than was raised should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000004', 'general', raised, 'Demo Store', '00000000-0000-0000-0000-000000000004');
+  raise notice 'PASS  a funded case pays out up to what was raised, and no more';
+end $$;
+
+-- 18. An approved case cannot be quietly edited.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
+select pg_temp.expect_error($$update public.cases set public_summary = 'Changed' where id = '20000000-0000-0000-0000-000000000003'$$,
+  'The text a trustee approved cannot be changed afterwards');
+select pg_temp.expect_error($$update public.cases set requested_amount = 1 where id = '20000000-0000-0000-0000-000000000003'$$,
+  'The amount asked for cannot change after approval');
+select pg_temp.expect_error($$update public.cases set applicant_id = '00000000-0000-0000-0000-000000000020' where id = '20000000-0000-0000-0000-000000000002'$$,
+  'Who a case is for cannot be changed');
+
+-- 19. Nobody can give past a case's target.
+select pg_temp.as_system();
+select set_config('test.left3', (select (target_amount - raised_amount)::text from public.cases where id = '20000000-0000-0000-0000-000000000003'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$
+declare left_amount integer := current_setting('test.left3')::integer;
+begin
+  begin
+    insert into public.donations (donor_id, fund, case_id, amount)
+    values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000003', left_amount + 1);
+    raise exception 'FAIL  a gift larger than what is still needed should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.donations (donor_id, fund, case_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000003', left_amount);
+  raise notice 'PASS  a gift can complete a case but not go past its target';
+end $$;
+
+-- 20. Document names: someone in the household is fine; a verifier's corrected reading clears the old flag.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select public.record_document_check('50000000-0000-0000-0000-000000000002', 'manual', 36000, 'Hussain Demo');
+do $$ begin
+  if (select outcome from public.document_checks where document_id = '50000000-0000-0000-0000-000000000002') <> 'matches' then
+    raise exception 'FAIL  a receipt in a household member''s name should match';
+  end if;
+  if exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002' and status = 'open') then
+    raise exception 'FAIL  the verifier''s corrected reading should clear the old name flag';
+  end if;
+  if (select reviewed_by from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002' limit 1)
+     <> '00000000-0000-0000-0000-000000000002' then
+    raise exception 'FAIL  the cleared flag should record who reviewed it';
+  end if;
+  raise notice 'PASS  household names match, and a corrected reading clears the old flag';
+end $$;
+
+-- 21. Public summaries hide addresses in any capitals and leave dates alone.
+select pg_temp.as_system();
+do $$ begin
+  if public.mask_identity('Lives at demo building a since 2026-09-14, call 98200 12345.', '{}', '{Demo Building A}')
+     <> 'Lives at [hidden] since 2026-09-14, call [number hidden].' then
+    raise exception 'FAIL  masking: got %',
+      public.mask_identity('Lives at demo building a since 2026-09-14, call 98200 12345.', '{}', '{Demo Building A}');
+  end if;
+  raise notice 'PASS  addresses are hidden whatever their capitals; dates are not mistaken for phones';
+end $$;
+
 rollback;

@@ -295,8 +295,8 @@ function CaseDetail() {
         {c.status === "disbursed" ? (
           hasRole("finance") ? (
             <div className="mt-3">
-              <p className="text-sm text-muted">Closing tells donors the need was met.</p>
-              <Button className="mt-3" disabled={busy} onClick={() => setStatus("closed", {}, "Case closed. Donors will be told the need was met.")}>Close case</Button>
+              <p className="text-sm text-muted">Closing tells the family the case is complete. Donors were told when it was fully funded.</p>
+              <Button className="mt-3" disabled={busy} onClick={() => setStatus("closed", {}, "Case closed. The family has been told.")}>Close case</Button>
             </div>
           ) : <p className="mt-2 text-sm text-muted">Paid out. Finance closes the case.</p>
         ) : null}
