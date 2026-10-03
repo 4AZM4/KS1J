@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, G, Path, Pattern, Polygon, Rect } from 'react-native-svg';
+import { Image, StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Circle, Defs, G, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
+import { DISPLAY } from '@/constants/Type';
+import { useT } from '@/lib/i18n';
 
 /** Jamaat palette used by the artwork. Text on it stays high-contrast for elders. */
 export const ART = {
@@ -39,14 +41,34 @@ export function Lattice({ id, opacity = 0.18, color = ART.gold, size = 72 }: { i
   );
 }
 
-/** The KS1J eight-pointed star. */
-export function Star({ size = 48, color = ART.gold }: { size?: number; color?: string }) {
+const STAR =
+  '256.00,78.00 308.13,130.13 381.87,130.13 381.87,203.87 434.00,256.00 381.87,308.13 381.87,381.87 308.13,381.87 256.00,434.00 203.87,381.87 130.13,381.87 130.13,308.13 78.00,256.00 130.13,203.87 130.13,130.13 203.87,130.13';
+const STAR_LINE =
+  '256.00,106.00 299.93,149.93 362.07,149.93 362.07,212.07 406.00,256.00 362.07,299.93 362.07,362.07 299.93,362.07 256.00,406.00 212.07,362.07 149.93,362.07 149.93,299.93 106.00,256.00 149.93,212.07 149.93,149.93 212.07,149.93';
+
+/** A gold khatam star, used as decoration in banners and receipts. */
+export function Star({ size = 48, color = ART.gold, ink = ART.deep }: { size?: number; color?: string; ink?: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 480 480" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <Rect x={120} y={120} width={240} height={240} fill="none" stroke={color} strokeWidth={18} />
-      <Polygon points="240,70 410,240 240,410 70,240" fill="none" stroke={color} strokeWidth={18} />
-      <Circle cx={240} cy={240} r={34} fill={color} />
+    <Svg width={size} height={size} viewBox="78 78 356 356" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Polygon points={STAR} fill={color} />
+      <Polygon points={STAR_LINE} fill="none" stroke={ink} strokeWidth={6} />
     </Svg>
+  );
+}
+
+/** The KS1J logo: the star image, then the letters with a gold "1". See docs/brand/. */
+export function Logo({ height = 40, tone = 'ink' }: { height?: number; tone?: 'ink' | 'light' }) {
+  const main = tone === 'light' ? '#FFFFFF' : ART.deep;
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: height * 0.25 }} lightColor="transparent" darkColor="transparent" accessible accessibilityLabel="KS1J">
+      <Image source={require('@/assets/images/ks1j-logo.png')} style={{ width: height * 1.2, height: height * 1.2 }} accessibilityIgnoresInvertColors />
+      <Svg width={height * 0.6 * (2258 / 696)} height={height * 0.6} viewBox="0 -682 2258 696">
+        <Path transform="translate(-44 0)" d="M44 0V-668H202V-403L443 -668H636L372 -382L649 0H466L270 -272L202 -197V0Z" fill={main} />
+        <Path transform="translate(-44 0)" d="M993 12Q884 12 809.5 -32.5Q735 -77 704 -157L848 -209Q862 -161 900.5 -138.0Q939 -115 994 -115Q1023 -115 1050.0 -121.5Q1077 -128 1095.0 -143.5Q1113 -159 1113 -185Q1113 -220 1079.0 -239.5Q1045 -259 991 -269L910 -285Q856 -296 809.5 -318.5Q763 -341 735.0 -378.5Q707 -416 707 -473Q707 -527 732.0 -566.0Q757 -605 798.5 -630.0Q840 -655 890.0 -667.5Q940 -680 990 -680Q1044 -680 1094.5 -665.0Q1145 -650 1185.0 -618.5Q1225 -587 1246 -535L1103 -483Q1090 -517 1056.5 -535.0Q1023 -553 976 -553Q930 -553 899.5 -536.5Q869 -520 869 -489Q869 -464 890.0 -446.0Q911 -428 945 -421L1035 -403Q1076 -395 1118.0 -382.5Q1160 -370 1195.5 -349.5Q1231 -329 1253.0 -295.0Q1275 -261 1275 -209Q1275 -156 1250.5 -114.5Q1226 -73 1185.5 -45.0Q1145 -17 1095.0 -2.5Q1045 12 993 12Z" fill={main} />
+        <Path transform="translate(-44 0)" d="M1517 0V-448H1365V-571Q1418 -571 1453.0 -576.5Q1488 -582 1511.5 -602.5Q1535 -623 1553 -668H1668V0Z" fill={ART.gold} />
+        <Path transform="translate(-44 0)" d="M2041 12Q1936 12 1874.0 -39.0Q1812 -90 1791 -175L1936 -228Q1942 -200 1954.5 -173.5Q1967 -147 1988.5 -130.0Q2010 -113 2041 -113Q2091 -113 2117.5 -144.5Q2144 -176 2144 -256V-668H2302V-256Q2302 -131 2235.5 -59.5Q2169 12 2041 12Z" fill={main} />
+      </Svg>
+    </View>
   );
 }
 
@@ -64,25 +86,79 @@ export function Arch({ width, height, color = ART.gold, strokeWidth = 3 }: { wid
   );
 }
 
+/** Points of an eight-pointed khatam star (two overlapping squares) centred on cx, cy. */
+function khatamPoints(cx: number, cy: number, r: number): string {
+  const inner = (r * Math.cos(Math.PI / 4)) / Math.cos(Math.PI / 8);
+  return Array.from({ length: 16 }, (_, i) => {
+    const a = Math.PI / 2 + (i * Math.PI) / 8;
+    const rad = i % 2 === 0 ? r : inner;
+    return `${(cx + rad * Math.cos(a)).toFixed(1)},${(cy - rad * Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+}
+
+/** Rings of the corner rosette: radius, stroke width, opacity (from the outside in). */
+const ROSETTE_RINGS: [number, number, number][] = [
+  [170, 1, 0.3],
+  [140, 2.6, 0.9],
+  [130, 1, 0.6],
+  [100, 1.6, 0.8],
+  [72, 2.6, 0.9],
+  [64, 1, 0.6],
+];
+const ROSETTE_W = 180;
+const ROSETTE_H = 172;
+
 /**
- * The deep green banner at the top of each tab: star lattice, a gold arch with the KS1J star,
- * and the screen's title in large, high-contrast text.
+ * The banner at the top of each tab: Jamaat green with a fine star lattice, and a gold khatam
+ * medallion opening from the top corner. The screen's title is large, high-contrast text.
  */
 export function Hero({ title, intro, id, children }: { title: string; intro?: string; id: string; children?: ReactNode }) {
+  const { rtl } = useT();
+  const align = rtl ? ({ textAlign: 'right', writingDirection: 'rtl' } as const) : null;
+  // On very narrow screens (small phones, the landing-page preview) the title needs the full width.
+  const narrow = useWindowDimensions().width < 360;
+  // The medallion sits in the corner the text does not start from.
+  const cx = rtl ? 0 : ROSETTE_W;
   return (
-    <View style={styles.hero} lightColor={ART.deep} darkColor={ART.deep}>
-      <Lattice id={`lat-${id}`} />
-      <View style={styles.archWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
-        <Arch width={104} height={150} />
-        <View style={styles.archStar} lightColor="transparent" darkColor="transparent">
-          <Star size={38} />
-        </View>
-      </View>
+    <View style={[styles.hero, rtl ? styles.heroRtl : null, narrow && styles.heroNarrow]} lightColor={ART.deep} darkColor={ART.deep}>
+      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
+        <Defs>
+          <Pattern id={`lat-${id}`} width={48} height={48} patternUnits="userSpaceOnUse">
+            <G fill="none" stroke={ART.gold} strokeWidth={0.8} opacity={0.16}>
+              <Rect x={13} y={13} width={22} height={22} />
+              <Polygon points="24,8.5 39.5,24 24,39.5 8.5,24" />
+              <Circle cx={24} cy={24} r={3} />
+            </G>
+          </Pattern>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#lat-${id})`} />
+      </Svg>
+      <Svg
+        style={[styles.rosette, rtl ? { left: 0 } : { right: 0 }]}
+        width={ROSETTE_W}
+        height={ROSETTE_H}
+        viewBox={`0 0 ${ROSETTE_W} ${ROSETTE_H}`}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+      >
+        <Defs>
+          <RadialGradient id={`glow-${id}`} cx={cx} cy={0} r={150} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={ART.goldLight} stopOpacity={0.3} />
+            <Stop offset="1" stopColor={ART.goldLight} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={cx} cy={0} r={150} fill={`url(#glow-${id})`} />
+        {ROSETTE_RINGS.map(([r, w, o]) => (
+          <Polygon key={r} points={khatamPoints(cx, 0, r)} fill="none" stroke={ART.gold} strokeWidth={w} opacity={o} />
+        ))}
+        <Polygon points={khatamPoints(cx, 0, 28)} fill={ART.gold} />
+      </Svg>
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
-        <Text accessibilityRole="header" style={styles.heroTitle}>
+        <Text accessibilityRole="header" style={[styles.heroTitle, align]}>
           {title}
         </Text>
-        {intro ? <Text style={styles.heroIntro}>{intro}</Text> : null}
+        {intro ? <Text style={[styles.heroIntro, align]}>{intro}</Text> : null}
         {children}
       </View>
     </View>
@@ -97,10 +173,11 @@ export function accentStyle(accent?: 'gold' | 'lapis' | 'green'): StyleProp<View
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 24, paddingLeft: 22, paddingRight: 120, minHeight: 150, marginBottom: 8 },
-  archWrap: { position: 'absolute', right: 14, bottom: -2, width: 104, height: 150 },
-  archStar: { position: 'absolute', left: 33, top: 58 },
+  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 28, paddingLeft: 24, paddingRight: 96, minHeight: 156, marginBottom: 8 },
+  heroRtl: { paddingLeft: 96, paddingRight: 24 },
+  heroNarrow: { paddingLeft: 22, paddingRight: 22, minHeight: 0 },
+  rosette: { position: 'absolute', top: 0 },
   heroText: { gap: 6 },
-  heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', lineHeight: 36 },
+  heroTitle: { color: '#FFFFFF', fontFamily: DISPLAY, fontSize: 32, lineHeight: 40 },
   heroIntro: { color: ART.mint, fontSize: 17, lineHeight: 24 },
 });

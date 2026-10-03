@@ -15,7 +15,7 @@ import {
   type FollowUpStage,
   type Tables,
 } from "@ks1j/shared";
-import { errorMessage, supabase } from "@/lib/supabase";
+import { errorMessage, supabase, files } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { downloadCsv, today } from "@/lib/csv";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
@@ -24,6 +24,7 @@ type Loan = Tables<"education_loans"> & { borrower: { full_name: string } | null
 type CaseRow = Tables<"cases"> & { applicant: { full_name: string; household_id: string | null } | null };
 type Hardship = Tables<"loan_hardship_requests"> & { requester: { full_name: string } | null };
 type FollowUp = Database["public"]["Functions"]["loan_followup_list"]["Returns"][number];
+type Staff = Database["public"]["Functions"]["staff_directory"]["Returns"][number];
 
 const STAGE_TONE: Record<FollowUpStage, "neutral" | "good" | "warn" | "bad"> = {
   none: "good",
@@ -42,12 +43,13 @@ export default function LoansPage() {
   const [toSetUp, setToSetUp] = useState<CaseRow[]>([]);
   const [hardship, setHardship] = useState<Hardship[]>([]);
   const [followUp, setFollowUp] = useState<FollowUp[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const db = supabase();
-    const [l, c, h, f] = await Promise.all([
+    const [l, c, h, f, st] = await Promise.all([
       db
         .from("education_loans")
         .select("*, borrower:members!education_loans_borrower_id_fkey(full_name), case:cases(case_no)")
@@ -63,6 +65,7 @@ export default function LoansPage() {
         .eq("status", "pending")
         .order("created_at"),
       db.rpc("loan_followup_list"),
+      db.rpc("staff_directory"),
     ]);
     const err = l.error ?? c.error ?? h.error ?? f.error;
     if (err) setError(errorMessage(err));
@@ -72,6 +75,7 @@ export default function LoansPage() {
     setToSetUp(((c.data ?? []) as unknown as CaseRow[]).filter((x) => !withLoan.has(x.id)));
     setHardship((h.data ?? []) as unknown as Hardship[]);
     setFollowUp(f.data ?? []);
+    setStaff((st.data ?? []) as Staff[]);
   }, []);
 
   useEffect(() => {
@@ -169,6 +173,8 @@ export default function LoansPage() {
               <tbody>
                 {followUp.map((r) => {
                   const stage = r.stage as FollowUpStage;
+                  const loan = (loans ?? []).find((x) => x.id === r.loan_id);
+                  const mentor = loan?.jamaat_guarantee ? staff.find((m) => m.id === loan.mentor_member_id) : undefined;
                   return (
                     <tr key={r.loan_id} className="border-t border-border">
                       <td className="py-2 pr-3 font-medium">{r.borrower}</td>
@@ -183,10 +189,19 @@ export default function LoansPage() {
                         <Badge tone={r.autopay_status === "active" ? "good" : "warn"}>{AUTOPAY_LABEL[r.autopay_status] ?? r.autopay_status}</Badge>
                       </td>
                       <td className="py-2 pr-3">
-                        <Badge tone={STAGE_TONE[stage] ?? "neutral"}>{FOLLOW_UP_LABEL[stage] ?? r.stage}</Badge>
+                        <Badge tone={STAGE_TONE[stage] ?? "neutral"}>
+                          {loan?.jamaat_guarantee && stage === "notify_guarantor" ? "Mentor told" : (FOLLOW_UP_LABEL[stage] ?? r.stage)}
+                        </Badge>
                       </td>
                       <td className="py-2">
-                        {r.guarantor}
+                        {loan?.jamaat_guarantee ? (
+                          <>
+                            <Badge tone="good">Jamaat guarantee</Badge>
+                            <span className="block text-xs">Mentor: {mentor?.full_name ?? "committee"}</span>
+                          </>
+                        ) : (
+                          r.guarantor
+                        )}
                         <span className="block text-xs text-muted">{r.guarantor_phone}</span>
                       </td>
                     </tr>
@@ -215,7 +230,7 @@ export default function LoansPage() {
       <Section title="Approved loans to set up" note="Approved education-loan cases that need repayment details before the family can agree a plan.">
         {toSetUp.length === 0 ? <p className="text-muted">Nothing waiting.</p> : null}
         {toSetUp.map((c) => (
-          <SetUpCard key={c.id} c={c} canSetUp={isTrustee || hasRole("finance")} onDone={done} onError={fail} />
+          <SetUpCard key={c.id} c={c} staff={staff} canSetUp={isTrustee || hasRole("finance")} onDone={done} onError={fail} />
         ))}
       </Section>
 
@@ -224,6 +239,7 @@ export default function LoansPage() {
           <div key={l.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-border py-2 text-sm">
             <span>
               <span className="font-medium">{l.borrower?.full_name}</span>{" "}
+              {l.jamaat_guarantee ? <Badge tone="good">Jamaat guarantee</Badge> : null}{" "}
               {l.case ? (
                 <Link href={`/admin/cases/view?id=${l.case_id}`} className="text-brand underline">
                   #{l.case.case_no}
@@ -324,9 +340,11 @@ function HardshipCard({ h, canDecide, onDone, onError }: { h: Hardship; canDecid
   const [busy, setBusy] = useState(false);
 
   async function openProof() {
-    const { data, error } = await supabase().storage.from("documents").createSignedUrl(h.proof_path, 300);
-    if (error) return onError(error);
-    window.open(data.signedUrl, "_blank", "noopener");
+    try {
+      window.open(await files().viewUrl(h.proof_path), "_blank", "noopener");
+    } catch (e) {
+      onError(e);
+    }
   }
 
   async function decide(status: "approved" | "rejected") {
@@ -364,13 +382,16 @@ function HardshipCard({ h, canDecide, onDone, onError }: { h: Hardship; canDecid
   );
 }
 
-function SetUpCard({ c, canSetUp, onDone, onError }: { c: CaseRow; canSetUp: boolean } & Handlers) {
+function SetUpCard({ c, staff, canSetUp, onDone, onError }: { c: CaseRow; staff: Staff[]; canSetUp: boolean } & Handlers) {
   const [members, setMembers] = useState<{ id: string; full_name: string }[]>([]);
   const [principal, setPrincipal] = useState(String(c.target_amount ?? c.requested_amount));
   const [courseEnd, setCourseEnd] = useState("");
   const [payer, setPayer] = useState(c.applicant_id);
   const [guarantorName, setGuarantorName] = useState("");
   const [guarantorPhone, setGuarantorPhone] = useState("");
+  // No family to stand guarantee (an orphan, or no relative who can): the Jamaat guarantees, with a mentor.
+  const [jamaat, setJamaat] = useState(false);
+  const [mentor, setMentor] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -384,7 +405,7 @@ function SetUpCard({ c, canSetUp, onDone, onError }: { c: CaseRow; canSetUp: boo
   }, [c.applicant?.household_id]);
 
   const amount = Number(principal || 0);
-  const ready = amount > 0 && courseEnd && guarantorName.trim() && guarantorPhone.trim().length >= 10;
+  const ready = amount > 0 && courseEnd && (jamaat ? mentor : guarantorName.trim() && guarantorPhone.trim().length >= 10);
 
   async function create() {
     setBusy(true);
@@ -395,8 +416,11 @@ function SetUpCard({ c, canSetUp, onDone, onError }: { c: CaseRow; canSetUp: boo
       principal: amount,
       outstanding: amount,
       course_end_date: courseEnd,
-      guarantor_name: guarantorName.trim(),
-      guarantor_phone: guarantorPhone.replace(/\D/g, ""),
+      // With a Jamaat guarantee the database fills the guarantor in as the welfare committee (mentor's phone).
+      guarantor_name: jamaat ? "" : guarantorName.trim(),
+      guarantor_phone: jamaat ? "" : guarantorPhone.replace(/\D/g, ""),
+      jamaat_guarantee: jamaat,
+      mentor_member_id: jamaat ? mentor : null,
     });
     setBusy(false);
     if (error) return onError(error);
@@ -429,12 +453,37 @@ function SetUpCard({ c, canSetUp, onDone, onError }: { c: CaseRow; canSetUp: boo
                 ))}
             </select>
           </Labeled>
-          <Labeled label="Guarantor name">
-            <input className={inputClass} value={guarantorName} onChange={(e) => setGuarantorName(e.target.value)} />
-          </Labeled>
-          <Labeled label="Guarantor phone">
-            <input className={inputClass} inputMode="tel" value={guarantorPhone} onChange={(e) => setGuarantorPhone(e.target.value)} />
-          </Labeled>
+          <label className="flex items-start gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" className="mt-1 h-5 w-5" checked={jamaat} onChange={(e) => setJamaat(e.target.checked)} />
+            <span>
+              <span className="font-semibold">No family to guarantee: the Jamaat guarantees this loan</span>
+              <span className="block text-muted">
+                For a student with no family who can stand guarantee. A committee mentor checks in with them instead of a
+                guarantor. Interest-free as always; hardship pauses reminders, and the committee can turn it into a grant.
+              </span>
+            </span>
+          </label>
+          {jamaat ? (
+            <Labeled label="Mentor (committee member)">
+              <select className={inputClass} value={mentor} onChange={(e) => setMentor(e.target.value)}>
+                <option value="">Choose a mentor</option>
+                {staff.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name}
+                  </option>
+                ))}
+              </select>
+            </Labeled>
+          ) : (
+            <>
+              <Labeled label="Guarantor name">
+                <input className={inputClass} value={guarantorName} onChange={(e) => setGuarantorName(e.target.value)} />
+              </Labeled>
+              <Labeled label="Guarantor phone">
+                <input className={inputClass} inputMode="tel" value={guarantorPhone} onChange={(e) => setGuarantorPhone(e.target.value)} />
+              </Labeled>
+            </>
+          )}
           <div className="flex items-end">
             <Button disabled={busy || !ready} onClick={create}>
               Set up loan

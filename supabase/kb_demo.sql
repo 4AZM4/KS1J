@@ -1,4 +1,4 @@
--- Demo helpdesk texts: how the KS1J app works. Loaded by seed_data.sql.
+-- Demo helpdesk texts: how the KS1J app works. Run after seed_data.sql (seed.sql loads it for local tests).
 -- These are NOT Jamaat documents. Replace them with texts the Jamaat has approved before launch.
 -- Religious rulings are deliberately absent: the helpdesk sends those questions to the Marja' or the Jamaat's alim.
 
@@ -12,7 +12,7 @@ insert into public.kb_chunks (document_id, position, heading, body) values
   ('a0000000-0000-0000-0000-000000000001', 1, 'How to apply',
    'Open Services and choose Welfare assistance for medical, education or ration help, or Scholarship for school and college fees. Choose Sadaat or Non-Sadaat, give a short title, the amount needed and the details. After you submit, the app asks for documents such as a fee receipt, medical report or income proof. A volunteer can also apply on your behalf.'),
   ('a0000000-0000-0000-0000-000000000001', 2, 'What happens after you apply',
-   'A verifier checks your documents and need, and Sadaat lineage where it applies. A different trustee then approves the case; the person who verified can never approve the same case. Approved cases are shown to donors without your name, phone or address. The Jamaat pays the hospital, school or family directly and keeps proof. You can follow every step under Services, My applications.'),
+   'A verifier checks your documents and need, and, for Sadaat, the Aadhaar card. A different trustee then approves the case; the person who verified can never approve the same case. Approved cases are shown to donors without your name, phone or address. The Jamaat pays the hospital, school or family directly and keeps proof. You can follow every step under Services, My applications.'),
   ('a0000000-0000-0000-0000-000000000001', 3, 'Who can see my details',
    'Only you, the person who submitted the case for you, and the Jamaat committee members working on it can see your details and documents. Donors only see the need, the amount and how much has been raised.'),
   ('a0000000-0000-0000-0000-000000000002', 1, 'No interest and no late fees',

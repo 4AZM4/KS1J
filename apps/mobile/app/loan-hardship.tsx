@@ -6,6 +6,7 @@ import { rupees } from '@ks1j/shared';
 import { Screen } from '@/components/Screen';
 import { Banner, Button, Choice, Field } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { uploadToMyFolder } from '@/lib/documents';
 import { errorMessage, supabase } from '@/lib/supabase';
 
 type Kind = 'pause' | 'lower_emi';
@@ -40,13 +41,7 @@ export default function LoanHardshipScreen() {
     setError(null);
     try {
       // Upload into the member's own private folder; only they and Jamaat staff can read it.
-      const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-      const path = `${session.user.id}/hardship-${Date.now()}.${ext}`;
-      const body = await (await fetch(file.uri)).arrayBuffer();
-      const { error: upError } = await supabase.storage
-        .from('documents')
-        .upload(path, body, { contentType: file.mimeType ?? 'application/pdf' });
-      if (upError) throw upError;
+      const path = await uploadToMyFolder(session.user.id, file, 'hardship');
 
       const { error } = await supabase.from('loan_hardship_requests').insert({
         loan_id: id,
@@ -67,7 +62,7 @@ export default function LoanHardshipScreen() {
   }
 
   return (
-    <Screen
+    <Screen eyebrow="Services"
       title="Ask for help with your EMI"
       intro="Reminders stop while a trustee reviews your request. Your proof is private to the committee.">
       {error ? <Banner>{error}</Banner> : null}

@@ -13,12 +13,14 @@ Members apply for medical, education or ration help, or a scholarship. Two diffe
 | Step | Who | Where |
 | --- | --- | --- |
 | Submit | Applicant, or volunteer on their behalf | App: Services |
-| Verify documents, need, and lineage for Sadaat | Verifier | Web: /admin/cases |
+| Verify documents and need; for Sadaat, check the Aadhaar card | Verifier | Web: /admin/cases |
 | Approve category and target | Trustee, never the verifier | Web |
 | Publish | Trustee | Web |
 | Funded | Automatic when raised ≥ target | Server |
 | Disburse (pay hospital/school/beneficiary, upload proof) | Finance | Web |
 | Close, notify donors | Finance | Web |
+
+**Sadaat check.** The verifier checks the family's Aadhaar card; there is no lineage check (no time for it). Ask for a *masked* Aadhaar (only the last 4 digits showing, downloadable from UIDAI) so the full number is never stored. The database flag is still called `lineage_verified`, and Sehme Sadaat still needs it.
 
 ## Screens
 

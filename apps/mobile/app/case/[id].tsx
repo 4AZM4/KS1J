@@ -14,6 +14,7 @@ import {
   type FundType,
 } from '@ks1j/shared';
 
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Choice, Field, Progress } from '@/components/ui';
@@ -27,25 +28,38 @@ const QUICK = [500, 1000, 5000];
 export default function CaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session } = useAuth();
-  const [c, setC] = useState<PublicCase | null>(null);
-  const [fund, setFund] = useState<FundType | null>(null);
+  const [c, setC] = useState<PublicCase | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [chosenFund, setFund] = useState<FundType | null>(null);
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thanks, setThanks] = useState<string | null>(null);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
   const card = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
 
   const load = useCallback(() => {
-    supabase.rpc('list_public_cases').then(({ data }) => setC((data ?? []).find((x) => x.id === id) ?? null));
+    supabase.rpc('list_public_cases').then(({ data, error }) => {
+      setLoadError(error ? errorMessage(error) : null);
+      setC(error ? null : (data ?? []).find((x) => x.id === id) ?? null);
+    });
   }, [id]);
   useFocusEffect(load);
 
+  if (c === undefined) {
+    return (
+      <Screen eyebrow="Give" title="Case">
+        <Text style={{ color: muted, fontSize: 16 }}>Loading…</Text>
+      </Screen>
+    );
+  }
   if (!c) {
     return (
-      <Screen title="Case">
-        <Text style={{ color: muted, fontSize: 16 }}>This case is not open for donations.</Text>
+      <Screen eyebrow="Give" title="Case">
+        {loadError ? <Banner>{loadError}</Banner> : null}
+        <Text style={{ color: muted, fontSize: 16 }}>{loadError ? 'Please check your connection and try again.' : 'This case is not open for donations.'}</Text>
       </Screen>
     );
   }
@@ -56,9 +70,12 @@ export default function CaseScreen() {
   );
   const amountNumber = Number(amount.replace(/\D/g, ''));
   const remaining = Math.max(0, c.target_amount - c.raised_amount);
+  // With only one fund on offer (Non-Sadaat cases), it is chosen already.
+  const fund: FundType | null = chosenFund ?? (funds.length === 1 ? funds[0] : null);
+  const tooMuch = amountNumber > remaining;
 
   async function donate() {
-    if (!session || !fund || amountNumber <= 0) return;
+    if (!session || !fund || amountNumber <= 0 || tooMuch) return;
     setBusy(true);
     setError(null);
     setThanks(null);
@@ -74,6 +91,7 @@ export default function CaseScreen() {
         const { error: payError } = await supabase.rpc('demo_confirm_payment', { p_kind: 'donation', p_id: data.id });
         if (payError) throw payError;
         setThanks(`Thank you. ${rupees(amountNumber)} as ${FUND_LABEL[fund]} is recorded in the Jamaat ledger.`);
+        setReceiptId(data.id);
       } else {
         setThanks('Your donation is waiting for payment confirmation.');
       }
@@ -89,7 +107,7 @@ export default function CaseScreen() {
   const closed = c.status === 'funded';
 
   return (
-    <Screen title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
+    <Screen eyebrow="Give" title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <Text style={styles.summary}>{c.public_summary || CASE_SUMMARY_FALLBACK}</Text>
         <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />
@@ -104,6 +122,7 @@ export default function CaseScreen() {
       </View>
 
       {thanks ? <Banner tone="good">{thanks}</Banner> : null}
+      {receiptId ? <ReceiptLink kind="donation" id={receiptId} /> : null}
       {error ? <Banner>{error}</Banner> : null}
 
       {!session && !closed ? (
@@ -137,10 +156,11 @@ export default function CaseScreen() {
               .map((q) => ({ value: String(q), label: q === remaining ? `${rupees(q)} (all that's left)` : rupees(q) }))}
           />
           <Field label="Or enter an amount (₹)" value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} keyboardType="number-pad" />
+          {tooMuch ? <Banner tone="info">{`This case only needs ${rupees(remaining)} more.`}</Banner> : null}
           <Button
             title={amountNumber > 0 && fund ? `Give ${rupees(amountNumber)}` : 'Give'}
             onPress={donate}
-            disabled={!fund || amountNumber <= 0}
+            disabled={!fund || amountNumber <= 0 || tooMuch}
             busy={busy}
           />
           {DEMO_MODE ? (

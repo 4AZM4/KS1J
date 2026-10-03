@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth";
+import { KS1JLockup } from "@/components/landing/Mark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LINKS = [
   { href: "/cases", label: "Cases" },
@@ -13,11 +16,17 @@ const LINKS = [
 export function SiteHeader() {
   const { session, isStaff, signOut } = useAuth();
   const path = usePathname();
+  // Keep the query too (a case page is /cases/view?id=…), so signing in comes back to the same case.
+  const [search, setSearch] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(window.location.search);
+  }, [path]);
   return (
     <header className="border-b border-border bg-paper">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-4 sm:px-6">
-        <Link href="/" className="text-xl font-bold tracking-tight text-ink">
-          KS1J
+        <Link href="/" aria-label="KS1J home">
+          <KS1JLockup />
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-1 text-base">
           {LINKS.map((l) => (
@@ -35,13 +44,14 @@ export function SiteHeader() {
               Dashboard
             </Link>
           ) : null}
+          <ThemeToggle />
           {session ? (
             <button onClick={() => void signOut()} className="rounded-lg px-3 py-2 font-semibold hover:bg-card">
               Sign out
             </button>
           ) : (
             <Link
-              href={`/login?next=${encodeURIComponent(path ?? "/cases")}`}
+              href={`/login?next=${encodeURIComponent(path ? path + search : "/cases")}`}
               className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110"
             >
               Sign in

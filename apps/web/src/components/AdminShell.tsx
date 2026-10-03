@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { IconName } from "@ks1j/shared";
 import { Icon } from "@/components/Icon";
 import { usePathname, useRouter } from "next/navigation";
@@ -8,19 +9,26 @@ import { useEffect, type ReactNode } from "react";
 import { ROLE_LABEL } from "@ks1j/shared";
 import { useAuth } from "@/components/auth";
 import { Button, Card } from "@/components/ui";
+import { KS1JLockup } from "@/components/landing/Mark";
 
-const adminNav: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin", label: "Overview", icon: "layout-dashboard" },
-  { href: "/admin/cases", label: "Cases", icon: "users" },
-  { href: "/admin/members", label: "Members to verify", icon: "user" },
-  { href: "/admin/loans", label: "Education loans", icon: "cash" },
-  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee" },
-  { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank" },
-  { href: "/admin/lawajam", label: "Lawajam", icon: "receipt" },
-  { href: "/admin/flags", label: "Fraud flags", icon: "flag" },
-  { href: "/admin/announcements", label: "Announcements", icon: "speakerphone" },
-  { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question" },
-] as const;
+import type { AdminRole } from "@ks1j/shared";
+
+// Each role sees the pages it works in, so the menu stays short. Super admins see everything.
+// This only tidies the menu: what each person can read or change is still decided by Supabase RLS.
+const ALL: AdminRole[] = ["volunteer", "verifier", "trustee", "finance"];
+const adminNav: { href: string; label: string; icon: IconName; roles: AdminRole[] }[] = [
+  { href: "/admin", label: "Overview", icon: "layout-dashboard", roles: ALL },
+  { href: "/admin/cases", label: "Cases", icon: "users", roles: ALL },
+  { href: "/admin/members", label: "Members to verify", icon: "user", roles: ["volunteer", "verifier"] },
+  { href: "/admin/loans", label: "Education loans", icon: "cash", roles: ["trustee", "finance"] },
+  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee", roles: ["trustee", "finance"] },
+  { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank", roles: ["trustee", "finance"] },
+  { href: "/admin/lawajam", label: "Lawajam", icon: "receipt", roles: ["finance"] },
+  { href: "/admin/flags", label: "Fraud flags", icon: "flag", roles: ["verifier", "trustee"] },
+  { href: "/admin/announcements", label: "Announcements", icon: "speakerphone", roles: ["trustee"] },
+  { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question", roles: ["trustee"] },
+  { href: "/admin/community", label: "Community", icon: "users-group", roles: ["verifier", "trustee"] },
+];
 
 // Access is enforced by Supabase RLS on every query. This gate only keeps non-staff
 // from seeing an empty dashboard.
@@ -62,18 +70,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col sm:flex-row">
-      <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r">
-        <Link href="/" className="text-sm font-semibold uppercase tracking-wide text-brand">KS1J Admin</Link>
-        <p className="mt-3 text-sm font-semibold">{member?.full_name}</p>
-        <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
+      <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r sm:px-5 sm:py-6">
+        <Link href="/" aria-label="KS1J home" className="flex items-center gap-2"><KS1JLockup size="sm" /><span className="sr-only">Committee dashboard</span></Link>
+        <div className="mt-5 rounded-xl bg-background px-3 py-2.5">
+          <p className="text-sm font-semibold">{member?.full_name}</p>
+          <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
+        </div>
         <ul className="mt-4 flex gap-1 overflow-x-auto sm:flex-col">
-          {adminNav.map((item) => {
+          {adminNav
+            .filter((item) => roles.includes("super_admin") || item.roles.some((r) => roles.includes(r)))
+            .map((item) => {
             const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-background font-semibold text-brand" : "hover:bg-background"}`}
+                  className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-brand-soft font-semibold text-brand" : "hover:bg-background"}`}
                 >
                   <Icon name={item.icon} size={20} className={active ? "text-brand" : "text-muted"} />
                   {item.label}
@@ -82,9 +94,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
             );
           })}
         </ul>
-        <button className="mt-4 text-sm text-muted underline" onClick={() => void signOut()}>Sign out</button>
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <button className="text-sm text-muted underline" onClick={() => void signOut()}>Sign out</button>
+          <ThemeToggle />
+        </div>
       </nav>
-      <main className="flex-1 p-4 sm:p-8">{children}</main>
+      <main className="admin-page flex-1 p-4 sm:px-10 sm:py-9">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-brand">Committee dashboard</p>
+        {children}
+      </main>
     </div>
   );
 }

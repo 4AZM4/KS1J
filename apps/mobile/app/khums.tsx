@@ -12,6 +12,7 @@ import {
 } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button, Choice, Field } from '@/components/ui';
@@ -59,7 +60,7 @@ export default function KhumsScreen() {
     latest ? payments.filter((p) => p.fund === fund && p.paid_at && p.paid_at >= latest.created_at).reduce((s, p) => s + p.amount, 0) : 0;
 
   return (
-    <Screen title="Khums" intro="Work out your Khums and pay each share to where it is allowed to go.">
+    <Screen eyebrow="Give" title="Khums" intro="Work out your Khums and pay each share to where it is allowed to go.">
       <Banner tone="info">{KHUMS_GUIDANCE}</Banner>
 
       {profile === undefined ? <Text style={{ color: muted }}>Loading…</Text> : null}
@@ -114,6 +115,7 @@ export default function KhumsScreen() {
               <Text style={[styles.small, { color: muted }]}>
                 {formatDate(p.paid_at)} · Receipt {p.gateway_ref ?? p.id.slice(0, 8)}
               </Text>
+              <ReceiptLink kind="donation" id={p.id} />
             </View>
           ))}
         </>

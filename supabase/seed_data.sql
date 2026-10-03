@@ -74,5 +74,4 @@ insert into public.announcements (title, body, published_at, created_by) values
   ('Welcome to KS1J', 'Members can now apply for assistance, pay Khums and Lawajam, and ask the Jamaat helpdesk from one app.',
    now() - interval '1 day', '00000000-0000-0000-0000-000000000003');
 
--- Demo helpdesk texts (to be replaced by Jamaat-approved documents).
-\ir kb_demo.sql
+-- Demo helpdesk texts are in kb_demo.sql (run it after this file).

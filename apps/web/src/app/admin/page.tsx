@@ -88,7 +88,7 @@ export default function AdminOverview() {
           <h2 className="text-lg font-semibold">Cases</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-5">
             {QUEUES.map((q) => (
-              <Link key={q.label} href={q.href} className="rounded-2xl border border-border bg-card p-4 hover:border-brand">
+              <Link key={q.label} href={q.href} className="rounded-2xl border border-border bg-card p-4 shadow-soft hover:border-brand">
                 <p className="text-3xl font-bold">{count(q.statuses)}</p>
                 <p className="mt-1 font-semibold">{q.label}</p>
                 {q.who ? <p className="text-sm text-muted">{q.who}</p> : null}
@@ -102,7 +102,7 @@ export default function AdminOverview() {
         <h2 className="text-lg font-semibold">Needs attention</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           {c.members !== null ? <Stat href="/admin/members" value={c.members} label="New members to verify" /> : null}
-          {c.flags !== null ? <Stat href="/admin/flags" value={c.flags} label="Open fraud flags" /> : null}
+          {c.flags !== null && (hasRole("verifier") || hasRole("trustee")) ? <Stat href="/admin/flags" value={c.flags} label="Open fraud flags" /> : null}
           {c.overdue !== null ? <Stat href="/admin/loans" value={c.overdue} label="Loans 15+ days late" /> : null}
           {c.hardship !== null ? <Stat href="/admin/loans" value={c.hardship} label="Hardship requests" /> : null}
           {/* Only finance can read dues; for other roles an empty list would wrongly read as ₹0. */}
@@ -138,7 +138,7 @@ export default function AdminOverview() {
 
 function Stat({ href, value, label }: { href: string; value: number | string; label: string }) {
   return (
-    <Link href={href} className="rounded-2xl border border-border bg-card p-4 hover:border-brand">
+    <Link href={href} className="rounded-2xl border border-border bg-card p-4 shadow-soft hover:border-brand">
       <p className="text-3xl font-bold">{value}</p>
       <p className="mt-1 font-semibold">{label}</p>
     </Link>

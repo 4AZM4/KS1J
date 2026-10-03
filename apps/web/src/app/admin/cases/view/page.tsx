@@ -87,6 +87,11 @@ function CaseDetail() {
     for (const d of dn.data ?? []) byFund[d.fund] = (byFund[d.fund] ?? 0) + d.amount;
     setPaidByFund(byFund);
     setPaidOut(ds.data ?? []);
+    // Start the payout form on the fund that still has money for this case (the database refuses any other).
+    const out: Record<string, number> = {};
+    for (const d of ds.data ?? []) out[d.fund] = (out[d.fund] ?? 0) + d.amount;
+    const left = (f: string) => (byFund[f] ?? 0) - (out[f] ?? 0);
+    setPayFund(left("sehme_sadaat") > left("general") ? "sehme_sadaat" : "general");
   }, [id]);
 
   useEffect(() => {
@@ -149,7 +154,7 @@ function CaseDetail() {
             <div><dt className="text-muted">Type</dt><dd>{CASE_TYPE_LABEL[c.type]}</dd></div>
             <div><dt className="text-muted">Requested</dt><dd>{rupees(c.requested_amount)}</dd></div>
             {isSadaat ? (
-              <div><dt className="text-muted">Sadaat lineage</dt><dd>{c.lineage_verified ? "Verified" : "Not yet verified"}</dd></div>
+              <div><dt className="text-muted">Sadaat (Aadhaar card)</dt><dd>{c.lineage_verified ? "Checked" : "Not yet checked"}</dd></div>
             ) : null}
           </dl>
         </Card>
@@ -214,7 +219,7 @@ function CaseDetail() {
               {isSadaat ? (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={lineage} onChange={(e) => setLineage(e.target.checked)} />
-                  I have verified Sadaat (Syed) lineage
+                  I have checked the Aadhaar card: this family is Sadaat (Syed)
                 </label>
               ) : null}
               <div className="flex gap-2">
@@ -295,8 +300,8 @@ function CaseDetail() {
         {c.status === "disbursed" ? (
           hasRole("finance") ? (
             <div className="mt-3">
-              <p className="text-sm text-muted">Closing tells donors the need was met.</p>
-              <Button className="mt-3" disabled={busy} onClick={() => setStatus("closed", {}, "Case closed. Donors will be told the need was met.")}>Close case</Button>
+              <p className="text-sm text-muted">Closing tells the family the case is complete. Donors were told when it was fully funded.</p>
+              <Button className="mt-3" disabled={busy} onClick={() => setStatus("closed", {}, "Case closed. The family has been told.")}>Close case</Button>
             </div>
           ) : <p className="mt-2 text-sm text-muted">Paid out. Finance closes the case.</p>
         ) : null}

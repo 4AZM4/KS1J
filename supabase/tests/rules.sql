@@ -456,6 +456,9 @@ select pg_temp.as_user('00000000-0000-0000-0000-000000000099');
 select pg_temp.expect_error($$update public.members set household_id = '10000000-0000-0000-0000-000000000001'
   where id = '00000000-0000-0000-0000-000000000099'$$,
   'A new member cannot put themselves in a household');
+select pg_temp.expect_error($$update public.members set membership_verified = true
+  where id = '00000000-0000-0000-0000-000000000099'$$,
+  'A new member cannot mark themselves verified');
 do $$ begin
   if exists (select 1 from public.lawajam_dues) then
     raise exception 'FAIL  a member without a household should see no household dues';
@@ -586,7 +589,7 @@ select pg_temp.expect_error($$insert into public.khums_calculations (member_id, 
 -- 11. Public case cards never identify the person who asked for help.
 select pg_temp.as_system();
 update public.cases
-   set public_summary = 'Zainab and her husband ZAINAB-son need ration. Call +91 98200 12345 or zainab@mail.test.'
+   set public_summary = 'Zainab and her husband ZAINAB-son need ration. Call +91 12345 67890 or zainab@mail.test.'
  where id = '20000000-0000-0000-0000-000000000004';
 select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
 do $$
@@ -671,5 +674,372 @@ end $$;
 select pg_temp.expect_error($$insert into public.document_checks (document_id, case_id, outcome, method)
   values ('50000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'matches', 'manual')$$,
   'Nobody writes check results directly');
+
+-- 13. Notifications: applicants hear each step, donors hear when the need is met.
+select pg_temp.as_system();
+select set_config('test.left', (select (target_amount - raised_amount)::text from public.cases where id = '20000000-0000-0000-0000-000000000004'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$
+declare left_amount integer := current_setting('test.left')::integer;
+begin
+  insert into public.donations (id, donor_id, fund, case_id, amount)
+  values ('40000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000004', left_amount);
+end $$;
+select pg_temp.as_system();
+update public.donations set status = 'paid', gateway_ref = 'test_need_met' where id = '40000000-0000-0000-0000-0000000000f1';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if (select count(*) from public.notifications where kind = 'need_met' and case_id = '20000000-0000-0000-0000-000000000004') <> 1 then
+    raise exception 'FAIL  the donor who completed the case should hear the need is met, once';
+  end if;
+  if exists (select 1 from public.notifications where member_id <> '00000000-0000-0000-0000-000000000020') then
+    raise exception 'FAIL  members must only see their own notifications';
+  end if;
+  raise notice 'PASS  donors hear when a case they gave to is fully funded';
+end $$;
+select pg_temp.expect_error($$update public.notifications set body = 'changed' where case_id = '20000000-0000-0000-0000-000000000004'$$,
+  'Notification text cannot be changed by members');
+select pg_temp.expect_ok($$update public.notifications set read_at = now() where case_id = '20000000-0000-0000-0000-000000000004'$$,
+  'Members can mark their notifications read');
+select pg_temp.expect_error($$insert into public.notifications (member_id, kind, title, body) values ('00000000-0000-0000-0000-000000000020', 'need_met', 'x', 'y')$$,
+  'Members cannot create notifications');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+do $$ begin
+  if not exists (select 1 from public.notifications where kind = 'case_status' and case_id = '20000000-0000-0000-0000-000000000004'
+                 and body like '%fully funded%') then
+    raise exception 'FAIL  the applicant should hear that the case is fully funded';
+  end if;
+  raise notice 'PASS  applicants hear each step of their case';
+end $$;
+
+-- 14. The same file on two different cases is flagged.
+select pg_temp.as_system();
+select public.record_document_hash('50000000-0000-0000-0000-000000000001', repeat('ab', 32));
+insert into public.case_documents (id, case_id, kind, storage_path, uploaded_by) values
+  ('50000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000002', 'fee_receipt',
+   '00000000-0000-0000-0000-000000000012/same.pdf', '00000000-0000-0000-0000-000000000012');
+select public.record_document_hash('50000000-0000-0000-0000-000000000003', repeat('ab', 32));
+do $$ begin
+  if not exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000003'
+                 and matched_case_id = '20000000-0000-0000-0000-000000000001' and reason like 'The same file is also attached to case #%') then
+    raise exception 'FAIL  a file reused on another case should be flagged';
+  end if;
+  raise notice 'PASS  the same file on two cases raises a flag';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_error($$select public.record_document_hash('50000000-0000-0000-0000-000000000003', repeat('cd', 32))$$,
+  'Only the server records file fingerprints');
+
+-- 15. Household page shows only your own household.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+do $$ begin
+  if (select count(*) from public.my_household_members()) <> 2 then
+    raise exception 'FAIL  Fatema should see the 2 people in her household (got %)', (select count(*) from public.my_household_members());
+  end if;
+  if exists (select 1 from public.my_household_members() where full_name like 'Zainab%') then
+    raise exception 'FAIL  another household must not appear';
+  end if;
+  raise notice 'PASS  members see only their own household';
+end $$;
+
+-- 16. A second open request from the same applicant or household is flagged, never blocked.
+select pg_temp.as_system();
+do $$
+declare v_case uuid;
+begin
+  select id into v_case from public.cases
+   where applicant_id = '00000000-0000-0000-0000-000000000010' and title = 'Hospital bill';
+  if v_case is null then
+    raise exception 'FAIL  the medical request from test 12 should exist';
+  end if;
+  if not exists (select 1 from public.fraud_flags where case_id = v_case and matched_case_id is not null
+                 and reason in ('Same applicant already has an open case', 'Same household already has an open case')) then
+    raise exception 'FAIL  a second open request from the same household should be flagged';
+  end if;
+  if (select status from public.cases where id = v_case) <> 'submitted' then
+    raise exception 'FAIL  a duplicate flag must not change the case status';
+  end if;
+  raise notice 'PASS  a second open request from the same household is flagged for a verifier';
+end $$;
+
+-- 17. Payouts: only from a fully funded case, never more than was raised.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000001', 'sehme_sadaat', 36000, 'Demo School', '00000000-0000-0000-0000-000000000004')$$,
+  'A case that is only submitted cannot be paid out (and not from Sehme Sadaat before lineage is verified)');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'general', 1000, 'Demo Hospital', '00000000-0000-0000-0000-000000000004')$$,
+  'A case still raising money cannot be paid out');
+select pg_temp.as_system();
+-- What was actually given to case 4 from General (the seeded opening amount has no gifts behind it).
+select set_config('test.raised4', (select coalesce(sum(amount), 0)::text from public.donations
+  where case_id = '20000000-0000-0000-0000-000000000004' and fund = 'general' and status = 'paid'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+do $$
+declare raised integer := current_setting('test.raised4')::integer;
+begin
+  begin
+    insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+    values ('20000000-0000-0000-0000-000000000004', 'general', raised + 1, 'Demo Store', '00000000-0000-0000-0000-000000000004');
+    raise exception 'FAIL  paying out more than was given should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000004', 'general', raised, 'Demo Store', '00000000-0000-0000-0000-000000000004');
+  raise notice 'PASS  a funded case pays out up to what was given, and no more';
+end $$;
+
+-- 18. An approved case cannot be quietly edited.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000005');
+select pg_temp.expect_error($$update public.cases set public_summary = 'Changed' where id = '20000000-0000-0000-0000-000000000003'$$,
+  'The text a trustee approved cannot be changed afterwards');
+select pg_temp.expect_error($$update public.cases set requested_amount = 1 where id = '20000000-0000-0000-0000-000000000003'$$,
+  'The amount asked for cannot change after approval');
+select pg_temp.expect_error($$update public.cases set applicant_id = '00000000-0000-0000-0000-000000000020' where id = '20000000-0000-0000-0000-000000000002'$$,
+  'Who a case is for cannot be changed');
+
+-- 19. Nobody can give past a case's target.
+select pg_temp.as_system();
+select set_config('test.left3', (select (target_amount - raised_amount)::text from public.cases where id = '20000000-0000-0000-0000-000000000003'), false);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$
+declare left_amount integer := current_setting('test.left3')::integer;
+begin
+  begin
+    insert into public.donations (donor_id, fund, case_id, amount)
+    values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000003', left_amount + 1);
+    raise exception 'FAIL  a gift larger than what is still needed should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.donations (donor_id, fund, case_id, amount)
+  values ('00000000-0000-0000-0000-000000000020', 'general', '20000000-0000-0000-0000-000000000003', left_amount);
+  raise notice 'PASS  a gift can complete a case but not go past its target';
+end $$;
+
+-- 20. Document names: someone in the household is fine; a verifier's corrected reading clears the old flag.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select public.record_document_check('50000000-0000-0000-0000-000000000002', 'manual', 36000, 'Hussain Demo');
+do $$ begin
+  if (select outcome from public.document_checks where document_id = '50000000-0000-0000-0000-000000000002') <> 'matches' then
+    raise exception 'FAIL  a receipt in a household member''s name should match';
+  end if;
+  if exists (select 1 from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002' and status = 'open') then
+    raise exception 'FAIL  the verifier''s corrected reading should clear the old name flag';
+  end if;
+  if (select reviewed_by from public.fraud_flags where document_id = '50000000-0000-0000-0000-000000000002' limit 1)
+     <> '00000000-0000-0000-0000-000000000002' then
+    raise exception 'FAIL  the cleared flag should record who reviewed it';
+  end if;
+  raise notice 'PASS  household names match, and a corrected reading clears the old flag';
+end $$;
+
+-- 21. Public summaries hide addresses in any capitals and leave dates alone.
+select pg_temp.as_system();
+do $$ begin
+  if public.mask_identity('Lives at demo building a since 2026-09-14, call +91 12345 67890.', '{}', '{Demo Building A}')
+     <> 'Lives at [hidden] since 2026-09-14, call [number hidden].' then
+    raise exception 'FAIL  masking: got %',
+      public.mask_identity('Lives at demo building a since 2026-09-14, call +91 12345 67890.', '{}', '{Demo Building A}');
+  end if;
+  raise notice 'PASS  addresses are hidden whatever their capitals; dates are not mistaken for phones';
+end $$;
+
+-- 22. Payouts come from the fund the money was given to.
+select pg_temp.as_system();
+do $$
+declare left_amount integer;
+begin
+  select target_amount - raised_amount into left_amount from public.cases where id = '20000000-0000-0000-0000-000000000003';
+  insert into public.donations (id, donor_id, fund, case_id, amount)
+  values ('40000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-000000000020', 'sehme_sadaat', '20000000-0000-0000-0000-000000000003', left_amount);
+  update public.donations set status = 'paid', gateway_ref = 'test_payout_fund' where id = '40000000-0000-0000-0000-0000000000f3';
+  if (select status from public.cases where id = '20000000-0000-0000-0000-000000000003') <> 'funded' then
+    raise exception 'FAIL  case 3 should now be funded';
+  end if;
+  perform set_config('test.sadaat3', (select sum(amount)::text from public.donations
+    where case_id = '20000000-0000-0000-0000-000000000003' and fund = 'sehme_sadaat' and status = 'paid'), false);
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select pg_temp.expect_error($$insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'general', 1000, 'Demo Hospital', '00000000-0000-0000-0000-000000000004')$$,
+  'A case funded with Sehme Sadaat cannot be paid out from General');
+do $$
+declare given integer := current_setting('test.sadaat3')::integer;
+begin
+  begin
+    insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+    values ('20000000-0000-0000-0000-000000000003', 'sehme_sadaat', given + 1, 'Demo Hospital', '00000000-0000-0000-0000-000000000004');
+    raise exception 'FAIL  paying out more Sehme Sadaat than was given should be refused';
+  exception when others then
+    if sqlerrm like 'FAIL%' then raise; end if;
+  end;
+  insert into public.disbursements (case_id, fund, amount, payee, recorded_by)
+  values ('20000000-0000-0000-0000-000000000003', 'sehme_sadaat', given, 'Demo Hospital', '00000000-0000-0000-0000-000000000004');
+  raise notice 'PASS  payouts come from the fund the money was given to, never another';
+end $$;
+
+-- 23. Landing-page totals: anyone can read them, and they are totals only.
+select pg_temp.as_system();
+set local role anon;
+do $$
+declare r record;
+begin
+  select * into r from public.public_impact();
+  if r.raised is null or r.families_helped is null or r.open_needs is null then
+    raise exception 'FAIL  public totals should always return numbers';
+  end if;
+  raise notice 'PASS  anyone can read the landing-page totals (aggregates only)';
+end $$;
+
+-- 24. A student with no family: the Jamaat can guarantee the loan, with a committee mentor.
+select pg_temp.as_system();
+insert into public.cases (id, applicant_id, submitted_by, type, category, status, title, requested_amount)
+values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000012',
+        'education_loan', 'non_sadaat', 'approved', 'Education loan: Diploma', 50000);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_error($$insert into public.education_loans (case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee)
+  values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, 'x', '910000000000', current_date + 300, true)$$,
+  'A Jamaat-guaranteed loan needs a mentor');
+select pg_temp.expect_error($$insert into public.education_loans (case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee, mentor_member_id)
+  values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, 'x', '910000000000', current_date + 300, true, '00000000-0000-0000-0000-000000000013')$$,
+  'The mentor must be a committee member');
+select pg_temp.expect_ok($$insert into public.education_loans (id, case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee, mentor_member_id)
+  values ('60000000-0000-0000-0000-0000000000a1', '20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, '', '', current_date + 300, true, '00000000-0000-0000-0000-000000000005')$$,
+  'A trustee sets up a Jamaat-guaranteed loan with a volunteer as mentor');
+do $$ begin
+  if (select guarantor_name from public.education_loans where id = '60000000-0000-0000-0000-0000000000a1') <> 'KSI Jamaat welfare committee'
+     or (select guarantor_phone from public.education_loans where id = '60000000-0000-0000-0000-0000000000a1') <> '910000000005' then
+    raise exception 'FAIL  the guarantor should read as the welfare committee, reached through the mentor';
+  end if;
+  if not exists (select 1 from public.staff_directory() where id = '00000000-0000-0000-0000-000000000005') then
+    raise exception 'FAIL  staff should be able to choose a mentor from the committee list';
+  end if;
+  raise notice 'PASS  the Jamaat can guarantee a loan for a student with no family, with a mentor';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_error($$select * from public.staff_directory()$$, 'Members cannot read the committee list');
+
+-- 25. Community: only verified members take part, names cannot be faked, conversations need consent,
+--     private groups stay private and only the committee removes content.
+--     …010 Fatema · …013 Abbas · …020 donor · …012 Zainab (made unverified for this test) · …002 verifier
+select pg_temp.as_system();
+update public.members set membership_verified = false where id = '00000000-0000-0000-0000-000000000012';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+select pg_temp.expect_error($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000012', 'Hello')$$,
+  'An unverified member cannot join the community');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, display_name, headline, profession, city, is_mentor, mentor_areas)
+  values ('00000000-0000-0000-0000-000000000010', 'Someone Famous', 'Teacher', 'Education', 'Mumbai', true, '{Careers}')$$,
+  'A verified member creates a community profile');
+do $$ begin
+  if (select display_name from public.community_profiles where member_id = '00000000-0000-0000-0000-000000000010') <> 'Fatema (demo)' then
+    raise exception 'FAIL  the community name must be the membership name';
+  end if;
+  raise notice 'PASS  the name shown is always the membership name';
+end $$;
+select pg_temp.expect_error($$insert into public.community_profiles (member_id) values ('00000000-0000-0000-0000-000000000013')$$,
+  'Nobody can create a profile for someone else');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000020', 'Donor')$$,
+  'The donor creates a community profile');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000013', 'Student')$$,
+  'Abbas creates a community profile');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+do $$ begin
+  if exists (select 1 from public.community_profiles) then
+    raise exception 'FAIL  an unverified member can read community profiles';
+  end if;
+  raise notice 'PASS  an unverified member cannot see the directory';
+end $$;
+
+-- Messages open only with consent.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$insert into public.community_connections (from_id, to_id, kind, note) values ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000013', 'call', 'Can we talk?')$$,
+  'A call can be requested only from a mentor');
+select pg_temp.expect_ok($$insert into public.community_connections (id, from_id, to_id, kind, note) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000010', 'message', 'Salaam, may I ask about teaching?')$$,
+  'The donor asks Fatema to talk');
+select pg_temp.expect_error($$insert into public.community_messages (connection_id, sender_id, body) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', 'Hello?')$$,
+  'No message before the other person accepts');
+select pg_temp.expect_error($$update public.community_connections set status = 'accepted' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'You cannot accept your own request');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$update public.community_connections set status = 'accepted' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'Fatema accepts');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_ok($$insert into public.community_messages (connection_id, sender_id, body) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', 'Shukran!')$$,
+  'Once accepted, they can talk');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+do $$ begin
+  if exists (select 1 from public.community_messages) or exists (select 1 from public.community_connections) then
+    raise exception 'FAIL  a third member can read someone else''s conversation';
+  end if;
+  raise notice 'PASS  nobody else can read a conversation';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+do $$ begin
+  if exists (select 1 from public.community_messages) then
+    raise exception 'FAIL  staff can read private messages';
+  end if;
+  raise notice 'PASS  not even staff can read private messages';
+end $$;
+
+-- Private groups.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$insert into public.community_groups (id, name, kind, private, created_by) values ('71000000-0000-0000-0000-000000000001', 'Teachers circle', 'profession', true, '00000000-0000-0000-0000-000000000010')$$,
+  'Fatema creates a private group');
+select pg_temp.expect_ok($$insert into public.community_posts (id, author_id, group_id, body) values ('72000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000010', '71000000-0000-0000-0000-000000000001', 'Welcome, teachers')$$,
+  'The owner posts in her group');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_ok($$insert into public.community_group_members (group_id, member_id, status, role) values ('71000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000013', 'member', 'owner')$$,
+  'Abbas asks to join');
+do $$ begin
+  if (select status || '/' || role from public.community_group_members where group_id = '71000000-0000-0000-0000-000000000001' and member_id = '00000000-0000-0000-0000-000000000013') <> 'pending/member' then
+    raise exception 'FAIL  joining a private group must wait for the owner, and nobody makes themselves owner';
+  end if;
+  if exists (select 1 from public.community_posts where group_id = '71000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  a pending member can read a private group';
+  end if;
+  raise notice 'PASS  a private group waits for the owner and stays hidden until then';
+end $$;
+select pg_temp.expect_error($$insert into public.community_posts (author_id, group_id, body) values ('00000000-0000-0000-0000-000000000013', '71000000-0000-0000-0000-000000000001', 'Hi')$$,
+  'A non-member cannot post in a group');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$update public.community_group_members set status = 'member' where group_id = '71000000-0000-0000-0000-000000000001' and member_id = '00000000-0000-0000-0000-000000000013'$$,
+  'The owner approves');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+do $$ begin
+  if not exists (select 1 from public.community_posts where group_id = '71000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  an approved member should read the group';
+  end if;
+  raise notice 'PASS  once approved, the member reads the group';
+end $$;
+
+-- Moderation.
+select pg_temp.expect_ok($$insert into public.community_posts (id, author_id, body) values ('72000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000013', 'Salaam everyone')$$,
+  'Abbas posts on the feed');
+select pg_temp.expect_ok($$insert into public.community_opportunities (id, author_id, kind, title, body) values ('73000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000013', 'job', 'Tutor needed', 'Maths tutor for Class 10, two evenings a week.')$$,
+  'Abbas posts an opportunity');
+select pg_temp.expect_error($$update public.community_opportunities set status = 'removed' where id = '73000000-0000-0000-0000-000000000001'$$,
+  'Only the committee can remove an opportunity');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$update public.community_posts set removed = true where id = '72000000-0000-0000-0000-000000000002'$$,
+  'A member cannot remove someone else''s post');
+select pg_temp.expect_ok($$insert into public.community_reports (reporter_id, target_kind, target_id, reason) values ('00000000-0000-0000-0000-000000000020', 'post', '72000000-0000-0000-0000-000000000002', 'Off topic')$$,
+  'A member reports a post');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_ok($$update public.community_posts set removed = true where id = '72000000-0000-0000-0000-000000000002'$$,
+  'A verifier removes the post');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.community_posts where id = '72000000-0000-0000-0000-000000000002') then
+    raise exception 'FAIL  a removed post is still shown';
+  end if;
+  raise notice 'PASS  removed posts disappear from the feed';
+end $$;
+select pg_temp.as_system();
+update public.members set membership_verified = true where id = '00000000-0000-0000-0000-000000000012';
 
 rollback;

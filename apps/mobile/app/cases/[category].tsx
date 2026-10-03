@@ -40,7 +40,7 @@ export default function CaseListScreen() {
       : 'Verified families. Sehme Sadaat cannot be given here; general donations only.';
 
   return (
-    <Screen title={valid ? `${CATEGORY_LABEL[category]} cases` : 'Cases'} intro={intro}>
+    <Screen eyebrow="Give" title={valid ? `${CATEGORY_LABEL[category]} cases` : 'Cases'} intro={intro}>
       {cases === null ? <Text style={{ color: muted }}>Loading…</Text> : null}
       {cases?.length === 0 ? <Text style={{ color: muted, fontSize: 16 }}>No open cases right now.</Text> : null}
       {cases?.map((c) => (

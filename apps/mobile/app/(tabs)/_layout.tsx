@@ -7,6 +7,7 @@ import { Icon } from '@/components/Icon';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useAuth } from '@/lib/auth';
+import { useT } from '@/lib/i18n';
 
 // Tabler icons, the same set as the website and the pitch deck.
 function TabIcon({ name, color }: { name: IconName; color: string }) {
@@ -18,6 +19,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { loading, session } = useAuth();
   const clientOnlyHeader = useClientOnlyValue(false, true);
+  const { t } = useT();
 
   if (loading) {
     return (
@@ -35,14 +37,16 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme].tint,
         tabBarInactiveTintColor: Colors[colorScheme].mutedText,
         tabBarLabelStyle: { fontSize: 15, fontWeight: '600' },
-        tabBarStyle: { height: 72, paddingTop: 6, paddingBottom: 10 },
+        tabBarStyle: { height: 72, paddingTop: 6, paddingBottom: 10, borderTopColor: Colors[colorScheme].border },
+        headerShadowVisible: false,
+        headerTitleStyle: { fontSize: 17, fontWeight: '600' },
         // Disable the static render of the header on web to prevent a hydration error.
         headerShown: clientOnlyHeader,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tab.home'),
           tabBarIcon: ({ color }) => (
             <TabIcon name="home" color={String(color)} />
           ),
@@ -51,7 +55,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="services"
         options={{
-          title: 'Services',
+          title: t('tab.services'),
           tabBarIcon: ({ color }) => (
             <TabIcon name="lifebuoy" color={String(color)} />
           ),
@@ -60,7 +64,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="give"
         options={{
-          title: 'Give',
+          title: t('tab.give'),
           tabBarIcon: ({ color }) => (
             <TabIcon name="heart-handshake" color={String(color)} />
           ),
@@ -69,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="learn"
         options={{
-          title: 'Learn',
+          title: t('tab.learn'),
           tabBarIcon: ({ color }) => (
             <TabIcon name="book" color={String(color)} />
           ),

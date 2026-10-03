@@ -39,7 +39,7 @@ export function findReceiptAmount(text: string): number | null {
 /** The person named on the document ("Student name: …", "Patient name: …", "Name: …"), or null. */
 export function findDocumentName(text: string): string | null {
   const m = text.match(
-    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
+    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|(?<!(?:father|mother|parent|guardian|school|college|institute|institution|hospital|doctor|bank|account)(?:'s)?\s+)name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
   );
   if (!m) return null;
   // Stop at the next label on the same line ("Fatema Hussain Class: IX").
@@ -58,4 +58,22 @@ export function findInstitution(text: string): string | null {
     .map((l) => l.trim())
     .find((l) => /\b(school|college|institute|university|hospital|academy|madressa|clinic)\b/i.test(l) && l.length <= 120);
   return line ? line.split(/\s{2,}/)[0].trim() : null;
+}
+
+/** What the private `documents` bucket accepts (kept in step with its storage settings). */
+export const UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
+export const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf'];
+
+/**
+ * A plain-words reason a file cannot be uploaded, or null if it is fine.
+ * Checked before uploading so members see this instead of a storage error.
+ */
+export function uploadProblem(size: number | null | undefined, type: string | null | undefined, name = ''): string | null {
+  const t = (type || '').toLowerCase();
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  const okType = UPLOAD_TYPES.includes(t) || (!t && ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'webp'].includes(ext));
+  if (!okType) return 'Please choose a PDF or a photo (JPG, PNG, HEIC or WebP).';
+  if (size != null && size > UPLOAD_MAX_BYTES) return 'This file is larger than 10 MB. Please choose a smaller file or take a clearer, smaller photo.';
+  if (size === 0) return 'This file is empty. Please choose it again.';
+  return null;
 }

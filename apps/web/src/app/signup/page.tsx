@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useState } from "react";
 import { signUpMember, signupProblem, type SignupInput } from "@ks1j/shared";
 import { errorMessage, supabase } from "@/lib/supabase";
@@ -38,7 +39,9 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+      <div className="flex-1 bg-paper text-ink">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-md px-4 py-12">
         <Card>
           <h1 className="text-2xl font-bold">Your account is created</h1>
           {done === "confirm-email" ? (
@@ -60,11 +63,14 @@ export default function SignupPage() {
           </div>
         </Card>
       </main>
+    </div>
     );
   }
 
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+    <div className="flex-1 bg-paper text-ink">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-md px-4 py-12">
       <h1 className="text-2xl font-bold">Create your KS1J account</h1>
       <p className="mt-2 text-muted">
         For members of KSI Jamaat Mumbai. A verifier checks every new account before family details are shared.
@@ -77,7 +83,7 @@ export default function SignupPage() {
       <Card className="mt-6">
         <form onSubmit={submit} className="space-y-4" noValidate>
           <Field id="name" label="Full name" value={form.fullName} onChange={set("fullName")} autoComplete="name" />
-          <Field id="phone" label="Mobile number" value={form.phone} onChange={set("phone")} autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
+          <Field id="phone" label="Mobile number" value={form.phone} onChange={set("phone")} autoComplete="tel" inputMode="tel" placeholder="+91 12345 67890" />
           <Field id="email" label="Email" type="email" value={form.email} onChange={set("email")} autoComplete="email" />
           <Field
             id="password"
@@ -114,6 +120,7 @@ export default function SignupPage() {
         </Link>
       </p>
     </main>
+    </div>
   );
 }
 

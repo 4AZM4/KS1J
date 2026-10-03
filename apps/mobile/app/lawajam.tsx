@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { formatDate, rupees, type Tables } from '@ks1j/shared';
 
+import { ReceiptLink } from '@/components/ReceiptLink';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button } from '@/components/ui';
@@ -62,7 +63,7 @@ export default function LawajamScreen() {
   const paid = (dues ?? []).filter((d) => d.status === 'paid');
 
   return (
-    <Screen title="Lawajam" intro="Your household's yearly membership dues to the Jamaat.">
+    <Screen eyebrow="Give" title="Lawajam" intro="Your household's yearly membership dues to the Jamaat.">
       {notice ? <Banner tone="good">{notice}</Banner> : null}
       {error ? <Banner>{error}</Banner> : null}
       {dues === null ? <Text style={{ color: muted }}>Loading…</Text> : null}
@@ -91,8 +92,9 @@ export default function LawajamScreen() {
               {d.period} · {rupees(d.amount)} · Paid
             </Text>
             <Text style={[styles.small, { color: muted }]}>
-              {p ? `${formatDate(p.paid_at)} · Receipt ${p.gateway_ref ?? p.id.slice(0, 8)}` : 'Paid at the Jamaat office'}
+              {p ? `${formatDate(p.paid_at)} · Receipt ${p.gateway_ref ?? p.id.slice(0, 8)}` : 'Paid by your household'}
             </Text>
+            {p ? <ReceiptLink kind="lawajam" id={p.id} /> : null}
           </View>
         );
       })}

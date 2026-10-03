@@ -8,9 +8,8 @@ import {
   formatDate,
   rupees,
   type DocumentKind,
-  type Tables,
-} from "@ks1j/shared";
-import { errorMessage, supabase } from "@/lib/supabase";
+  type Tables, uploadProblem } from "@ks1j/shared";
+import { errorMessage, supabase, files } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { Button, Card, inputClass } from "@/components/ui";
 
@@ -58,12 +57,17 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
       const { data, error } = await supabase().functions.invoke<{ checked: boolean; reason?: string }>("check-document", {
         body: { document_id: documentId },
       });
-      if (error) throw error;
+      if (error) {
+        // Show the server's own message rather than "non-2xx status code".
+        const body = await (error as { context?: Response }).context?.json?.().catch(() => null);
+        throw new Error(body?.error ?? "The document could not be read. Enter what it says below.");
+      }
       if (data && !data.checked && data.reason) setError(`${data.reason}. Enter what it says below.`);
-      await load();
     } catch (e) {
       setError(errorMessage(e));
     } finally {
+      // Always refresh, so a new upload shows even when reading it failed.
+      await load();
       setReading(null);
     }
   }
@@ -74,20 +78,23 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
   }, [load]);
 
   async function open(d: Doc) {
-    const { data, error } = await supabase().storage.from("documents").createSignedUrl(d.storage_path, 300);
-    if (error) return setError("This file could not be opened. It may not have finished uploading.");
-    window.open(data.signedUrl, "_blank", "noopener");
+    try {
+      window.open(await files().viewUrl(d.storage_path), "_blank", "noopener");
+    } catch {
+      setError("This file could not be opened. It may not have finished uploading.");
+    }
   }
 
   async function add() {
     if (!session || !file) return;
+    const problem = uploadProblem(file.size, file.type, file.name);
+    if (problem) return setError(problem);
     setBusy(true);
     setError(null);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "pdf";
       const path = `${session.user.id}/case-${caseId.slice(0, 8)}-${kind}-${Date.now()}.${ext}`;
-      const up = await supabase().storage.from("documents").upload(path, file, { contentType: file.type || "application/pdf" });
-      if (up.error) throw up.error;
+      await files().upload(path, file, file.type || "application/pdf");
       const { data: doc, error } = await supabase()
         .from("case_documents")
         .insert({ case_id: caseId, kind, storage_path: path, uploaded_by: session.user.id })
@@ -95,8 +102,8 @@ export function CaseDocuments({ caseId, suggested }: { caseId: string; suggested
         .single();
       if (error) throw error;
       setFile(null);
-      if (isChecked(kind)) await read(doc.id);
-      else void load();
+      // Every file is fingerprinted on the server; receipts and bills are also read.
+      await read(doc.id);
     } catch (e) {
       setError(errorMessage(e));
     } finally {

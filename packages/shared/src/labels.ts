@@ -4,7 +4,11 @@ import type { FollowUpStage } from './loans';
 
 type LoanStatus = Enums<'loan_status'>;
 
-export const rupees = (n: number | null | undefined) => `₹${(n ?? 0).toLocaleString('en-IN')}`;
+/** ₹1,20,000 in the Indian grouping; a negative amount reads −₹500, never ₹-500. */
+export const rupees = (n: number | null | undefined) => {
+  const v = n ?? 0;
+  return `${v < 0 ? '−' : ''}₹${Math.abs(v).toLocaleString('en-IN')}`;
+};
 
 export const CASE_TYPE_LABEL: Record<CaseType, string> = {
   medical: 'Medical',
@@ -23,7 +27,8 @@ export const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   marksheet: 'Mark sheet',
   income_proof: 'Income proof',
   medical_report: 'Medical report or bill',
-  lineage_proof: 'Sadaat lineage proof',
+  // Kept as lineage_proof in the database; for Sadaat cases the committee checks the Aadhaar card.
+  lineage_proof: 'Aadhaar card (Sadaat), masked',
   id_proof: 'ID proof',
   other: 'Other',
 };
@@ -116,12 +121,29 @@ export const AUTOPAY_LABEL: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
-/** "15 Oct 2026" for a YYYY-MM-DD date. */
+const IST_OFFSET_MS = 330 * 60 * 1000;
+
+/**
+ * "15 Oct 2026" for a YYYY-MM-DD date, or for a timestamp shown as the date in India.
+ * Timestamps arrive in UTC, so a payment at 11 pm IST must not show the day before.
+ */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—';
-  const [y, m, day] = d.slice(0, 10).split('-').map(Number);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (d.length > 10) {
+    const t = Date.parse(d);
+    if (!Number.isNaN(t)) {
+      const ist = new Date(t + IST_OFFSET_MS);
+      return `${ist.getUTCDate()} ${months[ist.getUTCMonth()]} ${ist.getUTCFullYear()}`;
+    }
+  }
+  const [y, m, day] = d.slice(0, 10).split('-').map(Number);
   return `${day} ${months[m - 1]} ${y}`;
+}
+
+/** Today's date in India as YYYY-MM-DD, whatever the phone's locale or time zone. */
+export function todayInIndia(now: Date = new Date()): string {
+  return new Date(now.getTime() + IST_OFFSET_MS).toISOString().slice(0, 10);
 }
 
 /** Shown on every Khums screen (CLAUDE.md rule 8). Wording to be approved by the Jamaat's alim. */
@@ -144,3 +166,13 @@ export const CASE_PRIVACY_NOTE =
   "To protect the family's dignity, their name and contact details are hidden. The Jamaat knows who they are and has checked the need.";
 /** Used when staff did not write a public summary. */
 export const CASE_SUMMARY_FALLBACK = 'Checked by a Jamaat verifier and approved by a different trustee.';
+
+/** Sign-in errors from Supabase Auth, in plain words. Other messages pass through unchanged. */
+export function friendlyAuthError(message: string, demo = false): string {
+  if (/invalid login credentials/i.test(message)) {
+    return demo ? 'Wrong email or password. Try again, or tap a demo account below.' : 'Wrong email or password. Please try again.';
+  }
+  if (/email not confirmed/i.test(message)) return 'Please confirm your email first: open the link we sent you, then sign in.';
+  if (/rate limit|too many requests/i.test(message)) return 'Too many tries. Please wait a minute and try again.';
+  return message;
+}

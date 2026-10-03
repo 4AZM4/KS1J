@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth";
+import { themeScript } from "@/components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,8 +10,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
+        {/* Sets light or dark before the first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Atkinson Hyperlegible: designed for readers with low vision (elder-friendly rule). */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -18,7 +21,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@500;600;700&display=swap"
         />
       </head>
       <body className="min-h-full flex flex-col">

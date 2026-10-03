@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { friendlyAuthError } from './labels.ts';
 import { isDonationAllowed, canTransition } from './domain.ts';
 import { calculateKhums } from './khums.ts';
 import { checkEmiProposal, followUpStage, minimumEmi, monthsToRepay } from './loans.ts';
@@ -55,4 +56,18 @@ test('Follow-up escalates automatically and stops for a pending hardship request
   assert.equal(followUpStage(15, false), 'officer_follow_up');
   assert.equal(followUpStage(30, false), 'committee_review');
   assert.equal(followUpStage(45, true), 'paused_for_review');
+});
+
+test('dates show the day in India, not UTC', async () => {
+  const { formatDate, todayInIndia } = await import('./labels.ts');
+  assert.equal(formatDate('2026-10-01T20:00:00+00:00'), '2 Oct 2026');
+  assert.equal(formatDate('2026-10-01T10:00:00.123456+00:00'), '1 Oct 2026');
+  assert.equal(formatDate('2026-10-15'), '15 Oct 2026');
+  assert.equal(todayInIndia(new Date('2026-10-01T19:00:00Z')), '2026-10-02');
+});
+
+test('sign-in errors read in plain words', () => {
+  assert.equal(friendlyAuthError('Invalid login credentials'), 'Wrong email or password. Please try again.');
+  assert.match(friendlyAuthError('Invalid login credentials', true), /demo account/);
+  assert.equal(friendlyAuthError('Some other error'), 'Some other error');
 });

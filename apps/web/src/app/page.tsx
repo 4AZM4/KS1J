@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { KHUMS_GUIDANCE, type IconName } from "@ks1j/shared";
 import { Icon } from "@/components/Icon";
 import { Announcements } from "@/components/landing/Announcements";
 import { FundFlow } from "@/components/landing/FundFlow";
+import { Impact } from "@/components/landing/Impact";
 import { KS1JLockup } from "@/components/landing/Mark";
 import { MihrabFrame } from "@/components/landing/MihrabFrame";
 import { StarLattice } from "@/components/landing/StarLattice";
@@ -48,7 +50,7 @@ const tabs: { name: string; icon: IconName; lead: string; items: string[] }[] = 
 
 const steps: { title: string; body: string; icon: IconName }[] = [
   { icon: "file-plus", title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
-  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
+  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and the Aadhaar card for Sadaat cases." },
   { icon: "rosette-discount-check", title: "A different trustee approves", body: "The person who verified can never approve the same case." },
   { icon: "eye-off", title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
   { icon: "building-bank", title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },
@@ -82,10 +84,12 @@ export default function Home() {
           <Link href="/help" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
             Helpdesk
           </Link>
-          <Link href="/login" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
+          <ThemeToggle />
+          <Link href="/login" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110 sm:bg-transparent sm:text-ink sm:hover:bg-card sm:hover:brightness-100">
             Sign in
           </Link>
-          <Link href="/signup" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110">
+          {/* On phones the hero already has "Create an account", so the header keeps to one row. */}
+          <Link href="/signup" className="hidden rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110 sm:inline-block">
             Create account
           </Link>
         </nav>
@@ -136,6 +140,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <Impact />
 
         {/* Before and after: today's paper and messages, then one place */}
         <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">

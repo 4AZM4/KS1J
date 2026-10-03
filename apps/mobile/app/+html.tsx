@@ -5,6 +5,9 @@ import type { ReactNode } from 'react';
 // web page during static rendering.
 // The contents of this function only run in Node.js environments and
 // do not have access to the DOM or browser APIs.
+// The app is served under a base path on GitHub Pages (/KS1J/app); empty in development.
+const BASE = (process.env.EXPO_BASE_URL ?? '').replace(/\/$/, '');
+
 export default function Root({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -21,7 +24,13 @@ export default function Root({ children }: { children: ReactNode }) {
 
         {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
-        {/* Add any additional <head> elements that you want globally available on web... */}
+        {/* Installable on phones: Add to Home screen opens KS1J like an app, with the star icon. */}
+        <link rel="manifest" href={`${BASE}/manifest.json`} />
+        <meta name="theme-color" content="#0B4D3A" />
+        <link rel="apple-touch-icon" href={`${BASE}/icons/apple-touch-icon.png`} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="KS1J" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>{children}</body>
     </html>

@@ -1,24 +1,38 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { buildReminders, type Reminder, type Tables } from '@ks1j/shared';
+import { buildReminders, todayInIndia, type Reminder, type Tables } from '@ks1j/shared';
 
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { ART } from '@/components/Art';
+import { CommitteeToday, isStaff } from '@/components/StaffTools';
+import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
-  const { member, session, signOut } = useAuth();
+  const { member, session, signOut, roles } = useAuth();
   const [news, setNews] = useState<Tables<'announcements'>[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [updates, setUpdates] = useState<Tables<'notifications'>[]>([]);
+  const { t } = useT();
   const muted = useThemeColor({}, 'mutedText');
 
   useFocusEffect(
     useCallback(() => {
-      if (session) void loadReminders(session.user.id).then(setReminders);
+      if (session) void loadReminders(session.user.id, member?.household_id ?? null).then(setReminders);
+      if (session)
+        supabase
+          .from('notifications')
+          .select('*')
+          .is('read_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5)
+          .then(({ data }) => setUpdates(data ?? []));
       supabase
         .from('announcements')
         .select('*')
@@ -26,54 +40,78 @@ export default function HomeScreen() {
         .order('published_at', { ascending: false })
         .limit(5)
         .then(({ data }) => setNews(data ?? []));
-    }, [session]),
+    }, [session, member?.household_id]),
   );
 
   const first = member?.full_name?.split(' ')[0];
 
   return (
-    <Screen hero title={first ? `Salaam, ${first.replace(/\s*\(demo\)/, '')}` : 'Salaam'} intro="Everything from the Jamaat in one place.">
+    <Screen
+      hero
+      title={first ? t('home.salaamName', { name: first.replace(/\s*\(demo\)/, '') }) : t('home.salaam')}
+      intro={t('home.intro')}>
       {member && !member.membership_verified ? (
         <Banner tone="info">
           Your account is created. A Jamaat verifier will confirm your membership and link you to your household. You can
           already apply for help and give; family dues and loans appear once you are verified.
         </Banner>
       ) : null}
+      {isStaff(roles) ? <CommitteeToday roles={roles} /> : null}
+      {updates.length > 0 ? (
+        <>
+          <SectionLabel>{t('sec.updates')}</SectionLabel>
+          {updates.map((n) => (
+            <UpdateCard key={n.id} n={n} onRead={() => setUpdates((u) => u.filter((x) => x.id !== n.id))} />
+          ))}
+        </>
+      ) : null}
       {reminders.length > 0 ? (
         <>
-          <SectionLabel>For you</SectionLabel>
+          <SectionLabel>{t('sec.forYou')}</SectionLabel>
           {reminders.map((r) => (
             <ReminderCard key={r.key} r={r} />
           ))}
         </>
       ) : null}
-      <SectionLabel>Announcements</SectionLabel>
-      {news.length === 0 ? <FeatureCard title="No announcements yet" description="Jamaat news will appear here." /> : null}
+      <SectionLabel>{t('sec.announcements')}</SectionLabel>
+      {news.length === 0 ? <FeatureCard icon="speakerphone" title={t('card.noNews.t')} description={t('card.noNews.d')} /> : null}
       {news.map((n) => (
         <FeatureCard key={n.id} icon="speakerphone" title={n.title} description={n.body} />
       ))}
-      <SectionLabel>Quick actions</SectionLabel>
-      <FeatureCard icon="file-plus" title="Apply for help" description="Medical, education, ration or a scholarship." href="/apply" />
-      <FeatureCard accent="gold" icon="heart-handshake" title="Support a Sadaat case" description="Verified needs. Sehme Sadaat goes only here." href="/cases/sadaat" />
-      <FeatureCard icon="calculator" title="Pay Khums or Lawajam" description="Calculate, pay and download receipts." href="/give" />
+      <SectionLabel>{t('sec.quick')}</SectionLabel>
+      {isStaff(roles) ? (
+        roles.includes('volunteer') || roles.includes('super_admin') ? (
+          <FeatureCard icon="file-plus" title="Refer a family" description="Apply for help on behalf of a family who cannot use the app." href="/apply?refer=1" />
+        ) : null
+      ) : (
+        <FeatureCard icon="file-plus" title={t('card.apply.t')} description={t('card.apply.d')} href="/apply" />
+      )}
+      <FeatureCard icon="heart-handshake" accent="gold" title={t('card.supportSadaat.t')} description={t('card.supportSadaat.d')} href="/cases/sadaat" />
+      <FeatureCard icon="calculator" title={t('card.payKhums.t')} description={t('card.payKhums.d')} href="/give" />
       <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.signout}>
-        <Text style={[styles.signoutText, { color: muted }]}>Sign out</Text>
+        <Text style={[styles.signoutText, { color: muted }]}>{t('common.signOut')}</Text>
       </Pressable>
     </Screen>
   );
 }
 
 /** Everything a reminder needs, read with the member's own permissions (RLS). */
-async function loadReminders(me: string): Promise<Reminder[]> {
-  const [loans, hardship, khums, dues] = await Promise.all([
+async function loadReminders(me: string, householdId: string | null): Promise<Reminder[]> {
+  // Staff can read every household's dues and requests, so filter to this member's own.
+  const [loans, khums, dues] = await Promise.all([
     supabase.from('education_loans').select('*').or(`borrower_id.eq.${me},payer_member_id.eq.${me}`),
-    supabase.from('loan_hardship_requests').select('loan_id').eq('status', 'pending'),
     supabase.from('khums_profiles').select('year_end_month, year_end_day').eq('member_id', me).maybeSingle(),
-    supabase.from('lawajam_dues').select('period, amount').eq('status', 'pending'),
+    householdId
+      ? supabase.from('lawajam_dues').select('period, amount').eq('status', 'pending').eq('household_id', householdId)
+      : Promise.resolve({ data: [] as { period: string; amount: number }[] }),
   ]);
+  const loanIds = (loans.data ?? []).map((l) => l.id);
+  const hardship = loanIds.length
+    ? await supabase.from('loan_hardship_requests').select('loan_id').eq('status', 'pending').in('loan_id', loanIds)
+    : { data: [] as { loan_id: string }[] };
   const pending = new Set((hardship.data ?? []).map((h) => h.loan_id));
   return buildReminders({
-    today: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD in the phone's time zone
+    today: todayInIndia(),
     loans: (loans.data ?? []).map((l) => ({
       planAgreed: !!l.plan_agreed_at,
       status: l.status,
@@ -86,6 +124,34 @@ async function loadReminders(me: string): Promise<Reminder[]> {
     khumsYearEnd: khums.data ? { month: khums.data.year_end_month, day: khums.data.year_end_day } : null,
     lawajamDue: dues.data ?? [],
   });
+}
+
+/** A notice from the Jamaat (case step, need met). Tapping it marks it read and opens the case. */
+function UpdateCard({ n, onRead }: { n: Tables<'notifications'>; onRead: () => void }) {
+  const card = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'border');
+  const muted = useThemeColor({}, 'mutedText');
+  async function open() {
+    await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id);
+    onRead();
+    if (n.kind === 'need_met' && n.case_id) router.push({ pathname: '/case/[id]', params: { id: n.case_id } });
+    else router.push('/applications');
+  }
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint="Marks this update read and opens it"
+      onPress={() => void open()}
+      style={({ pressed }) => [styles.update, { backgroundColor: card, borderColor: border, opacity: pressed ? 0.75 : 1 }]}>
+      <View style={styles.updateIcon} lightColor={ART.gold} darkColor={ART.gold}>
+        <Icon name={n.kind === 'need_met' ? 'heart' : 'bell-ringing'} size={24} color={ART.darkest} />
+      </View>
+      <View style={{ flex: 1 }} lightColor="transparent" darkColor="transparent">
+        <Text style={styles.reminderTitle}>{n.title}</Text>
+        <Text style={[styles.reminderBody, { color: muted }]}>{n.body}</Text>
+      </View>
+    </Pressable>
+  );
 }
 
 const TONE = { urgent: '#B42318', soon: '#B7791F', info: '#0F6B4F' } as const;
@@ -116,5 +182,7 @@ const styles = StyleSheet.create({
   reminderTitle: { fontSize: 18, fontWeight: '700' },
   reminderBody: { fontSize: 16, lineHeight: 22, marginTop: 4 },
   signout: { paddingVertical: 16, alignItems: 'center' },
+  update: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 12, flexDirection: 'row', gap: 14, alignItems: 'center' },
+  updateIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   signoutText: { fontSize: 16, textDecorationLine: 'underline' },
 });

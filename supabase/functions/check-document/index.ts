@@ -8,14 +8,17 @@
 // 2. Without it: the text of a PDF is read with simple rules (mirrors packages/shared/src/documents.ts).
 // 3. A photo with no AI key is left for the verifier to read and enter by hand.
 //
+// Every file (any kind) also gets a SHA-256 fingerprint; the same file on two cases raises a fraud flag.
 // Only someone who can see the document (applicant, submitter, staff) can ask for it to be checked.
-// Secrets (Supabase only, never in the apps): ANTHROPIC_API_KEY, optional ANTHROPIC_MODEL.
+// Secrets (Supabase only, never in the apps): ANTHROPIC_API_KEY, optional ANTHROPIC_MODEL; optional
+// FIREBASE_SERVICE_ACCOUNT (+ FIREBASE_STORAGE_BUCKET) when documents are stored in Firebase.
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 import { extractText, getDocumentProxy } from 'npm:unpdf@0.12.1';
 
 const CHECKED_KINDS = ['fee_receipt', 'medical_report', 'marksheet'];
 const MAX_BYTES = 10 * 1024 * 1024;
+const AI_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -31,6 +34,57 @@ const SERVICE = () => Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const JWT = /^Bearer [\w-]+\.[\w-]+\.[\w-]+$/;
 
 type Found = { amount: number | null; name: string | null; institution: string | null };
+
+// ---------- Firebase file storage (optional) ----------
+// When FIREBASE_SERVICE_ACCOUNT is set, documents may live in Cloud Storage for Firebase under
+// documents/<member id>/... (see packages/shared/src/files.ts). Optional FIREBASE_STORAGE_BUCKET,
+// otherwise <project id>.firebasestorage.app. Returns null if Firebase is off or the file is not there.
+const b64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64urlJson = (v: unknown) => b64url(new TextEncoder().encode(JSON.stringify(v)));
+let googleToken: { value: string; until: number } | null = null;
+
+async function firebaseDownload(path: string): Promise<{ bytes: Uint8Array; type: string } | null> {
+  const raw = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+  if (!raw) return null;
+  try {
+    const acct = JSON.parse(raw) as { client_email: string; private_key: string; project_id: string };
+    const bucket = Deno.env.get('FIREBASE_STORAGE_BUCKET') || `${acct.project_id}.firebasestorage.app`;
+    const now = Math.floor(Date.now() / 1000);
+    if (!googleToken || googleToken.until < now + 60) {
+      const pem = acct.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+      const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+      const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+      const unsigned = `${b64urlJson({ alg: 'RS256', typ: 'JWT' })}.${b64urlJson({
+        iss: acct.client_email,
+        scope: 'https://www.googleapis.com/auth/devstorage.read_only',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600,
+      })}`;
+      const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned)));
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${b64url(sig)}` }),
+      });
+      if (!res.ok) throw new Error(`google token ${res.status}`);
+      const t = (await res.json()) as { access_token: string; expires_in: number };
+      googleToken = { value: t.access_token, until: now + t.expires_in };
+    }
+    const obj = encodeURIComponent(`documents/${path}`);
+    const file = await fetch(`https://storage.googleapis.com/storage/v1/b/${bucket}/o/${obj}?alt=media`, {
+      headers: { Authorization: `Bearer ${googleToken.value}` },
+    });
+    if (file.status === 404) return null;
+    if (!file.ok) throw new Error(`firebase download ${file.status}`);
+    return { bytes: new Uint8Array(await file.arrayBuffer()), type: file.headers.get('content-type') ?? '' };
+  } catch (e) {
+    console.error('firebase download failed, trying Supabase', e);
+    return null;
+  }
+}
+
 
 // ---------- Text rules (mirror packages/shared/src/documents.ts; change both together) ----------
 const AMOUNT = /(?:₹|rs\.?|inr)?\s*((?:\d{1,3}(?:,\d{2,3})+|\d+))(?:\.\d{1,2})?\s*(?:\/-)?/gi;
@@ -57,7 +111,7 @@ function findReceiptAmount(text: string): number | null {
 }
 function findDocumentName(text: string): string | null {
   const m = text.match(
-    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
+    /\b(?:student(?:'s)?\s+name|name\s+of\s+(?:the\s+)?(?:student|patient|candidate)|patient(?:'s)?\s+name|candidate(?:'s)?\s+name|(?<!(?:father|mother|parent|guardian|school|college|institute|institution|hospital|doctor|bank|account)(?:'s)?\s+)name)\s*[:\-]\s*([A-Za-z][A-Za-z .']{2,79})/i,
   );
   if (!m) return null;
   // Stop at the next label on the same line ("Fatema Hussain Class: IX").
@@ -174,39 +228,77 @@ Deno.serve(async (req) => {
 
   try {
     // Read the document as the caller: RLS decides whether they may see it.
-    const docRes = await rest(`/rest/v1/case_documents?id=eq.${documentId}&select=id,kind,storage_path`, { asUser: auth });
-    const doc = ((await docRes.json()) as { id: string; kind: string; storage_path: string }[])[0];
+    const docRes = await rest(`/rest/v1/case_documents?id=eq.${documentId}&select=id,kind,storage_path,content_hash`, { asUser: auth });
+    const doc = ((await docRes.json()) as { id: string; kind: string; storage_path: string; content_hash: string | null }[])[0];
     if (!doc) return json({ error: 'Document not found' }, 404);
+
+    let bytes: Uint8Array | null = null;
+    let type = '';
+    const download = async (): Promise<Uint8Array> => {
+      if (bytes) return bytes;
+      // Firebase first when it is set up; files from before the switch are still in Supabase.
+      const fb = await firebaseDownload(doc.storage_path);
+      if (fb) {
+        type = fb.type;
+        bytes = fb.bytes;
+        return bytes;
+      }
+      const file = await rest(`/storage/v1/object/documents/${doc.storage_path.split('/').map(encodeURIComponent).join('/')}`, {
+        method: 'GET',
+      });
+      if (!file.ok) throw new Error(`download failed: ${file.status}`);
+      type = file.headers.get('content-type') ?? '';
+      bytes = new Uint8Array(await file.arrayBuffer());
+      return bytes;
+    };
+
+    // Every file gets a fingerprint, so the same file attached to two cases is flagged for a verifier.
+    if (!doc.content_hash) {
+      const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await download()));
+      const hex = [...digest].map((b) => b.toString(16).padStart(2, '0')).join('');
+      const h = await rest('/rest/v1/rpc/record_document_hash', { method: 'POST', body: JSON.stringify({ p_document: doc.id, p_hash: hex }) });
+      if (!h.ok) console.error('record_document_hash failed', h.status, await h.text());
+    }
+
     if (!CHECKED_KINDS.includes(doc.kind)) return json({ checked: false });
 
     // Already read (by the AI, the PDF rules or a verifier): keep that reading.
     const prev = await (await rest(`/rest/v1/document_checks?document_id=eq.${doc.id}&select=outcome,method`)).json();
     if (prev[0] && prev[0].outcome !== 'unreadable') return json({ checked: true });
 
-    const file = await rest(`/storage/v1/object/documents/${doc.storage_path.split('/').map(encodeURIComponent).join('/')}`, {
-      method: 'GET',
-    });
-    if (!file.ok) return json({ error: 'The file could not be opened' }, 404);
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.length > MAX_BYTES) return json({ checked: false, reason: 'File too large to read' });
+    const data = await download();
+    if (data.length > MAX_BYTES) return json({ checked: false, reason: 'File too large to read' });
 
-    const isPdf = bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46; // %PDF
-    const type = file.headers.get('content-type') ?? '';
+    const isPdf = data[0] === 0x25 && data[1] === 0x50 && data[2] === 0x44 && data[3] === 0x46; // %PDF
     const imageType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].find((t) => type.startsWith(t));
 
-    let found: Found;
-    let method: 'ai' | 'pdf_text';
-    if (Deno.env.get('ANTHROPIC_API_KEY') && (isPdf || imageType)) {
-      found = await askClaude(bytes, isPdf ? 'application/pdf' : imageType!);
+    let found: Found | null = null;
+    let method: 'ai' | 'pdf_text' = 'ai';
+    // The AI reads photos up to 5 MB; bigger photos go to a verifier.
+    const aiCanRead = isPdf || (imageType && data.length <= AI_IMAGE_MAX_BYTES);
+    if (Deno.env.get('ANTHROPIC_API_KEY') && aiCanRead) {
+      try {
+        found = await askClaude(data, isPdf ? 'application/pdf' : imageType!);
+      } catch (e) {
+        // If the AI is unavailable, a PDF can still be read by its text; a photo waits for a verifier.
+        console.error('AI read failed', e);
+        if (!isPdf) return json({ checked: false, reason: 'This photo could not be read automatically' });
+      }
+    }
+    if (found) {
       method = 'ai';
     } else if (isPdf) {
-      const text = await pdfText(bytes);
+      const text = await pdfText(data);
       found = {
         amount: doc.kind === 'marksheet' ? null : findReceiptAmount(text),
         name: findDocumentName(text),
         institution: findInstitution(text),
       };
       method = 'pdf_text';
+    } else if (imageType && data.length > AI_IMAGE_MAX_BYTES) {
+      return json({ checked: false, reason: 'This photo is too large to read automatically' });
+    } else if (Deno.env.get('ANTHROPIC_API_KEY')) {
+      return json({ checked: false, reason: 'This type of photo cannot be read automatically' });
     } else {
       return json({ checked: false, reason: 'Photos are read by a verifier until the AI key is added' });
     }

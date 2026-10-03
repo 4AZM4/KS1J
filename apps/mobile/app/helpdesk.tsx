@@ -44,7 +44,7 @@ export default function HelpdeskScreen() {
   }
 
   return (
-    <Screen title="Jamaat helpdesk" intro="Answers come only from texts the Jamaat has approved, with the source shown.">
+    <Screen eyebrow="Learn" title="Jamaat helpdesk" intro="Answers come only from texts the Jamaat has approved, with the source shown.">
       <Field
         label="Your question"
         value={question}
