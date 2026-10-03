@@ -1,4 +1,4 @@
-# Demo script (about 9 minutes)
+# Demo script (about 10 minutes)
 
 Live: https://4azm4.github.io/KS1J/ · Member app: https://4azm4.github.io/KS1J/app/ · Admin: https://4azm4.github.io/KS1J/login/
 
@@ -6,7 +6,7 @@ All people and amounts are fictional. Every demo account signs in with one tap o
 
 ## Before you start (10 minutes before judging)
 
-1. Reset the demo in the Supabase SQL editor: run `supabase/demo_reset.sql`, then `supabase/seed_data.sql`, then `supabase/kb_demo.sql` (the helpdesk texts).
+1. Reset the demo in the Supabase SQL editor: run `supabase/demo_reset.sql`, then `supabase/seed_data.sql`, then `supabase/kb_demo.sql` (the helpdesk texts), then `supabase/seed_community.sql` (demo profiles, posts and groups).
    This clears test gifts, receipts, flags and notifications.
 2. Open two windows side by side: the **member app** on a phone (or a narrow browser window) and the **admin** on a laptop.
 3. Check the landing page loads and shows the "Welcome to KS1J" announcement.
@@ -73,17 +73,26 @@ Point out: no interest, no late fees; nobody is turned away for having no family
    "An elder without a smartphone still gets help: a volunteer files it under her account, and she is told at each step."
 3. Sign in as **Super admin**: Home lists cases to verify, approve and publish, each opening the committee dashboard. On the website each role sees only its own menu (Finance sees payouts, not cases to verify); the database still enforces the limits.
 
-## 8. New members (30 s)
+## 8. The community (45 s) — app, **Abbas**, then **Donor**, then **Fatema**
+
+1. **Abbas** → Learn → **Community**: the feed (text only), **Directory** (search "tax" → the trustee), **Mentorship circle** → a mentor → **Request a call** with a note and a time.
+2. **Opportunities**: jobs, referrals, business ideas, mentorship openings. **Groups**: join *Finance and accounting*; the *Healthcare circle* is private and waits for its owner.
+3. **Donor** → Learn: *Messages · 1* → **Requests** → **Accept** Abbas's call request → reply. "Conversations open only with consent, and nobody else can read them, not even the committee."
+4. **Fatema** → Learn → Community feed: she has no profile yet, so she is asked to make one first. Her name comes from her membership (nobody can post as someone else) and her phone is never shown.
+5. Admin, **Verifier** → **Community**: reports from members, and *Remove* hides a post while keeping it on record. Only verified members ever see the community.
+
+## 9. New members (30 s)
 
 Landing page → **Create account** → the account starts *unverified* with no household (so it sees no family data). Admin, **Verifier** → **Members to verify** → link to a household → **Verify member**.
 
 ## Questions judges ask
 
 - **Is the money real?** Demo mode confirms payments instantly. In production, only the server marks a payment paid after the gateway (Razorpay) confirms it; apps can only create *pending* payments.
-- **What stops one person approving their own case?** A database trigger, tested by 135 automated rule tests that run on every change.
+- **What stops one person approving their own case?** A database trigger, tested by 164 automated rule tests that run on every change.
 - **Privacy?** Row-level security on every table. Public case cards come from one function with a generic title and a summary with names, phones and emails masked.
 - **Does the AI decide anything?** No. It reads receipts and flags mismatches, and the helpdesk only answers from approved sources. People verify, approve and pay.
 - **Elders?** Large text, plain words, four tabs, and Gujarati, Hindi and Urdu. Translations will be checked by native speakers before launch.
 - **What if a student has no family to guarantee the loan?** The Jamaat welfare committee stands guarantor and a named committee mentor follows up. Still no interest and no late fees.
 - **What about elders with no smartphone?** A volunteer refers the family from the app; the request is filed under the family's own account, so they still get every update.
+- **Why a community inside a welfare app?** The same verified members, one login. Mentors help students on loans find work and repay; opportunities stay inside a network members trust.
 - **What's next?** Push notifications for Khums year-end and EMIs, eMadressa and History of the Jamaat, payment gateway go-live.

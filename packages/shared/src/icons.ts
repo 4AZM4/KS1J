@@ -7,6 +7,92 @@
 export type IconElement = ['path' | 'circle' | 'rect' | 'line' | 'polyline' | 'polygon' | 'ellipse', Record<string, string>];
 
 export const ICONS = {
+  "messages": [
+    [
+      "path",
+      {
+        "d": "M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2"
+      }
+    ]
+  ],
+  "news": [
+    [
+      "path",
+      {
+        "d": "M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M8 8l4 0"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M8 12l4 0"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M8 16l4 0"
+      }
+    ]
+  ],
+  "address-book": [
+    [
+      "path",
+      {
+        "d": "M20 6v12a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2z"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M10 16h6"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M11 11a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M4 8h3"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M4 12h3"
+      }
+    ],
+    [
+      "path",
+      {
+        "d": "M4 16h3"
+      }
+    ]
+  ],
+  "phone": [
+    [
+      "path",
+      {
+        "d": "M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"
+      }
+    ]
+  ],
   "bell-ringing": [
     [
       "path",

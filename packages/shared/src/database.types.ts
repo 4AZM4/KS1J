@@ -197,6 +197,60 @@ export type Database = {
         Update: { marja?: string | null; member_id?: string; updated_at?: string; year_end_day?: number; year_end_month?: number }
         Relationships: Rel[]
       }
+      community_profiles: {
+        Row: { bio: string | null; city: string | null; created_at: string; display_name: string; headline: string | null; industry: string | null; is_mentor: boolean; listed: boolean; member_id: string; mentor_areas: string[]; mentor_note: string | null; open_to_work: boolean; profession: string | null; skills: string[]; updated_at: string }
+        Insert: { bio?: string | null; city?: string | null; headline?: string | null; industry?: string | null; is_mentor?: boolean; listed?: boolean; member_id?: string; mentor_areas?: string[]; mentor_note?: string | null; open_to_work?: boolean; profession?: string | null; skills?: string[] }
+        Update: { bio?: string | null; city?: string | null; headline?: string | null; industry?: string | null; is_mentor?: boolean; listed?: boolean; member_id?: string; mentor_areas?: string[]; mentor_note?: string | null; open_to_work?: boolean; profession?: string | null; skills?: string[] }
+        Relationships: Rel[]
+      }
+      community_opportunities: {
+        Row: { author_id: string; body: string; city: string | null; created_at: string; id: string; kind: "job" | "referral" | "business" | "mentorship"; status: "open" | "closed" | "removed"; title: string }
+        Insert: { author_id?: string; body: string; city?: string | null; id?: string; kind: "job" | "referral" | "business" | "mentorship"; title: string }
+        Update: { body?: string; city?: string | null; status?: "open" | "closed" | "removed"; title?: string }
+        Relationships: Rel[]
+      }
+      community_groups: {
+        Row: { created_at: string; created_by: string; description: string | null; id: string; kind: "profession" | "interest"; name: string; private: boolean }
+        Insert: { created_by?: string; description?: string | null; id?: string; kind: "profession" | "interest"; name: string; private?: boolean }
+        Update: { description?: string | null; name?: string; private?: boolean }
+        Relationships: Rel[]
+      }
+      community_group_members: {
+        Row: { created_at: string; group_id: string; member_id: string; role: "owner" | "member"; status: "pending" | "member" }
+        Insert: { group_id: string; member_id?: string }
+        Update: { status?: "pending" | "member" }
+        Relationships: Rel[]
+      }
+      community_posts: {
+        Row: { author_id: string; body: string; created_at: string; group_id: string | null; id: string; removed: boolean }
+        Insert: { author_id?: string; body: string; group_id?: string | null; id?: string }
+        Update: { body?: string; removed?: boolean }
+        Relationships: Rel[]
+      }
+      community_appreciations: {
+        Row: { created_at: string; member_id: string; post_id: string }
+        Insert: { member_id?: string; post_id: string }
+        Update: { post_id?: string }
+        Relationships: Rel[]
+      }
+      community_connections: {
+        Row: { created_at: string; from_id: string; id: string; kind: "message" | "call"; note: string; preferred_time: string | null; responded_at: string | null; status: "pending" | "accepted" | "declined"; to_id: string }
+        Insert: { from_id?: string; id?: string; kind?: "message" | "call"; note: string; preferred_time?: string | null; to_id: string }
+        Update: { status?: "accepted" | "declined" }
+        Relationships: Rel[]
+      }
+      community_messages: {
+        Row: { body: string; connection_id: string; created_at: string; id: string; sender_id: string }
+        Insert: { body: string; connection_id: string; id?: string; sender_id?: string }
+        Update: { body?: string }
+        Relationships: Rel[]
+      }
+      community_reports: {
+        Row: { created_at: string; id: string; reason: string; reporter_id: string; resolved_at: string | null; resolved_by: string | null; status: "open" | "resolved"; target_id: string; target_kind: "post" | "opportunity" | "profile" | "group" }
+        Insert: { reason: string; reporter_id?: string; target_id: string; target_kind: "post" | "opportunity" | "profile" | "group" }
+        Update: { status?: "open" | "resolved" }
+        Relationships: Rel[]
+      }
       notifications: {
         Row: { body: string; case_id: string | null; created_at: string; id: string; kind: string; member_id: string; read_at: string | null; title: string }
         Insert: never
@@ -255,6 +309,9 @@ export type Database = {
       household_loan_overdue: { Args: { p_household: string }; Returns: boolean }
       institution_sehme_imam_balance: { Args: { p_institution: string }; Returns: number }
       is_staff: { Args: never; Returns: boolean }
+      is_verified_member: { Args: never; Returns: boolean }
+      is_group_member: { Args: { p_group: string }; Returns: boolean }
+      is_group_owner: { Args: { p_group: string }; Returns: boolean }
       search_help: {
         Args: { max_results?: number; q: string }
         Returns: { body: string; chunk_id: string; document_id: string; heading: string | null; rank: number; source_ref: string; title: string }[]

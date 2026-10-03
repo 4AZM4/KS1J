@@ -921,4 +921,125 @@ end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
 select pg_temp.expect_error($$select * from public.staff_directory()$$, 'Members cannot read the committee list');
 
+-- 25. Community: only verified members take part, names cannot be faked, conversations need consent,
+--     private groups stay private and only the committee removes content.
+--     …010 Fatema · …013 Abbas · …020 donor · …012 Zainab (made unverified for this test) · …002 verifier
+select pg_temp.as_system();
+update public.members set membership_verified = false where id = '00000000-0000-0000-0000-000000000012';
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+select pg_temp.expect_error($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000012', 'Hello')$$,
+  'An unverified member cannot join the community');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, display_name, headline, profession, city, is_mentor, mentor_areas)
+  values ('00000000-0000-0000-0000-000000000010', 'Someone Famous', 'Teacher', 'Education', 'Mumbai', true, '{Careers}')$$,
+  'A verified member creates a community profile');
+do $$ begin
+  if (select display_name from public.community_profiles where member_id = '00000000-0000-0000-0000-000000000010') <> 'Fatema (demo)' then
+    raise exception 'FAIL  the community name must be the membership name';
+  end if;
+  raise notice 'PASS  the name shown is always the membership name';
+end $$;
+select pg_temp.expect_error($$insert into public.community_profiles (member_id) values ('00000000-0000-0000-0000-000000000013')$$,
+  'Nobody can create a profile for someone else');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000020', 'Donor')$$,
+  'The donor creates a community profile');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_ok($$insert into public.community_profiles (member_id, headline) values ('00000000-0000-0000-0000-000000000013', 'Student')$$,
+  'Abbas creates a community profile');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000012');
+do $$ begin
+  if exists (select 1 from public.community_profiles) then
+    raise exception 'FAIL  an unverified member can read community profiles';
+  end if;
+  raise notice 'PASS  an unverified member cannot see the directory';
+end $$;
+
+-- Messages open only with consent.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$insert into public.community_connections (from_id, to_id, kind, note) values ('00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000013', 'call', 'Can we talk?')$$,
+  'A call can be requested only from a mentor');
+select pg_temp.expect_ok($$insert into public.community_connections (id, from_id, to_id, kind, note) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', '00000000-0000-0000-0000-000000000010', 'message', 'Salaam, may I ask about teaching?')$$,
+  'The donor asks Fatema to talk');
+select pg_temp.expect_error($$insert into public.community_messages (connection_id, sender_id, body) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', 'Hello?')$$,
+  'No message before the other person accepts');
+select pg_temp.expect_error($$update public.community_connections set status = 'accepted' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'You cannot accept your own request');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$update public.community_connections set status = 'accepted' where id = '70000000-0000-0000-0000-000000000001'$$,
+  'Fatema accepts');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_ok($$insert into public.community_messages (connection_id, sender_id, body) values ('70000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000020', 'Shukran!')$$,
+  'Once accepted, they can talk');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+do $$ begin
+  if exists (select 1 from public.community_messages) or exists (select 1 from public.community_connections) then
+    raise exception 'FAIL  a third member can read someone else''s conversation';
+  end if;
+  raise notice 'PASS  nobody else can read a conversation';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+do $$ begin
+  if exists (select 1 from public.community_messages) then
+    raise exception 'FAIL  staff can read private messages';
+  end if;
+  raise notice 'PASS  not even staff can read private messages';
+end $$;
+
+-- Private groups.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$insert into public.community_groups (id, name, kind, private, created_by) values ('71000000-0000-0000-0000-000000000001', 'Teachers circle', 'profession', true, '00000000-0000-0000-0000-000000000010')$$,
+  'Fatema creates a private group');
+select pg_temp.expect_ok($$insert into public.community_posts (id, author_id, group_id, body) values ('72000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000010', '71000000-0000-0000-0000-000000000001', 'Welcome, teachers')$$,
+  'The owner posts in her group');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_ok($$insert into public.community_group_members (group_id, member_id, status, role) values ('71000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000013', 'member', 'owner')$$,
+  'Abbas asks to join');
+do $$ begin
+  if (select status || '/' || role from public.community_group_members where group_id = '71000000-0000-0000-0000-000000000001' and member_id = '00000000-0000-0000-0000-000000000013') <> 'pending/member' then
+    raise exception 'FAIL  joining a private group must wait for the owner, and nobody makes themselves owner';
+  end if;
+  if exists (select 1 from public.community_posts where group_id = '71000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  a pending member can read a private group';
+  end if;
+  raise notice 'PASS  a private group waits for the owner and stays hidden until then';
+end $$;
+select pg_temp.expect_error($$insert into public.community_posts (author_id, group_id, body) values ('00000000-0000-0000-0000-000000000013', '71000000-0000-0000-0000-000000000001', 'Hi')$$,
+  'A non-member cannot post in a group');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000010');
+select pg_temp.expect_ok($$update public.community_group_members set status = 'member' where group_id = '71000000-0000-0000-0000-000000000001' and member_id = '00000000-0000-0000-0000-000000000013'$$,
+  'The owner approves');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+do $$ begin
+  if not exists (select 1 from public.community_posts where group_id = '71000000-0000-0000-0000-000000000001') then
+    raise exception 'FAIL  an approved member should read the group';
+  end if;
+  raise notice 'PASS  once approved, the member reads the group';
+end $$;
+
+-- Moderation.
+select pg_temp.expect_ok($$insert into public.community_posts (id, author_id, body) values ('72000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000013', 'Salaam everyone')$$,
+  'Abbas posts on the feed');
+select pg_temp.expect_ok($$insert into public.community_opportunities (id, author_id, kind, title, body) values ('73000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000013', 'job', 'Tutor needed', 'Maths tutor for Class 10, two evenings a week.')$$,
+  'Abbas posts an opportunity');
+select pg_temp.expect_error($$update public.community_opportunities set status = 'removed' where id = '73000000-0000-0000-0000-000000000001'$$,
+  'Only the committee can remove an opportunity');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+select pg_temp.expect_error($$update public.community_posts set removed = true where id = '72000000-0000-0000-0000-000000000002'$$,
+  'A member cannot remove someone else''s post');
+select pg_temp.expect_ok($$insert into public.community_reports (reporter_id, target_kind, target_id, reason) values ('00000000-0000-0000-0000-000000000020', 'post', '72000000-0000-0000-0000-000000000002', 'Off topic')$$,
+  'A member reports a post');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000002');
+select pg_temp.expect_ok($$update public.community_posts set removed = true where id = '72000000-0000-0000-0000-000000000002'$$,
+  'A verifier removes the post');
+select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
+do $$ begin
+  if exists (select 1 from public.community_posts where id = '72000000-0000-0000-0000-000000000002') then
+    raise exception 'FAIL  a removed post is still shown';
+  end if;
+  raise notice 'PASS  removed posts disappear from the feed';
+end $$;
+select pg_temp.as_system();
+update public.members set membership_verified = true where id = '00000000-0000-0000-0000-000000000012';
+
 rollback;

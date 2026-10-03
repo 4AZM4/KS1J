@@ -11,3 +11,4 @@ export * from './documents';
 export * from './icons';
 export * from './i18n';
 export * from './files';
+export * from './community';

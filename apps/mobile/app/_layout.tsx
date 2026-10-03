@@ -68,6 +68,15 @@ function RootLayoutNav() {
           <Stack.Screen name="helpdesk" options={{ title: 'Helpdesk' }} />
           <Stack.Screen name="profile" options={{ title: 'Profile' }} />
           <Stack.Screen name="receipt" options={{ title: 'Receipt' }} />
+          <Stack.Screen name="community/feed" options={{ title: 'Community' }} />
+          <Stack.Screen name="community/directory" options={{ title: 'Directory' }} />
+          <Stack.Screen name="community/person" options={{ title: 'Member' }} />
+          <Stack.Screen name="community/opportunities" options={{ title: 'Opportunities' }} />
+          <Stack.Screen name="community/messages" options={{ title: 'Messages' }} />
+          <Stack.Screen name="community/chat" options={{ title: 'Conversation' }} />
+          <Stack.Screen name="community/groups" options={{ title: 'Groups' }} />
+          <Stack.Screen name="community/group" options={{ title: 'Group' }} />
+          <Stack.Screen name="community/profile" options={{ title: 'My community profile' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'About' }} />
         </Stack>
       </ThemeProvider>

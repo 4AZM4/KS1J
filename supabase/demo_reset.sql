@@ -3,6 +3,7 @@
 -- 1. Run this file (Supabase SQL editor, or psql as the database owner).
 -- 2. Then run supabase/seed_data.sql to load the demo cases, loans and dues again.
 -- 3. Then run supabase/kb_demo.sql to load the demo helpdesk texts again.
+-- 4. Then run supabase/seed_community.sql to load the demo community (profiles, posts, groups).
 --
 -- It refuses to run unless jamaat_settings.demo_mode is on, so it can never touch a real
 -- Jamaat database. Member accounts (demo logins and anyone who signed up) are kept.
@@ -43,6 +44,9 @@ delete from public.announcements;
 -- Only the demo help texts (kb_demo.sql); texts the committee added stay.
 delete from public.kb_documents where id::text like 'a0000000-0000-0000-0000-%';
 delete from public.helpdesk_questions;
+-- Community: everything goes (profiles cascade to posts, groups, requests and messages).
+delete from public.community_reports;
+delete from public.community_profiles;
 
 alter table public.ledger_entries enable trigger ledger_append_only;
 

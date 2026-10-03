@@ -27,6 +27,7 @@ const adminNav: { href: string; label: string; icon: IconName; roles: AdminRole[
   { href: "/admin/flags", label: "Fraud flags", icon: "flag", roles: ["verifier", "trustee"] },
   { href: "/admin/announcements", label: "Announcements", icon: "speakerphone", roles: ["trustee"] },
   { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question", roles: ["trustee"] },
+  { href: "/admin/community", label: "Community", icon: "users-group", roles: ["verifier", "trustee"] },
 ];
 
 // Access is enforced by Supabase RLS on every query. This gate only keeps non-staff
