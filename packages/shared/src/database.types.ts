@@ -260,6 +260,10 @@ export type Database = {
         Returns: { body: string; chunk_id: string; document_id: string; heading: string | null; rank: number; source_ref: string; title: string }[]
       }
       is_system: { Args: never; Returns: boolean }
+      public_impact: {
+        Args: never
+        Returns: { families_helped: number; loans_repaid: number; open_needs: number; raised: number; students_with_loans: number }[]
+      }
       list_public_cases: {
         Args: { p_category?: Database["public"]["Enums"]["case_category"] }
         Returns: {

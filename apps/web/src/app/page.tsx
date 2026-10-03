@@ -3,6 +3,7 @@ import { KHUMS_GUIDANCE, type IconName } from "@ks1j/shared";
 import { Icon } from "@/components/Icon";
 import { Announcements } from "@/components/landing/Announcements";
 import { FundFlow } from "@/components/landing/FundFlow";
+import { Impact } from "@/components/landing/Impact";
 import { KS1JLockup } from "@/components/landing/Mark";
 import { MihrabFrame } from "@/components/landing/MihrabFrame";
 import { StarLattice } from "@/components/landing/StarLattice";
@@ -137,6 +138,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <Impact />
 
         {/* Before and after: today's paper and messages, then one place */}
         <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">

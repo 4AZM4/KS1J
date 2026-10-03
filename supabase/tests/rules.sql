@@ -880,4 +880,17 @@ begin
   raise notice 'PASS  payouts come from the fund the money was given to, never another';
 end $$;
 
+-- 23. Landing-page totals: anyone can read them, and they are totals only.
+select pg_temp.as_system();
+set local role anon;
+do $$
+declare r record;
+begin
+  select * into r from public.public_impact();
+  if r.raised is null or r.families_helped is null or r.open_needs is null then
+    raise exception 'FAIL  public totals should always return numbers';
+  end if;
+  raise notice 'PASS  anyone can read the landing-page totals (aggregates only)';
+end $$;
+
 rollback;

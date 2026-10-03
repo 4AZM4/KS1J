@@ -37,7 +37,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export:pages": "EXPO_BASE_URL=/KS1J/app expo export --platform web --output-dir dist-pages && node scripts/add-pwa-tags.mjs dist-pages /KS1J/app"
   },
   "private": true
 }

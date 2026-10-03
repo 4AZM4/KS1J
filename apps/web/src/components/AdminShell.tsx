@@ -10,18 +10,23 @@ import { useAuth } from "@/components/auth";
 import { Button, Card } from "@/components/ui";
 import { KS1JLockup } from "@/components/landing/Mark";
 
-const adminNav: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin", label: "Overview", icon: "layout-dashboard" },
-  { href: "/admin/cases", label: "Cases", icon: "users" },
-  { href: "/admin/members", label: "Members to verify", icon: "user" },
-  { href: "/admin/loans", label: "Education loans", icon: "cash" },
-  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee" },
-  { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank" },
-  { href: "/admin/lawajam", label: "Lawajam", icon: "receipt" },
-  { href: "/admin/flags", label: "Fraud flags", icon: "flag" },
-  { href: "/admin/announcements", label: "Announcements", icon: "speakerphone" },
-  { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question" },
-] as const;
+import type { AdminRole } from "@ks1j/shared";
+
+// Each role sees the pages it works in, so the menu stays short. Super admins see everything.
+// This only tidies the menu: what each person can read or change is still decided by Supabase RLS.
+const ALL: AdminRole[] = ["volunteer", "verifier", "trustee", "finance"];
+const adminNav: { href: string; label: string; icon: IconName; roles: AdminRole[] }[] = [
+  { href: "/admin", label: "Overview", icon: "layout-dashboard", roles: ALL },
+  { href: "/admin/cases", label: "Cases", icon: "users", roles: ALL },
+  { href: "/admin/members", label: "Members to verify", icon: "user", roles: ["volunteer", "verifier"] },
+  { href: "/admin/loans", label: "Education loans", icon: "cash", roles: ["trustee", "finance"] },
+  { href: "/admin/khums", label: "Khums & ledgers", icon: "coin-rupee", roles: ["trustee", "finance"] },
+  { href: "/admin/institutions", label: "Sehme Imam institutions", icon: "building-bank", roles: ["trustee", "finance"] },
+  { href: "/admin/lawajam", label: "Lawajam", icon: "receipt", roles: ["finance"] },
+  { href: "/admin/flags", label: "Fraud flags", icon: "flag", roles: ["verifier", "trustee"] },
+  { href: "/admin/announcements", label: "Announcements", icon: "speakerphone", roles: ["trustee"] },
+  { href: "/admin/helpdesk", label: "Helpdesk", icon: "message-question", roles: ["trustee"] },
+];
 
 // Access is enforced by Supabase RLS on every query. This gate only keeps non-staff
 // from seeing an empty dashboard.
@@ -68,7 +73,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <p className="mt-3 text-sm font-semibold">{member?.full_name}</p>
         <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
         <ul className="mt-4 flex gap-1 overflow-x-auto sm:flex-col">
-          {adminNav.map((item) => {
+          {adminNav
+            .filter((item) => roles.includes("super_admin") || item.roles.some((r) => roles.includes(r)))
+            .map((item) => {
             const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
             return (
               <li key={item.href}>
