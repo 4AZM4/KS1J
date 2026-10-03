@@ -60,7 +60,7 @@ export default function KhumsScreen() {
     latest ? payments.filter((p) => p.fund === fund && p.paid_at && p.paid_at >= latest.created_at).reduce((s, p) => s + p.amount, 0) : 0;
 
   return (
-    <Screen title="Khums" intro="Work out your Khums and pay each share to where it is allowed to go.">
+    <Screen eyebrow="Give" title="Khums" intro="Work out your Khums and pay each share to where it is allowed to go.">
       <Banner tone="info">{KHUMS_GUIDANCE}</Banner>
 
       {profile === undefined ? <Text style={{ color: muted }}>Loading…</Text> : null}

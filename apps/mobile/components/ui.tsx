@@ -18,8 +18,8 @@ export function Button({
   variant?: 'primary' | 'secondary';
 }) {
   const tint = useThemeColor({}, 'tint');
-  const bg = useThemeColor({}, 'background');
-  const border = useThemeColor({}, 'border');
+  const bg = useThemeColor({}, 'card');
+  const card = useThemeColor({}, 'card');
   const primary = variant === 'primary';
   return (
     <Pressable
@@ -29,7 +29,7 @@ export function Button({
       disabled={disabled || busy}
       style={({ pressed }) => [
         styles.button,
-        primary ? { backgroundColor: tint } : { borderWidth: 1, borderColor: border },
+        primary ? { backgroundColor: tint } : { borderWidth: 1.5, borderColor: tint, backgroundColor: card },
         { opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
       ]}>
       {busy ? (
@@ -45,6 +45,7 @@ export function Field({ label, hint, ...props }: TextInputProps & { label: strin
   const text = useThemeColor({}, 'text');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
+  const card = useThemeColor({}, 'card');
   return (
     <View style={styles.field} lightColor="transparent" darkColor="transparent">
       <Text style={styles.label}>{label}</Text>
@@ -53,7 +54,7 @@ export function Field({ label, hint, ...props }: TextInputProps & { label: strin
         accessibilityLabel={label}
         placeholderTextColor={muted}
         {...props}
-        style={[styles.input, { color: text, borderColor: border }, props.multiline ? { minHeight: 96, textAlignVertical: 'top' } : null]}
+        style={[styles.input, { color: text, borderColor: border, backgroundColor: card }, props.multiline ? { minHeight: 96, textAlignVertical: 'top' } : null]}
       />
     </View>
   );
@@ -74,6 +75,8 @@ export function Choice<T extends string>({
   const tint = useThemeColor({}, 'tint');
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'mutedText');
+  const card = useThemeColor({}, 'card');
+  const soft = useThemeColor({}, 'tintSoft');
   return (
     <View style={styles.field} lightColor="transparent" darkColor="transparent">
       <Text style={styles.label}>{label}</Text>
@@ -87,7 +90,7 @@ export function Choice<T extends string>({
               accessibilityState={{ checked: selected, selected }}
               aria-checked={selected}
               onPress={() => onChange(o.value)}
-              style={[styles.chip, { borderColor: selected ? tint : border, borderWidth: selected ? 2 : 1 }]}>
+              style={[styles.chip, { borderColor: selected ? tint : border, borderWidth: selected ? 2 : 1, backgroundColor: selected ? soft : card }]}>
               <Text style={[styles.chipText, selected ? { color: tint, fontWeight: '700' } : null]}>{o.label}</Text>
               {o.note ? <Text style={[styles.chipNote, { color: muted }]}>{o.note}</Text> : null}
             </Pressable>
@@ -99,9 +102,10 @@ export function Choice<T extends string>({
 }
 
 export function Banner({ children, tone = 'bad' }: { children: ReactNode; tone?: 'bad' | 'good' | 'info' }) {
-  const colors = { bad: '#B42318', good: '#0F6B4F', info: '#555555' }[tone];
+  const colors = { bad: '#B42318', good: '#0B6B4C', info: '#4A5A53' }[tone];
+  const fill = { bad: 'rgba(180,35,24,0.06)', good: 'rgba(11,107,76,0.07)', info: 'rgba(74,90,83,0.06)' }[tone];
   return (
-    <View style={[styles.banner, { borderColor: colors }]} lightColor="transparent" darkColor="transparent">
+    <View style={[styles.banner, { borderColor: colors, backgroundColor: fill }]} lightColor="transparent" darkColor="transparent">
       <Text style={{ color: colors, fontSize: 16, lineHeight: 22 }}>{children}</Text>
     </View>
   );
@@ -128,12 +132,12 @@ const styles = StyleSheet.create({
   field: { marginBottom: 16 },
   label: { fontSize: 16, fontWeight: '600', marginBottom: 6 },
   hint: { fontSize: 14, marginBottom: 6, lineHeight: 20 },
-  input: { borderWidth: 1, borderRadius: 10, fontSize: 18, paddingHorizontal: 12, paddingVertical: 12 },
+  input: { borderWidth: 1, borderRadius: 12, fontSize: 18, paddingHorizontal: 14, paddingVertical: 13 },
   choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, minHeight: 48, justifyContent: 'center' },
   chipText: { fontSize: 16 },
   chipNote: { fontSize: 13, marginTop: 2 },
-  banner: { borderWidth: 1, borderRadius: 12, padding: 12, marginBottom: 12 },
+  banner: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 12 },
   track: { height: 10, borderRadius: 5, overflow: 'hidden', marginTop: 10 },
   bar: { height: 10, borderRadius: 5 },
 });

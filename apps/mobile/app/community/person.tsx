@@ -59,7 +59,7 @@ export default function PersonScreen() {
   }
 
   return (
-    <Screen title={p?.display_name ?? 'Member'}>
+    <Screen eyebrow="Community" title={p?.display_name ?? 'Member'}>
       <CommunityGate>
         {!p ? null : (
           <>

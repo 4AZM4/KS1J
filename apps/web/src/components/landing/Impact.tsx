@@ -31,7 +31,7 @@ export function Impact() {
 
   return (
     <section aria-labelledby="impact" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6">
-      <h2 id="impact" className="text-sm font-bold uppercase tracking-[0.2em] text-brand">Together so far</h2>
+      <h2 id="impact" className="font-sans text-sm font-bold uppercase tracking-[0.2em] text-brand">Together so far</h2>
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {tiles.map((x, i) => (
           // On phones the first total (usually the rupees raised) gets the full width, and numbers shrink

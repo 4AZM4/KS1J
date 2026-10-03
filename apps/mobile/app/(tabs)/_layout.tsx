@@ -37,7 +37,9 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme].tint,
         tabBarInactiveTintColor: Colors[colorScheme].mutedText,
         tabBarLabelStyle: { fontSize: 15, fontWeight: '600' },
-        tabBarStyle: { height: 72, paddingTop: 6, paddingBottom: 10 },
+        tabBarStyle: { height: 72, paddingTop: 6, paddingBottom: 10, borderTopColor: Colors[colorScheme].border },
+        headerShadowVisible: false,
+        headerTitleStyle: { fontSize: 17, fontWeight: '600' },
         // Disable the static render of the header on web to prevent a hydration error.
         headerShown: clientOnlyHeader,
       }}>

@@ -42,10 +42,10 @@ export default function GroupScreen() {
   const pending = roster.filter((m) => m.status === 'pending');
   const name = (m: string) => people.get(m)?.display_name ?? 'Member';
 
-  if (!group) return <Screen title="Group"><CommunityGate>{null}</CommunityGate></Screen>;
+  if (!group) return <Screen eyebrow="Community" title="Group"><CommunityGate>{null}</CommunityGate></Screen>;
 
   return (
-    <Screen title={group.name} intro={group.description ?? undefined}>
+    <Screen eyebrow="Community" title={group.name} intro={group.description ?? undefined}>
       <CommunityGate needProfile>
         <Tags items={[group.private ? 'Private' : 'Open', group.kind === 'profession' ? 'Profession' : 'Interest']} tone="gold" />
         {!isMember ? (

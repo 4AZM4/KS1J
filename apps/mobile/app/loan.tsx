@@ -42,7 +42,7 @@ export default function LoanScreen() {
   useFocusEffect(load);
 
   return (
-    <Screen title="Education loan" intro="Qard-e-Hasana: interest-free, no late fees. Repay after your course and grace period.">
+    <Screen eyebrow="Services" title="Education loan" intro="Qard-e-Hasana: interest-free, no late fees. Repay after your course and grace period.">
       {loans === null ? <Text style={{ color: muted }}>Loading…</Text> : null}
       {loans?.length === 0 ? (
         <>

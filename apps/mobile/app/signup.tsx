@@ -40,7 +40,7 @@ export default function SignupScreen() {
 
   if (confirmEmail) {
     return (
-      <Screen title="Check your email" intro={`We sent a link to ${form.email.trim()}.`}>
+      <Screen eyebrow="Your account" title="Check your email" intro={`We sent a link to ${form.email.trim()}.`}>
         <Text style={{ fontSize: 17, lineHeight: 24 }}>
           Open the link to confirm your email, then come back and sign in. A Jamaat verifier will then confirm your
           membership and link you to your household.
@@ -51,7 +51,7 @@ export default function SignupScreen() {
   }
 
   return (
-    <Screen
+    <Screen eyebrow="Your account"
       title="Create your account"
       intro="For members of KSI Jamaat Mumbai. A verifier checks every new account before family details are shared.">
       {error ? <Banner>{error}</Banner> : null}

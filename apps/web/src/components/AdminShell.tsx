@@ -70,10 +70,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col sm:flex-row">
-      <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r">
-        <Link href="/" aria-label="KS1J home" className="flex items-center gap-2"><KS1JLockup size="sm" /><span className="text-sm font-semibold uppercase tracking-wide text-brand">Admin</span></Link>
-        <p className="mt-3 text-sm font-semibold">{member?.full_name}</p>
-        <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
+      <nav aria-label="Admin" className="border-b border-border bg-card p-4 sm:w-64 sm:border-b-0 sm:border-r sm:px-5 sm:py-6">
+        <Link href="/" aria-label="KS1J home" className="flex items-center gap-2"><KS1JLockup size="sm" /><span className="sr-only">Committee dashboard</span></Link>
+        <div className="mt-5 rounded-xl bg-background px-3 py-2.5">
+          <p className="text-sm font-semibold">{member?.full_name}</p>
+          <p className="text-xs text-muted">{roles.map((r) => ROLE_LABEL[r]).join(", ")}</p>
+        </div>
         <ul className="mt-4 flex gap-1 overflow-x-auto sm:flex-col">
           {adminNav
             .filter((item) => roles.includes("super_admin") || item.roles.some((r) => roles.includes(r)))
@@ -83,7 +85,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-background font-semibold text-brand" : "hover:bg-background"}`}
+                  className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm ${active ? "bg-brand-soft font-semibold text-brand" : "hover:bg-background"}`}
                 >
                   <Icon name={item.icon} size={20} className={active ? "text-brand" : "text-muted"} />
                   {item.label}
@@ -97,7 +99,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </div>
       </nav>
-      <main className="flex-1 p-4 sm:p-8">{children}</main>
+      <main className="admin-page flex-1 p-4 sm:px-10 sm:py-9">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-brand">Committee dashboard</p>
+        {children}
+      </main>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function CommunityProfileScreen() {
   }
 
   return (
-    <Screen
+    <Screen eyebrow="Community"
       title={profile ? 'My community profile' : 'Join the community'}
       intro="Only verified Jamaat members can see this. Your name comes from your membership, and your phone number is never shown.">
       <CommunityGate>

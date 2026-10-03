@@ -3,6 +3,7 @@ import { Image, StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle 
 import Svg, { Circle, Defs, G, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
+import { DISPLAY } from '@/constants/Type';
 import { useT } from '@/lib/i18n';
 
 /** Jamaat palette used by the artwork. Text on it stays high-contrast for elders. */
@@ -177,6 +178,6 @@ const styles = StyleSheet.create({
   heroNarrow: { paddingLeft: 22, paddingRight: 22, minHeight: 0 },
   rosette: { position: 'absolute', top: 0 },
   heroText: { gap: 6 },
-  heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', lineHeight: 36 },
+  heroTitle: { color: '#FFFFFF', fontFamily: DISPLAY, fontSize: 32, lineHeight: 40 },
   heroIntro: { color: ART.mint, fontSize: 17, lineHeight: 24 },
 });

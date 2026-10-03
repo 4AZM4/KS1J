@@ -62,7 +62,7 @@ export default function LoanHardshipScreen() {
   }
 
   return (
-    <Screen
+    <Screen eyebrow="Services"
       title="Ask for help with your EMI"
       intro="Reminders stop while a trustee reviews your request. Your proof is private to the committee.">
       {error ? <Banner>{error}</Banner> : null}

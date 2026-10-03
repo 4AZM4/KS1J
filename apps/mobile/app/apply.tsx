@@ -66,7 +66,7 @@ export default function ApplyScreen() {
   }
 
   return (
-    <Screen
+    <Screen eyebrow="Services"
       title={refer ? 'Refer a family' : 'Apply for help'}
       intro={
         refer

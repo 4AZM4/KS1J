@@ -1,3 +1,5 @@
+import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display/600SemiBold';
+import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display/700Bold';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -5,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import { AuthProvider } from '@/lib/auth';
 import { LanguageProvider } from '@/lib/i18n';
 
@@ -24,6 +27,8 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -44,14 +49,24 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+// Navigation chrome in the KS1J palette: white bars over the pale page, green for active items.
+const lightNav = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, primary: Colors.light.tint, background: Colors.light.background, card: Colors.light.card, border: Colors.light.border, text: Colors.light.text },
+};
+const darkNav = {
+  ...DarkTheme,
+  colors: { ...DarkTheme.colors, primary: Colors.dark.tint, background: Colors.dark.background, card: Colors.dark.card, border: Colors.dark.border, text: Colors.dark.text },
+};
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
     <AuthProvider>
       <LanguageProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerTitleStyle: { fontSize: 18 }, headerBackTitle: 'Back' }}>
+      <ThemeProvider value={colorScheme === 'dark' ? darkNav : lightNav}>
+        <Stack screenOptions={{ headerTitleStyle: { fontSize: 17, fontWeight: '600' }, headerBackTitle: 'Back', headerShadowVisible: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ title: 'Sign in', headerBackVisible: false }} />
           <Stack.Screen name="signup" options={{ title: 'Create an account' }} />

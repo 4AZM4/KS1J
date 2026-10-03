@@ -54,7 +54,7 @@ export default function OpportunitiesScreen() {
   const shown = rows.filter((o) => filter === 'all' || o.kind === filter);
 
   return (
-    <Screen title="Opportunities" intro="Jobs, referrals and ventures, shared within a network you can trust.">
+    <Screen eyebrow="Community" title="Opportunities" intro="Jobs, referrals and ventures, shared within a network you can trust.">
       <CommunityGate>
         {!profile ? (
           <JoinPrompt text="Make a short profile to post an opportunity. Reading is open to every verified member." />

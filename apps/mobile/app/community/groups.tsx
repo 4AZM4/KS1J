@@ -93,7 +93,7 @@ export default function GroupsScreen() {
   };
 
   return (
-    <Screen title="Groups" intro="Profession circles and shared interests. Text discussions only, by design.">
+    <Screen eyebrow="Community" title="Groups" intro="Profession circles and shared interests. Text discussions only, by design.">
       <CommunityGate>
         {!profile ? (
           <JoinPrompt text="Make a short profile to join or start a group." />

@@ -50,14 +50,14 @@ export default function CaseScreen() {
 
   if (c === undefined) {
     return (
-      <Screen title="Case">
+      <Screen eyebrow="Give" title="Case">
         <Text style={{ color: muted, fontSize: 16 }}>Loading…</Text>
       </Screen>
     );
   }
   if (!c) {
     return (
-      <Screen title="Case">
+      <Screen eyebrow="Give" title="Case">
         {loadError ? <Banner>{loadError}</Banner> : null}
         <Text style={{ color: muted, fontSize: 16 }}>{loadError ? 'Please check your connection and try again.' : 'This case is not open for donations.'}</Text>
       </Screen>
@@ -107,7 +107,7 @@ export default function CaseScreen() {
   const closed = c.status === 'funded';
 
   return (
-    <Screen title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
+    <Screen eyebrow="Give" title={c.title} intro={`Case #${c.case_no} · ${CATEGORY_LABEL[c.category]} · ${CASE_TYPE_LABEL[c.type]}`}>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         <Text style={styles.summary}>{c.public_summary || CASE_SUMMARY_FALLBACK}</Text>
         <Progress value={c.raised_amount} max={c.target_amount} label={`${rupees(c.raised_amount)} raised of ${rupees(c.target_amount)}`} />

@@ -43,7 +43,7 @@ export default function MessagesScreen() {
   }
 
   return (
-    <Screen title="Messages" intro="Conversations open only when the other person accepts. Nobody else can read them.">
+    <Screen eyebrow="Community" title="Messages" intro="Conversations open only when the other person accepts. Nobody else can read them.">
       <CommunityGate needProfile>
         <Filters
           options={[

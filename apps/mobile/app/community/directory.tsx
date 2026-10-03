@@ -49,7 +49,7 @@ export default function DirectoryScreen() {
   });
 
   return (
-    <Screen
+    <Screen eyebrow="Community"
       title={mentorsMode ? 'Mentorship circle' : 'Directory'}
       intro={
         mentorsMode
@@ -60,7 +60,7 @@ export default function DirectoryScreen() {
         {mentorsMode && profile && !profile.is_mentor ? (
           <Button title="Become a mentor" variant="secondary" onPress={() => router.push('/community/profile')} />
         ) : null}
-        <Text style={[communityStyles.meta, { color: muted, marginBottom: 12 }]}>
+        <Text style={[communityStyles.meta, { color: muted, marginTop: 14, marginBottom: 12 }]}>
           {people.length} {people.length === 1 ? 'member' : 'members'} listed · {cities} {cities === 1 ? 'city' : 'cities'}
         </Text>
         <Field label="Search" value={q} onChangeText={setQ} placeholder="Name, skill or city" autoCorrect={false} />

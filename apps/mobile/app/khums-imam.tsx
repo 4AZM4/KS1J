@@ -69,7 +69,7 @@ export default function KhumsImamScreen() {
   }
 
   return (
-    <Screen title="Pay Sehme Imam" intro="Only institutions holding a verified ijazah from a Marja' are listed.">
+    <Screen eyebrow="Give" title="Pay Sehme Imam" intro="Only institutions holding a verified ijazah from a Marja' are listed.">
       <Banner tone="info">{KHUMS_GUIDANCE}</Banner>
       {thanks ? <Banner tone="good">{thanks}</Banner> : null}
       {error ? <Banner>{error}</Banner> : null}

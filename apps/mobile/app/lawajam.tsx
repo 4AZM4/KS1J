@@ -63,7 +63,7 @@ export default function LawajamScreen() {
   const paid = (dues ?? []).filter((d) => d.status === 'paid');
 
   return (
-    <Screen title="Lawajam" intro="Your household's yearly membership dues to the Jamaat.">
+    <Screen eyebrow="Give" title="Lawajam" intro="Your household's yearly membership dues to the Jamaat.">
       {notice ? <Banner tone="good">{notice}</Banner> : null}
       {error ? <Banner>{error}</Banner> : null}
       {dues === null ? <Text style={{ color: muted }}>Loading…</Text> : null}

@@ -6,6 +6,7 @@ import { initials, type Tables } from '@ks1j/shared';
 import { ART } from '@/components/Art';
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner, Button } from '@/components/ui';
+import { DISPLAY, cardShadow } from '@/constants/Type';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
@@ -82,7 +83,7 @@ export function Card({ children, accent }: { children: ReactNode; accent?: boole
   const border = useThemeColor({}, 'border');
   return (
     <View
-      style={[styles.card, { backgroundColor: card, borderColor: border }, accent ? { borderLeftWidth: 6, borderLeftColor: ART.gold } : null]}
+      style={[styles.card, { backgroundColor: card, borderColor: border }, cardShadow, accent ? { borderLeftWidth: 4, borderLeftColor: ART.gold } : null]}
       lightColor="transparent"
       darkColor="transparent">
       {children}
@@ -142,6 +143,7 @@ export function PersonLine({ person, sub, onPress }: { person: { member_id: stri
 export function Filters<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   const tint = useThemeColor({}, 'tint');
   const border = useThemeColor({}, 'border');
+  const surface = useThemeColor({}, 'card');
   return (
     <View style={styles.filters} lightColor="transparent" darkColor="transparent">
       {options.map((o) => {
@@ -153,8 +155,8 @@ export function Filters<T extends string>({ options, value, onChange }: { option
             accessibilityState={{ checked: on, selected: on }}
             aria-checked={on}
             onPress={() => onChange(o.value)}
-            style={[styles.filter, on ? { backgroundColor: tint, borderColor: tint } : { borderColor: border }]}>
-            <Text style={[styles.filterText, on ? { color: '#FFFFFF', fontWeight: '700' } : null]}>{o.label}</Text>
+            style={[styles.filter, on ? { backgroundColor: tint, borderColor: tint } : { borderColor: border, backgroundColor: surface }]}>
+            <Text style={[styles.filterText, on ? { color: surface, fontWeight: '700' } : null]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -211,14 +213,14 @@ export function Empty({ title, text }: { title: string; text?: string }) {
 }
 
 export const communityStyles = StyleSheet.create({
-  cardTitle: { fontSize: 19, fontWeight: '700', marginBottom: 4 },
+  cardTitle: { fontFamily: DISPLAY, fontSize: 21, lineHeight: 28, marginBottom: 6 },
   body: { fontSize: 17, lineHeight: 25 },
   meta: { fontSize: 15, marginTop: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10, flexWrap: 'wrap' },
 });
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
+  card: { borderWidth: 1, borderRadius: 18, padding: 18, marginBottom: 12 },
   cardTitle: communityStyles.cardTitle,
   body: { fontSize: 16, lineHeight: 23, marginBottom: 4 },
   avatar: { alignItems: 'center', justifyContent: 'center' },

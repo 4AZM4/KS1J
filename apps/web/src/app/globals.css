@@ -4,12 +4,13 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #111111;
-  --muted: #555555;
-  --card: #f4f6f5;
-  --border: #dde3e0;
-  --brand: #0f6b4f;
+  --background: #f4f7f5;
+  --foreground: #10241d;
+  --muted: #55665f;
+  --card: #ffffff;
+  --border: #e2e8e4;
+  --brand: #0b4d3a;
+  --brand-soft: #e6f0eb;
   /* Landing page: Jamaat green, lapis, and a gold for the star lattice. */
   --paper: #f6f8f6;
   --ink: #0e3b2e;
@@ -31,16 +32,21 @@
   --color-deep: var(--deep);
   --color-lapis: var(--lapis);
   --color-gold: var(--gold);
+  --color-brand-soft: var(--brand-soft);
   --font-sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Page titles, as on KSIJ Connect: a calm serif. Body text stays Atkinson Hyperlegible for low vision. */
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --shadow-soft: 0 1px 2px rgba(16, 36, 29, 0.04), 0 6px 18px rgba(16, 36, 29, 0.05);
 }
 
 :root[data-theme="dark"] {
-  --background: #0b0f0d;
-  --foreground: #f5f5f5;
-  --muted: #b5bdb9;
-  --card: #161c19;
-  --border: #2a332f;
-  --brand: #6fd3a8;
+  --background: #0b110f;
+  --foreground: #eef3f0;
+  --muted: #a9b6b0;
+  --card: #141b18;
+  --border: #26302b;
+  --brand: #7fd3ae;
+  --brand-soft: #173028;
   --paper: #0d1714;
   --ink: #e7efe9;
   --deep: #0a3a2c;
@@ -52,12 +58,13 @@
 /* Before the script runs (or without JavaScript), still follow the device. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --background: #0b0f0d;
-    --foreground: #f5f5f5;
-    --muted: #b5bdb9;
-    --card: #161c19;
-    --border: #2a332f;
-    --brand: #6fd3a8;
+    --background: #0b110f;
+    --foreground: #eef3f0;
+    --muted: #a9b6b0;
+    --card: #141b18;
+    --border: #26302b;
+    --brand: #7fd3ae;
+    --brand-soft: #173028;
     --paper: #0d1714;
     --ink: #e7efe9;
     --deep: #0a3a2c;
@@ -65,6 +72,31 @@
     --gold: #d9b866;
     --wordmark: #f6f8f6;
   }
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Committee dashboard: each page title gets the short gold rule. */
+.admin-page h1 {
+  font-size: 2.1rem;
+  line-height: 1.15;
+}
+.admin-page h1::after {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 2px;
+  margin-top: 0.75rem;
+  border-radius: 1px;
+  background: var(--gold);
+}
+.admin-page h2 {
+  font-size: 1.3rem;
 }
 
 body {

@@ -120,10 +120,10 @@ export default function ReceiptScreen() {
     if (kind && id) void loadReceipt(kind, id).then(setR);
   }, [kind, id]);
 
-  if (r === undefined) return <Screen title="Receipt"><Text style={{ color: muted }}>Loading…</Text></Screen>;
+  if (r === undefined) return <Screen eyebrow="Give" title="Receipt"><Text style={{ color: muted }}>Loading…</Text></Screen>;
   if (r === null) {
     return (
-      <Screen title="Receipt">
+      <Screen eyebrow="Give" title="Receipt">
         <Text style={[styles.body, { color: muted }]}>There is no paid receipt here. Payments waiting for the bank have no receipt yet.</Text>
       </Screen>
     );
@@ -131,7 +131,7 @@ export default function ReceiptScreen() {
 
   const name = member?.full_name ?? '';
   return (
-    <Screen title="Receipt">
+    <Screen eyebrow="Give" title="Receipt">
       <View style={[styles.receipt, { borderColor: ART.gold }]}>
         <View style={styles.head} lightColor={ART.deep} darkColor={ART.deep}>
           <Lattice id="lat-receipt" opacity={0.16} />

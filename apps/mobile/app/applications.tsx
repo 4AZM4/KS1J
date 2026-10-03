@@ -33,7 +33,7 @@ export default function ApplicationsScreen() {
   );
 
   return (
-    <Screen title="My applications" intro="You will see each step as the committee works on your case.">
+    <Screen eyebrow="Services" title="My applications" intro="You will see each step as the committee works on your case.">
       {submitted ? <Banner tone="good">{`Application #${submitted} submitted. A verifier will review it.`}</Banner> : null}
       {cases === null ? <Text style={{ color: muted }}>Loading…</Text> : null}
       {cases?.length === 0 ? <Text style={[styles.empty, { color: muted }]}>You have not applied for anything yet.</Text> : null}

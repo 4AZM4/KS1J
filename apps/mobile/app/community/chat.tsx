@@ -52,12 +52,12 @@ export default function ChatScreen() {
     void load();
   }
 
-  if (!conn) return <Screen title="Conversation"><CommunityGate>{null}</CommunityGate></Screen>;
+  if (!conn) return <Screen eyebrow="Community" title="Conversation"><CommunityGate>{null}</CommunityGate></Screen>;
   const otherId = conn.from_id === me ? conn.to_id : conn.from_id;
   const other = people.get(otherId);
 
   return (
-    <Screen title={other?.display_name ?? 'Conversation'}>
+    <Screen eyebrow="Community" title={other?.display_name ?? 'Conversation'}>
       <CommunityGate needProfile>
         <PersonLine person={{ member_id: otherId, display_name: other?.display_name ?? 'Member', headline: other?.headline }} />
         <View style={[styles.note, { backgroundColor: card }]} lightColor="transparent" darkColor="transparent">

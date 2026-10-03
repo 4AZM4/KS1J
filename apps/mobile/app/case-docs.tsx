@@ -84,7 +84,7 @@ export default function CaseDocsScreen() {
     submitted ? router.replace({ pathname: '/applications', params: { submitted } }) : router.back();
 
   return (
-    <Screen
+    <Screen eyebrow="Services"
       title={submitted ? 'Add your documents' : 'Documents'}
       intro={c ? `#${c.case_no} ${c.title}. Only you and the committee can see these.` : undefined}>
       {submitted ? <Banner tone="good">{`Application #${submitted} submitted. Documents help the verifier decide faster.`}</Banner> : null}

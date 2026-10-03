@@ -38,7 +38,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <Screen title={t('profile.title')}>
+    <Screen eyebrow="Your account" title={t('profile.title')}>
       <SectionLabel>{t('profile.you')}</SectionLabel>
       <View style={[styles.card, { backgroundColor: card, borderColor: border }]}>
         {rows
