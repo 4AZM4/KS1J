@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Image, StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, G, LinearGradient, Path, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, G, Path, Pattern, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
 import { useT } from '@/lib/i18n';
@@ -95,37 +95,64 @@ function khatamPoints(cx: number, cy: number, r: number): string {
   }).join(' ');
 }
 
+/** Rings of the corner rosette: radius, stroke width, opacity (from the outside in). */
+const ROSETTE_RINGS: [number, number, number][] = [
+  [170, 1, 0.3],
+  [140, 2.6, 0.9],
+  [130, 1, 0.6],
+  [100, 1.6, 0.8],
+  [72, 2.6, 0.9],
+  [64, 1, 0.6],
+];
+const ROSETTE_W = 180;
+const ROSETTE_H = 172;
+
 /**
- * The banner at the top of each tab: emerald gradient, star lattice, a gold double frame and the
- * KS1J logo in a faint star ring, with the screen's title in large, high-contrast text.
+ * The banner at the top of each tab: Jamaat green with a fine star lattice, and a gold khatam
+ * medallion opening from the top corner. The screen's title is large, high-contrast text.
  */
 export function Hero({ title, intro, id, children }: { title: string; intro?: string; id: string; children?: ReactNode }) {
   const { rtl } = useT();
   const align = rtl ? ({ textAlign: 'right', writingDirection: 'rtl' } as const) : null;
   // On very narrow screens (small phones, the landing-page preview) the title needs the full width.
   const narrow = useWindowDimensions().width < 360;
+  // The medallion sits in the corner the text does not start from.
+  const cx = rtl ? 0 : ROSETTE_W;
   return (
-    <View style={[styles.hero, narrow && styles.heroNarrow]} lightColor={ART.deep} darkColor={ART.deep}>
+    <View style={[styles.hero, rtl ? styles.heroRtl : null, narrow && styles.heroNarrow]} lightColor={ART.deep} darkColor={ART.deep}>
       <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
         <Defs>
-          <LinearGradient id={`emer-${id}`} x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={ART.deep} />
-            <Stop offset="1" stopColor="#14684F" />
-          </LinearGradient>
+          <Pattern id={`lat-${id}`} width={48} height={48} patternUnits="userSpaceOnUse">
+            <G fill="none" stroke={ART.gold} strokeWidth={0.8} opacity={0.16}>
+              <Rect x={13} y={13} width={22} height={22} />
+              <Polygon points="24,8.5 39.5,24 24,39.5 8.5,24" />
+              <Circle cx={24} cy={24} r={3} />
+            </G>
+          </Pattern>
         </Defs>
-        <Rect width="100%" height="100%" fill={`url(#emer-${id})`} />
+        <Rect width="100%" height="100%" fill={`url(#lat-${id})`} />
       </Svg>
-      <Lattice id={`lat-${id}`} />
-      <View style={styles.frameOuter} lightColor="transparent" darkColor="transparent" pointerEvents="none" />
-      <View style={styles.frameInner} lightColor="transparent" darkColor="transparent" pointerEvents="none" />
-      {narrow ? null : (
-        <View style={styles.logoWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
-          <Svg style={StyleSheet.absoluteFill} width={120} height={120} viewBox="0 0 120 120" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Polygon points={khatamPoints(60, 60, 58)} fill="none" stroke={ART.gold} strokeWidth={1.2} opacity={0.5} />
-          </Svg>
-          <Image source={require('@/assets/images/ks1j-logo.png')} style={styles.logo} accessibilityIgnoresInvertColors />
-        </View>
-      )}
+      <Svg
+        style={[styles.rosette, rtl ? { left: 0 } : { right: 0 }]}
+        width={ROSETTE_W}
+        height={ROSETTE_H}
+        viewBox={`0 0 ${ROSETTE_W} ${ROSETTE_H}`}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+      >
+        <Defs>
+          <RadialGradient id={`glow-${id}`} cx={cx} cy={0} r={150} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={ART.goldLight} stopOpacity={0.3} />
+            <Stop offset="1" stopColor={ART.goldLight} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={cx} cy={0} r={150} fill={`url(#glow-${id})`} />
+        {ROSETTE_RINGS.map(([r, w, o]) => (
+          <Polygon key={r} points={khatamPoints(cx, 0, r)} fill="none" stroke={ART.gold} strokeWidth={w} opacity={o} />
+        ))}
+        <Polygon points={khatamPoints(cx, 0, 28)} fill={ART.gold} />
+      </Svg>
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
         <Text accessibilityRole="header" style={[styles.heroTitle, align]}>
           {title}
@@ -145,12 +172,10 @@ export function accentStyle(accent?: 'gold' | 'lapis' | 'green'): StyleProp<View
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 28, paddingLeft: 26, paddingRight: 146, minHeight: 156, marginBottom: 8 },
-  heroNarrow: { paddingRight: 26, minHeight: 0 },
-  frameOuter: { position: 'absolute', top: 8, left: 8, right: 8, bottom: 8, borderRadius: 18, borderWidth: 2, borderColor: ART.gold },
-  frameInner: { position: 'absolute', top: 13, left: 13, right: 13, bottom: 13, borderRadius: 14, borderWidth: 0.8, borderColor: ART.goldLight, opacity: 0.6 },
-  logoWrap: { position: 'absolute', right: 22, top: '50%', marginTop: -60, width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 96, height: 96 },
+  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 28, paddingLeft: 24, paddingRight: 96, minHeight: 156, marginBottom: 8 },
+  heroRtl: { paddingLeft: 96, paddingRight: 24 },
+  heroNarrow: { paddingLeft: 22, paddingRight: 22, minHeight: 0 },
+  rosette: { position: 'absolute', top: 0 },
   heroText: { gap: 6 },
   heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', lineHeight: 36 },
   heroIntro: { color: ART.mint, fontSize: 17, lineHeight: 24 },
