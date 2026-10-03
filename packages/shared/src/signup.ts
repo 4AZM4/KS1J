@@ -21,7 +21,7 @@ export function signupProblem(i: SignupInput): string | null {
   return null;
 }
 
-/** "98765 43210" or "+91 98765 43210" → "919876543210". */
+/** "12345 67890" or "+91 12345 67890" → "911234567890". */
 export function normalisePhone(phone: string): string {
   const d = phone.replace(/\D/g, '');
   return d.length === 10 ? `91${d}` : d;

@@ -122,7 +122,7 @@ export default function LoginPage() {
           className="space-y-3"
         >
           <label className="block text-sm font-semibold" htmlFor="phone">Mobile number</label>
-          <input id="phone" className={inputClass} inputMode="tel" placeholder="98765 43210" value={phone}
+          <input id="phone" className={inputClass} inputMode="tel" placeholder="+91 12345 67890" value={phone}
             onChange={(e) => setPhone(e.target.value)} disabled={otpSent} />
           {otpSent ? (
             <>

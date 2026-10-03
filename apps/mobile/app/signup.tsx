@@ -56,7 +56,7 @@ export default function SignupScreen() {
       intro="For members of KSI Jamaat Mumbai. A verifier checks every new account before family details are shared.">
       {error ? <Banner>{error}</Banner> : null}
       <Field label="Full name" value={form.fullName} onChangeText={set('fullName')} autoComplete="name" />
-      <Field label="Mobile number" value={form.phone} onChangeText={set('phone')} keyboardType="phone-pad" placeholder="98765 43210" />
+      <Field label="Mobile number" value={form.phone} onChangeText={set('phone')} keyboardType="phone-pad" placeholder="+91 12345 67890" />
       <Field
         label="Email"
         value={form.email}

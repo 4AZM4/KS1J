@@ -122,7 +122,7 @@ export function Redaction() {
       <figure className="rounded-2xl border border-border bg-background p-6">
         <figcaption className="text-base font-bold text-muted">What the committee wrote</figcaption>
         <p className="mt-3 text-xl leading-relaxed">
-          <Personal>Zainab</Personal> and her husband need ration for six months. Call <Personal>98200 12345</Personal>.
+          <Personal>Zainab</Personal> and her husband need ration for six months. Call <Personal>+91 12345 67890</Personal>.
         </p>
       </figure>
       <p aria-hidden="true" className="pl-6 text-2xl text-gold">↓</p>

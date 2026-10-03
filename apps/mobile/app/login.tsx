@@ -73,7 +73,7 @@ export default function LoginScreen() {
       {PHONE_LOGIN ? (
         <>
       <SectionLabel>Or with your mobile number</SectionLabel>
-      <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="98765 43210" editable={!sent} />
+      <Field label="Mobile number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+91 12345 67890" editable={!sent} />
       {sent ? <Field label="6-digit code" value={code} onChangeText={setCode} keyboardType="number-pad" /> : null}
       <Button
         title={sent ? 'Verify and sign in' : 'Send code'}

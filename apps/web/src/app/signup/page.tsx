@@ -83,7 +83,7 @@ export default function SignupPage() {
       <Card className="mt-6">
         <form onSubmit={submit} className="space-y-4" noValidate>
           <Field id="name" label="Full name" value={form.fullName} onChange={set("fullName")} autoComplete="name" />
-          <Field id="phone" label="Mobile number" value={form.phone} onChange={set("phone")} autoComplete="tel" inputMode="tel" placeholder="98765 43210" />
+          <Field id="phone" label="Mobile number" value={form.phone} onChange={set("phone")} autoComplete="tel" inputMode="tel" placeholder="+91 12345 67890" />
           <Field id="email" label="Email" type="email" value={form.email} onChange={set("email")} autoComplete="email" />
           <Field
             id="password"
