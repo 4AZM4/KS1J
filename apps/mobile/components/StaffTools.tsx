@@ -31,7 +31,7 @@ const TOOLS: Tool[] = [
   {
     icon: 'file-search',
     title: 'Verify cases and documents',
-    description: 'Check new requests, read the receipt check and verify Sadaat lineage.',
+    description: 'Check new requests, read the receipt check and check the Aadhaar card for Sadaat cases.',
     path: '/admin/cases/',
     roles: ['verifier'],
   },

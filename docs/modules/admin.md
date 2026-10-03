@@ -7,7 +7,7 @@
 | Role | Can | Cannot |
 | --- | --- | --- |
 | volunteer | Submit cases for others | Verify, approve, pay |
-| verifier | Verify documents, need, Sadaat lineage; review fraud flags; verify members | Approve or pay |
+| verifier | Verify documents, need, Sadaat status (Aadhaar card); review fraud flags; verify members | Approve or pay |
 | trustee | Approve/reject verified cases, publish, manage institutions and announcements | Approve a case they verified; pay |
 | finance | Record disbursements, see ledgers, manage Lawajam | Change approvals |
 | super_admin | Everything, including assigning roles | Approve a case they verified (still blocked) |

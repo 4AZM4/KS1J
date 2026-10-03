@@ -102,7 +102,7 @@ export default function ApplyScreen() {
         value={category}
         onChange={setCategory}
         options={[
-          { value: 'sadaat', label: 'Sadaat (Syed)', note: 'Lineage is verified by the committee' },
+          { value: 'sadaat', label: 'Sadaat (Syed)', note: 'The committee checks your Aadhaar card' },
           { value: 'non_sadaat', label: 'Non-Sadaat' },
         ]}
       />

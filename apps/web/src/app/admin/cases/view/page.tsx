@@ -154,7 +154,7 @@ function CaseDetail() {
             <div><dt className="text-muted">Type</dt><dd>{CASE_TYPE_LABEL[c.type]}</dd></div>
             <div><dt className="text-muted">Requested</dt><dd>{rupees(c.requested_amount)}</dd></div>
             {isSadaat ? (
-              <div><dt className="text-muted">Sadaat lineage</dt><dd>{c.lineage_verified ? "Verified" : "Not yet verified"}</dd></div>
+              <div><dt className="text-muted">Sadaat (Aadhaar card)</dt><dd>{c.lineage_verified ? "Checked" : "Not yet checked"}</dd></div>
             ) : null}
           </dl>
         </Card>
@@ -219,7 +219,7 @@ function CaseDetail() {
               {isSadaat ? (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={lineage} onChange={(e) => setLineage(e.target.checked)} />
-                  I have verified Sadaat (Syed) lineage
+                  I have checked the Aadhaar card: this family is Sadaat (Syed)
                 </label>
               ) : null}
               <div className="flex gap-2">

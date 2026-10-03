@@ -50,7 +50,7 @@ const tabs: { name: string; icon: IconName; lead: string; items: string[] }[] = 
 
 const steps: { title: string; body: string; icon: IconName }[] = [
   { icon: "file-plus", title: "You apply", body: "From the app or with a volunteer. Only the committee sees your details." },
-  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and Sadaat lineage where it applies." },
+  { icon: "file-search", title: "A verifier checks", body: "Documents, need, and the Aadhaar card for Sadaat cases." },
   { icon: "rosette-discount-check", title: "A different trustee approves", body: "The person who verified can never approve the same case." },
   { icon: "eye-off", title: "Donors see the need", body: "Without your name, phone or address. Only what is needed and how much is left." },
   { icon: "building-bank", title: "The Jamaat pays directly", body: "To the hospital, school or family, with proof recorded." },

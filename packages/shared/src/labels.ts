@@ -27,7 +27,8 @@ export const DOCUMENT_KIND_LABEL: Record<DocumentKind, string> = {
   marksheet: 'Mark sheet',
   income_proof: 'Income proof',
   medical_report: 'Medical report or bill',
-  lineage_proof: 'Sadaat lineage proof',
+  // Kept as lineage_proof in the database; for Sadaat cases the committee checks the Aadhaar card.
+  lineage_proof: 'Aadhaar card (Sadaat), masked',
   id_proof: 'ID proof',
   other: 'Other',
 };

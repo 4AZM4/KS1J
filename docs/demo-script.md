@@ -33,7 +33,7 @@ Point out: only the committee sees the details and documents; donors never see h
 1. Sign in as **Verifier** → Overview shows the queue → Cases → *To verify* → open Fatema's case.
 2. **Documents** card: the receipt check has already read the file and flagged **"Receipt says ₹36,000, request says ₹40,000"**. It only flags; the verifier decides.
 3. **Fraud flags** page: a second open request from the same household is flagged too. Re-using one file on two cases would be flagged the same way.
-4. Tick *Sadaat lineage verified* → **Verify**. Back on the app, Fatema's Home shows **"A Jamaat verifier has checked your request"**.
+4. Tick *I have checked the Aadhaar card: this family is Sadaat (Syed)* → **Verify**. Back on the app, Fatema's Home shows **"A Jamaat verifier has checked your request"**.
 5. Sign out, sign in as **Trustee** → open the same case → set the target and public summary → **Approve** → **Publish**.
    The preview shows her name and phone are masked in the public summary.
 6. Try it the wrong way round if asked: sign in as **Super admin**, verify a case, then try to approve it. The database refuses.
