@@ -33,9 +33,14 @@ export function Impact() {
     <section aria-labelledby="impact" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6">
       <h2 id="impact" className="text-sm font-bold uppercase tracking-[0.2em] text-brand">Together so far</h2>
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {tiles.map((x) => (
-          <li key={x.label} className="rounded-2xl border border-border bg-card px-5 py-4">
-            <p className="text-3xl font-bold text-ink">{x.value}</p>
+        {tiles.map((x, i) => (
+          // On phones the first total (usually the rupees raised) gets the full width, and numbers shrink
+          // with the screen, so a long amount like ₹1,32,800 never spills out of its tile.
+          <li
+            key={x.label}
+            className={`min-w-0 rounded-2xl border border-border bg-card px-4 py-4 sm:px-5 ${i === 0 ? "col-span-2 sm:col-span-1" : ""}`}
+          >
+            <p className="text-[clamp(1.5rem,7vw,1.875rem)] font-bold leading-tight text-ink tabular-nums [overflow-wrap:anywhere]">{x.value}</p>
             <p className="mt-1 text-base text-muted">{x.label}</p>
           </li>
         ))}
