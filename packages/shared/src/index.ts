@@ -10,3 +10,4 @@ export type { Database, Tables, TablesInsert, TablesUpdate, Enums, Json } from '
 export * from './documents';
 export * from './icons';
 export * from './i18n';
+export * from './files';

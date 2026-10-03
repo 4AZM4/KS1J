@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, Platform } from 'react-native';
-import { createKs1jClient, friendlyAuthError } from '@ks1j/shared';
+import { createFileStore, createKs1jClient, fileStoreSettings, friendlyAuthError } from '@ks1j/shared';
 
 // One client for the app. Every query runs as the signed-in member, so Supabase RLS
 // decides what they can see. Only the public anon key is ever used here.
@@ -25,6 +25,12 @@ if (Platform.OS !== 'web') {
     else supabase.auth.stopAutoRefresh();
   });
 }
+
+/** Members' documents: Supabase Storage by default, Firebase when EXPO_PUBLIC_FILE_STORAGE=firebase. */
+export const files = createFileStore(
+  supabase,
+  fileStoreSettings(process.env.EXPO_PUBLIC_FILE_STORAGE, process.env.EXPO_PUBLIC_FIREBASE_CONFIG),
+);
 
 export const DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 

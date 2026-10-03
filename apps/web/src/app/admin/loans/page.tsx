@@ -15,7 +15,7 @@ import {
   type FollowUpStage,
   type Tables,
 } from "@ks1j/shared";
-import { errorMessage, supabase } from "@/lib/supabase";
+import { errorMessage, supabase, files } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { downloadCsv, today } from "@/lib/csv";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
@@ -324,9 +324,11 @@ function HardshipCard({ h, canDecide, onDone, onError }: { h: Hardship; canDecid
   const [busy, setBusy] = useState(false);
 
   async function openProof() {
-    const { data, error } = await supabase().storage.from("documents").createSignedUrl(h.proof_path, 300);
-    if (error) return onError(error);
-    window.open(data.signedUrl, "_blank", "noopener");
+    try {
+      window.open(await files().viewUrl(h.proof_path), "_blank", "noopener");
+    } catch (e) {
+      onError(e);
+    }
   }
 
   async function decide(status: "approved" | "rejected") {

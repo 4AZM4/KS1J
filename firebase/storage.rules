@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// KS1J members' documents in Cloud Storage for Firebase.
+// Mirrors the Supabase `documents` bucket (supabase/migrations/20261001000800_loans_autopay_documents.sql):
+//   - a member uploads only into documents/<their id>/, only PDFs and photos, at most 10 MB;
+//   - only the member who uploaded a file and Jamaat staff can read it;
+//   - nobody can overwrite, change or delete a file through the app (evidence stays as it was sent).
+// Members sign in to Firebase with a token from the `firebase-token` edge function, which sets
+// request.auth.uid to their KS1J member id and request.auth.token.staff for Jamaat staff.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /documents/{owner}/{file} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == owner || request.auth.token.staff == true);
+
+      allow create: if request.auth != null
+                    && request.auth.uid == owner
+                    && request.resource.size > 0
+                    && request.resource.size <= 10 * 1024 * 1024
+                    && request.resource.contentType.matches('application/pdf|image/(jpeg|png|heic|webp)');
+
+      allow update, delete: if false;
+    }
+
+    // Everything else is closed.
+    match /{all=**} {
+      allow read, write: if false;
+    }
+  }
+}

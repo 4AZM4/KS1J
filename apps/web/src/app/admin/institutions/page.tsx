@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatDate, type Tables, uploadProblem } from "@ks1j/shared";
-import { errorMessage, supabase } from "@/lib/supabase";
+import { errorMessage, supabase, files } from "@/lib/supabase";
 import { useAuth } from "@/components/auth";
 import { Alert, Badge, Button, Card, inputClass } from "@/components/ui";
 
@@ -47,9 +47,11 @@ export default function InstitutionsPage() {
   };
 
   async function openDoc(path: string) {
-    const { data, error } = await supabase().storage.from("documents").createSignedUrl(path, 300);
-    if (error) return fail(new Error("This ijazah document is not in storage (demo data)."));
-    window.open(data.signedUrl, "_blank", "noopener");
+    try {
+      window.open(await files().viewUrl(path), "_blank", "noopener");
+    } catch {
+      fail(new Error("This ijazah document is not in storage (demo data)."));
+    }
   }
 
   async function update(id: string, values: Partial<Tables<"institutions">>, msg: string) {
@@ -172,8 +174,7 @@ function AddInstitution({ onDone, onError }: { onDone: (m: string) => void; onEr
     try {
       const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "pdf";
       const path = `${session.user.id}/ijazah-${Date.now()}.${ext}`;
-      const up = await supabase().storage.from("documents").upload(path, file, { contentType: file.type || "application/pdf" });
-      if (up.error) throw up.error;
+      await files().upload(path, file, file.type || "application/pdf");
       const { error } = await supabase()
         .from("institutions")
         .insert({ name: name.trim(), city: city.trim() || null, marja: marja.trim(), ijazah_document_path: path });

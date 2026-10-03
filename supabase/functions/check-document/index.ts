@@ -10,7 +10,8 @@
 //
 // Every file (any kind) also gets a SHA-256 fingerprint; the same file on two cases raises a fraud flag.
 // Only someone who can see the document (applicant, submitter, staff) can ask for it to be checked.
-// Secrets (Supabase only, never in the apps): ANTHROPIC_API_KEY, optional ANTHROPIC_MODEL.
+// Secrets (Supabase only, never in the apps): ANTHROPIC_API_KEY, optional ANTHROPIC_MODEL; optional
+// FIREBASE_SERVICE_ACCOUNT (+ FIREBASE_STORAGE_BUCKET) when documents are stored in Firebase.
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 import { extractText, getDocumentProxy } from 'npm:unpdf@0.12.1';
@@ -33,6 +34,57 @@ const SERVICE = () => Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const JWT = /^Bearer [\w-]+\.[\w-]+\.[\w-]+$/;
 
 type Found = { amount: number | null; name: string | null; institution: string | null };
+
+// ---------- Firebase file storage (optional) ----------
+// When FIREBASE_SERVICE_ACCOUNT is set, documents may live in Cloud Storage for Firebase under
+// documents/<member id>/... (see packages/shared/src/files.ts). Optional FIREBASE_STORAGE_BUCKET,
+// otherwise <project id>.firebasestorage.app. Returns null if Firebase is off or the file is not there.
+const b64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64urlJson = (v: unknown) => b64url(new TextEncoder().encode(JSON.stringify(v)));
+let googleToken: { value: string; until: number } | null = null;
+
+async function firebaseDownload(path: string): Promise<{ bytes: Uint8Array; type: string } | null> {
+  const raw = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+  if (!raw) return null;
+  try {
+    const acct = JSON.parse(raw) as { client_email: string; private_key: string; project_id: string };
+    const bucket = Deno.env.get('FIREBASE_STORAGE_BUCKET') || `${acct.project_id}.firebasestorage.app`;
+    const now = Math.floor(Date.now() / 1000);
+    if (!googleToken || googleToken.until < now + 60) {
+      const pem = acct.private_key.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+      const der = Uint8Array.from(atob(pem), (c) => c.charCodeAt(0));
+      const key = await crypto.subtle.importKey('pkcs8', der, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+      const unsigned = `${b64urlJson({ alg: 'RS256', typ: 'JWT' })}.${b64urlJson({
+        iss: acct.client_email,
+        scope: 'https://www.googleapis.com/auth/devstorage.read_only',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600,
+      })}`;
+      const sig = new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned)));
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: `${unsigned}.${b64url(sig)}` }),
+      });
+      if (!res.ok) throw new Error(`google token ${res.status}`);
+      const t = (await res.json()) as { access_token: string; expires_in: number };
+      googleToken = { value: t.access_token, until: now + t.expires_in };
+    }
+    const obj = encodeURIComponent(`documents/${path}`);
+    const file = await fetch(`https://storage.googleapis.com/storage/v1/b/${bucket}/o/${obj}?alt=media`, {
+      headers: { Authorization: `Bearer ${googleToken.value}` },
+    });
+    if (file.status === 404) return null;
+    if (!file.ok) throw new Error(`firebase download ${file.status}`);
+    return { bytes: new Uint8Array(await file.arrayBuffer()), type: file.headers.get('content-type') ?? '' };
+  } catch (e) {
+    console.error('firebase download failed, trying Supabase', e);
+    return null;
+  }
+}
+
 
 // ---------- Text rules (mirror packages/shared/src/documents.ts; change both together) ----------
 const AMOUNT = /(?:₹|rs\.?|inr)?\s*((?:\d{1,3}(?:,\d{2,3})+|\d+))(?:\.\d{1,2})?\s*(?:\/-)?/gi;
@@ -184,6 +236,13 @@ Deno.serve(async (req) => {
     let type = '';
     const download = async (): Promise<Uint8Array> => {
       if (bytes) return bytes;
+      // Firebase first when it is set up; files from before the switch are still in Supabase.
+      const fb = await firebaseDownload(doc.storage_path);
+      if (fb) {
+        type = fb.type;
+        bytes = fb.bytes;
+        return bytes;
+      }
       const file = await rest(`/storage/v1/object/documents/${doc.storage_path.split('/').map(encodeURIComponent).join('/')}`, {
         method: 'GET',
       });

@@ -2,10 +2,10 @@ import type { DocumentPickerAsset } from 'expo-document-picker';
 
 import { uploadProblem } from '@ks1j/shared';
 
-import { supabase } from '@/lib/supabase';
+import { files } from '@/lib/supabase';
 
 /**
- * Uploads a picked file into the member's own private folder in the `documents` bucket
+ * Uploads a picked file into the member's own private folder (Supabase Storage, or Firebase when switched on)
  * (only they and Jamaat staff can read it) and returns its storage path.
  */
 export async function uploadToMyFolder(userId: string, file: DocumentPickerAsset, prefix: string): Promise<string> {
@@ -15,9 +15,6 @@ export async function uploadToMyFolder(userId: string, file: DocumentPickerAsset
   const ext = (file.name.split('.').pop() || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
   const path = `${userId}/${prefix}-${Date.now()}.${ext}`;
   const body = await (await fetch(file.uri)).arrayBuffer();
-  const { error } = await supabase.storage
-    .from('documents')
-    .upload(path, body, { contentType: file.mimeType ?? 'application/pdf' });
-  if (error) throw error;
+  await files.upload(path, body, file.mimeType ?? 'application/pdf');
   return path;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { createKs1jClient, friendlyAuthError, type Ks1jClient } from "@ks1j/shared";
+import { createFileStore, createKs1jClient, fileStoreSettings, friendlyAuthError, type FileStore, type Ks1jClient } from "@ks1j/shared";
 
 // One browser client for the whole site. The session lives in the browser; every query runs
 // as the signed-in member, so Supabase RLS decides what they can see and do.
@@ -13,6 +13,17 @@ export function supabase(): Ks1jClient {
     auth: { storageKey: "ks1j-web-auth", persistSession: true, autoRefreshToken: true },
   });
   return client;
+}
+
+let fileStore: FileStore | undefined;
+
+/** Members' documents: Supabase Storage by default, Firebase when NEXT_PUBLIC_FILE_STORAGE=firebase. */
+export function files(): FileStore {
+  fileStore ??= createFileStore(
+    supabase(),
+    fileStoreSettings(process.env.NEXT_PUBLIC_FILE_STORAGE, process.env.NEXT_PUBLIC_FIREBASE_CONFIG),
+  );
+  return fileStore;
 }
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
