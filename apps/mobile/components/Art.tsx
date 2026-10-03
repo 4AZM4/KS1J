@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Image, StyleSheet, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, G, Path, Pattern, Polygon, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, G, LinearGradient, Path, Pattern, Polygon, Rect, Stop } from 'react-native-svg';
 
 import { Text, View } from '@/components/Themed';
 import { useT } from '@/lib/i18n';
@@ -85,9 +85,19 @@ export function Arch({ width, height, color = ART.gold, strokeWidth = 3 }: { wid
   );
 }
 
+/** Points of an eight-pointed khatam star (two overlapping squares) centred on cx, cy. */
+function khatamPoints(cx: number, cy: number, r: number): string {
+  const inner = (r * Math.cos(Math.PI / 4)) / Math.cos(Math.PI / 8);
+  return Array.from({ length: 16 }, (_, i) => {
+    const a = Math.PI / 2 + (i * Math.PI) / 8;
+    const rad = i % 2 === 0 ? r : inner;
+    return `${(cx + rad * Math.cos(a)).toFixed(1)},${(cy - rad * Math.sin(a)).toFixed(1)}`;
+  }).join(' ');
+}
+
 /**
- * The deep green banner at the top of each tab: star lattice, a gold arch with the KS1J star,
- * and the screen's title in large, high-contrast text.
+ * The banner at the top of each tab: emerald gradient, star lattice, a gold double frame and the
+ * KS1J logo in a faint star ring, with the screen's title in large, high-contrast text.
  */
 export function Hero({ title, intro, id, children }: { title: string; intro?: string; id: string; children?: ReactNode }) {
   const { rtl } = useT();
@@ -96,13 +106,24 @@ export function Hero({ title, intro, id, children }: { title: string; intro?: st
   const narrow = useWindowDimensions().width < 360;
   return (
     <View style={[styles.hero, narrow && styles.heroNarrow]} lightColor={ART.deep} darkColor={ART.deep}>
+      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none">
+        <Defs>
+          <LinearGradient id={`emer-${id}`} x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={ART.deep} />
+            <Stop offset="1" stopColor="#14684F" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#emer-${id})`} />
+      </Svg>
       <Lattice id={`lat-${id}`} />
+      <View style={styles.frameOuter} lightColor="transparent" darkColor="transparent" pointerEvents="none" />
+      <View style={styles.frameInner} lightColor="transparent" darkColor="transparent" pointerEvents="none" />
       {narrow ? null : (
-        <View style={styles.archWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
-          <Arch width={104} height={150} />
-          <View style={styles.archStar} lightColor="transparent" darkColor="transparent">
-            <Star size={30} />
-          </View>
+        <View style={styles.logoWrap} lightColor="transparent" darkColor="transparent" pointerEvents="none">
+          <Svg style={StyleSheet.absoluteFill} width={120} height={120} viewBox="0 0 120 120" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <Polygon points={khatamPoints(60, 60, 58)} fill="none" stroke={ART.gold} strokeWidth={1.2} opacity={0.5} />
+          </Svg>
+          <Image source={require('@/assets/images/ks1j-logo.png')} style={styles.logo} accessibilityIgnoresInvertColors />
         </View>
       )}
       <View style={styles.heroText} lightColor="transparent" darkColor="transparent">
@@ -124,10 +145,12 @@ export function accentStyle(accent?: 'gold' | 'lapis' | 'green'): StyleProp<View
 }
 
 const styles = StyleSheet.create({
-  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 24, paddingLeft: 22, paddingRight: 120, minHeight: 150, marginBottom: 8 },
-  heroNarrow: { paddingRight: 22, minHeight: 0 },
-  archWrap: { position: 'absolute', right: 14, bottom: -2, width: 104, height: 150 },
-  archStar: { position: 'absolute', left: 37, top: 62 },
+  hero: { borderRadius: 24, overflow: 'hidden', paddingVertical: 28, paddingLeft: 26, paddingRight: 146, minHeight: 156, marginBottom: 8 },
+  heroNarrow: { paddingRight: 26, minHeight: 0 },
+  frameOuter: { position: 'absolute', top: 8, left: 8, right: 8, bottom: 8, borderRadius: 18, borderWidth: 2, borderColor: ART.gold },
+  frameInner: { position: 'absolute', top: 13, left: 13, right: 13, bottom: 13, borderRadius: 14, borderWidth: 0.8, borderColor: ART.goldLight, opacity: 0.6 },
+  logoWrap: { position: 'absolute', right: 22, top: '50%', marginTop: -60, width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 96, height: 96 },
   heroText: { gap: 6 },
   heroTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '700', lineHeight: 36 },
   heroIntro: { color: ART.mint, fontSize: 17, lineHeight: 24 },
