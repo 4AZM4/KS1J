@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth";
 import { KS1JLockup } from "@/components/landing/Mark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LINKS = [
   { href: "/cases", label: "Cases" },
@@ -43,6 +44,7 @@ export function SiteHeader() {
               Dashboard
             </Link>
           ) : null}
+          <ThemeToggle />
           {session ? (
             <button onClick={() => void signOut()} className="rounded-lg px-3 py-2 font-semibold hover:bg-card">
               Sign out

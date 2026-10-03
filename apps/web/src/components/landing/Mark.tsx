@@ -13,7 +13,8 @@ export function KS1JMark({ className = "", title }: { className?: string; title?
 
 /** The KS1J letters, outlined from Atkinson Hyperlegible Bold (the site font) so they look the same everywhere. The "1" is gold. */
 export function KS1JWordmark({ className = "", tone = "ink" }: { className?: string; tone?: "ink" | "light" }) {
-  const main = tone === "light" ? "#FFFFFF" : "#0B4D3A";
+  // "ink" follows the theme: Jamaat green on light pages, near-white in dark mode.
+  const main = tone === "light" ? "#FFFFFF" : "var(--wordmark)";
   return (
     <svg viewBox="0 -682 2258 696" className={className} role="img" aria-label="KS1J">
         <path transform="translate(-44 0)" d="M44 0V-668H202V-403L443 -668H636L372 -382L649 0H466L270 -272L202 -197V0Z" fill={main} />

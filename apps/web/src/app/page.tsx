@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { KHUMS_GUIDANCE, type IconName } from "@ks1j/shared";
 import { Icon } from "@/components/Icon";
 import { Announcements } from "@/components/landing/Announcements";
@@ -83,6 +84,7 @@ export default function Home() {
           <Link href="/help" className="rounded-lg px-3 py-2 font-bold hover:bg-card">
             Helpdesk
           </Link>
+          <ThemeToggle />
           <Link href="/login" className="rounded-lg bg-deep px-3 py-2 font-bold text-white hover:brightness-110 sm:bg-transparent sm:text-ink sm:hover:bg-card sm:hover:brightness-100">
             Sign in
           </Link>

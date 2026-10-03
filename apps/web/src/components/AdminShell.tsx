@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { IconName } from "@ks1j/shared";
 import { Icon } from "@/components/Icon";
 import { usePathname, useRouter } from "next/navigation";
@@ -90,7 +91,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
             );
           })}
         </ul>
-        <button className="mt-4 text-sm text-muted underline" onClick={() => void signOut()}>Sign out</button>
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <button className="text-sm text-muted underline" onClick={() => void signOut()}>Sign out</button>
+          <ThemeToggle />
+        </div>
       </nav>
       <main className="flex-1 p-4 sm:p-8">{children}</main>
     </div>
