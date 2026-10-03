@@ -17,6 +17,11 @@ Most unpaid loans are not hardship. Families who can pay stop paying, and the co
 - **EMI is set by the family:** the student and family propose a monthly amount; a trustee accepts it or counter-proposes. The plan is agreed only when both have accepted the same amount (`accept_loan_emi`).
 - **Floor:** EMI ≥ principal ÷ maximum tenure (default 48 months). Budget-friendly, but never so low it drags on.
 - **Payer:** the student or a family member. A guarantor is named and told if payments stop.
+- **No family to guarantee** (an orphan, or no relative who can): the Jamaat guarantees the loan
+  (`jamaat_guarantee`), and a committee member is named as **mentor** (`mentor_member_id`, must be staff).
+  The guarantor shows as "KSI Jamaat welfare committee" on the mentor's phone, so the 7-day step tells
+  the mentor, who checks in kindly. The student repays only after the course and grace period; a
+  hardship request pauses reminders, and the committee can convert the loan to a grant.
 - **Grace period:** first EMI falls due when the grace period ends (default 6 months after the course). One extension with proof of job search (`grace_extension_months`).
 - **No payout without a plan:** a disbursement on an `education_loan` case is rejected until the plan is agreed.
 - **AutoPay:** UPI AutoPay mandate set up before the grace period ends. Manual payment is the fallback.

@@ -108,7 +108,7 @@ export type Database = {
         Row: {
           agreed_emi: number | null; autopay_ref: string | null; autopay_status: string; borrower_id: string; case_id: string
           committee_accepted_emi: number | null; course_end_date: string | null; created_at: string; family_accepted_emi: number | null
-          grace_ends_on: string | null; grace_extension_months: number; grace_months: number; guarantor_member_id: string | null
+          grace_ends_on: string | null; grace_extension_months: number; grace_months: number; guarantor_member_id: string | null; jamaat_guarantee: boolean; mentor_member_id: string | null
           guarantor_name: string; guarantor_phone: string; id: string; max_tenure_months: number; next_due_date: string | null
           outstanding: number; payer_member_id: string; plan_agreed_at: string | null; plan_agreed_by: string | null
           principal: number; status: Database["public"]["Enums"]["loan_status"]
@@ -116,7 +116,7 @@ export type Database = {
         Insert: {
           agreed_emi?: number | null; autopay_ref?: string | null; autopay_status?: string; borrower_id: string; case_id: string
           committee_accepted_emi?: number | null; course_end_date?: string | null; created_at?: string; family_accepted_emi?: number | null
-          grace_ends_on?: string | null; grace_extension_months?: number; grace_months?: number; guarantor_member_id?: string | null
+          grace_ends_on?: string | null; grace_extension_months?: number; grace_months?: number; guarantor_member_id?: string | null; jamaat_guarantee?: boolean; mentor_member_id?: string | null
           guarantor_name: string; guarantor_phone: string; id?: string; max_tenure_months?: number; next_due_date?: string | null
           outstanding: number; payer_member_id?: string; plan_agreed_at?: string | null; plan_agreed_by?: string | null
           principal: number; status?: Database["public"]["Enums"]["loan_status"]
@@ -124,7 +124,7 @@ export type Database = {
         Update: {
           agreed_emi?: number | null; autopay_ref?: string | null; autopay_status?: string; borrower_id?: string; case_id?: string
           committee_accepted_emi?: number | null; course_end_date?: string | null; created_at?: string; family_accepted_emi?: number | null
-          grace_ends_on?: string | null; grace_extension_months?: number; grace_months?: number; guarantor_member_id?: string | null
+          grace_ends_on?: string | null; grace_extension_months?: number; grace_months?: number; guarantor_member_id?: string | null; jamaat_guarantee?: boolean; mentor_member_id?: string | null
           guarantor_name?: string; guarantor_phone?: string; id?: string; max_tenure_months?: number; next_due_date?: string | null
           outstanding?: number; payer_member_id?: string; plan_agreed_at?: string | null; plan_agreed_by?: string | null
           principal?: number; status?: Database["public"]["Enums"]["loan_status"]
@@ -260,6 +260,7 @@ export type Database = {
         Returns: { body: string; chunk_id: string; document_id: string; heading: string | null; rank: number; source_ref: string; title: string }[]
       }
       is_system: { Args: never; Returns: boolean }
+      staff_directory: { Args: never; Returns: { full_name: string; id: string; phone: string | null; roles: string[] }[] }
       public_impact: {
         Args: never
         Returns: { families_helped: number; loans_repaid: number; open_needs: number; raised: number; students_with_loans: number }[]

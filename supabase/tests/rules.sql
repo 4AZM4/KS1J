@@ -893,4 +893,32 @@ begin
   raise notice 'PASS  anyone can read the landing-page totals (aggregates only)';
 end $$;
 
+-- 24. A student with no family: the Jamaat can guarantee the loan, with a committee mentor.
+select pg_temp.as_system();
+insert into public.cases (id, applicant_id, submitted_by, type, category, status, title, requested_amount)
+values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', '00000000-0000-0000-0000-000000000012',
+        'education_loan', 'non_sadaat', 'approved', 'Education loan: Diploma', 50000);
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select pg_temp.expect_error($$insert into public.education_loans (case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee)
+  values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, 'x', '910000000000', current_date + 300, true)$$,
+  'A Jamaat-guaranteed loan needs a mentor');
+select pg_temp.expect_error($$insert into public.education_loans (case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee, mentor_member_id)
+  values ('20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, 'x', '910000000000', current_date + 300, true, '00000000-0000-0000-0000-000000000013')$$,
+  'The mentor must be a committee member');
+select pg_temp.expect_ok($$insert into public.education_loans (id, case_id, borrower_id, principal, outstanding, guarantor_name, guarantor_phone, course_end_date, jamaat_guarantee, mentor_member_id)
+  values ('60000000-0000-0000-0000-0000000000a1', '20000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-000000000012', 50000, 50000, '', '', current_date + 300, true, '00000000-0000-0000-0000-000000000005')$$,
+  'A trustee sets up a Jamaat-guaranteed loan with a volunteer as mentor');
+do $$ begin
+  if (select guarantor_name from public.education_loans where id = '60000000-0000-0000-0000-0000000000a1') <> 'KSI Jamaat welfare committee'
+     or (select guarantor_phone from public.education_loans where id = '60000000-0000-0000-0000-0000000000a1') <> '910000000005' then
+    raise exception 'FAIL  the guarantor should read as the welfare committee, reached through the mentor';
+  end if;
+  if not exists (select 1 from public.staff_directory() where id = '00000000-0000-0000-0000-000000000005') then
+    raise exception 'FAIL  staff should be able to choose a mentor from the committee list';
+  end if;
+  raise notice 'PASS  the Jamaat can guarantee a loan for a student with no family, with a mentor';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000013');
+select pg_temp.expect_error($$select * from public.staff_directory()$$, 'Members cannot read the committee list');
+
 rollback;
