@@ -1,4 +1,4 @@
-# Demo script (about 8 minutes)
+# Demo script (about 9 minutes)
 
 Live: https://4azm4.github.io/KS1J/ · Member app: https://4azm4.github.io/KS1J/app/ · Admin: https://4azm4.github.io/KS1J/login/
 
@@ -16,7 +16,7 @@ All people and amounts are fictional. Every demo account signs in with one tap o
 
 "Help, giving and dues are spread across offices, paper and WhatsApp. Donors can't see where money goes, and families wait without knowing the status. KS1J puts it in one app, with rules the system enforces."
 
-Show the **landing page**: the artwork, the live app in the phone frame, the five steps, the redacted case card and *Where your money goes*.
+Show the **landing page**: the artwork, the live app in the phone frame, **Together so far** (live totals straight from the database: raised, families helped, open needs, students with loans), the five steps, the redacted case card and *Where your money goes*.
 
 ## 2. A family asks for help, in their own language (1.5 min) — app, **Fatema**
 
@@ -55,7 +55,9 @@ Same on the website: **Cases** on the public site, and anyone can give without t
 3. App, **Fatema** (she pays her brother Hussain's loan) → Education loan: balance, next due date, AutoPay on, **Pay ₹2,000**, receipt.
 4. Admin → Education loans → **Follow-up list** (automatic reminders, guarantor told at 7 days, committee at 30) and the **hardship request** waiting for a decision.
 
-Point out: no interest, no late fees; the plan is agreed before money goes out; a household with a loan 30+ days late can't open new scholarship or loan requests, but medical help is never blocked.
+5. **A student with no family** (an orphan, or no relative who can stand guarantee): Admin, **Trustee** → Education loans → *Approved loans to set up* → tick **No family to guarantee: the Jamaat guarantees this loan** → choose a committee **mentor** → Save. The guarantor becomes *KSI Jamaat welfare committee*, the loan shows a **Jamaat guarantee** badge, and at 7 days late the follow-up list says **Mentor told** instead of calling a guarantor. (If nothing is waiting to set up, show the checkbox and the badge in *All loans*.) The database refuses a mentor who is not on the committee.
+
+Point out: no interest, no late fees; nobody is turned away for having no family; the plan is agreed before money goes out; a household with a loan 30+ days late can't open new scholarship or loan requests, but medical help is never blocked.
 
 ## 6. Dues, help and the committee's view (1 min)
 
@@ -64,7 +66,14 @@ Point out: no interest, no late fees; the plan is agreed before money goes out; 
 3. Admin, **Finance** → **Khums & ledgers**: each fund separate, append-only; **Lawajam**: by area, *Copy reminder list*.
 4. Admin, **Trustee** → **Announcements** → publish one → it appears on the app Home and the landing page.
 
-## 7. New members (30 s)
+## 7. The committee on their phone (30 s) — app, **Volunteer**, then **Super admin**
+
+1. Sign in as **Volunteer**. Home shows **Waiting for you** instead of member reminders; Services shows **Committee work**, not "apply for help".
+2. Services → **Refer a family** → enter Zainab's number `+91 00000 00012` → **Find the family** → "Applying for Zainab (demo)" → fill a short ration request → **Submit**.
+   "An elder without a smartphone still gets help: a volunteer files it under her account, and she is told at each step."
+3. Sign in as **Super admin**: Home lists cases to verify, approve and publish, each opening the committee dashboard. On the website each role sees only its own menu (Finance sees payouts, not cases to verify); the database still enforces the limits.
+
+## 8. New members (30 s)
 
 Landing page → **Create account** → the account starts *unverified* with no household (so it sees no family data). Admin, **Verifier** → **Members to verify** → link to a household → **Verify member**.
 
@@ -75,4 +84,6 @@ Landing page → **Create account** → the account starts *unverified* with no 
 - **Privacy?** Row-level security on every table. Public case cards come from one function with a generic title and a summary with names, phones and emails masked.
 - **Does the AI decide anything?** No. It reads receipts and flags mismatches, and the helpdesk only answers from approved sources. People verify, approve and pay.
 - **Elders?** Large text, plain words, four tabs, and Gujarati, Hindi and Urdu. Translations will be checked by native speakers before launch.
+- **What if a student has no family to guarantee the loan?** The Jamaat welfare committee stands guarantor and a named committee mentor follows up. Still no interest and no late fees.
+- **What about elders with no smartphone?** A volunteer refers the family from the app; the request is filed under the family's own account, so they still get every update.
 - **What's next?** Push notifications for Khums year-end and EMIs, eMadressa and History of the Jamaat, payment gateway go-live.
