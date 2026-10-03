@@ -589,7 +589,7 @@ select pg_temp.expect_error($$insert into public.khums_calculations (member_id, 
 -- 11. Public case cards never identify the person who asked for help.
 select pg_temp.as_system();
 update public.cases
-   set public_summary = 'Zainab and her husband ZAINAB-son need ration. Call +91 98200 12345 or zainab@mail.test.'
+   set public_summary = 'Zainab and her husband ZAINAB-son need ration. Call +91 12345 67890 or zainab@mail.test.'
  where id = '20000000-0000-0000-0000-000000000004';
 select pg_temp.as_user('00000000-0000-0000-0000-000000000020');
 do $$
@@ -838,10 +838,10 @@ end $$;
 -- 21. Public summaries hide addresses in any capitals and leave dates alone.
 select pg_temp.as_system();
 do $$ begin
-  if public.mask_identity('Lives at demo building a since 2026-09-14, call 98200 12345.', '{}', '{Demo Building A}')
+  if public.mask_identity('Lives at demo building a since 2026-09-14, call +91 12345 67890.', '{}', '{Demo Building A}')
      <> 'Lives at [hidden] since 2026-09-14, call [number hidden].' then
     raise exception 'FAIL  masking: got %',
-      public.mask_identity('Lives at demo building a since 2026-09-14, call 98200 12345.', '{}', '{Demo Building A}');
+      public.mask_identity('Lives at demo building a since 2026-09-14, call +91 12345 67890.', '{}', '{Demo Building A}');
   end if;
   raise notice 'PASS  addresses are hidden whatever their capitals; dates are not mistaken for phones';
 end $$;
