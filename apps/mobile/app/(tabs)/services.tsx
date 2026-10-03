@@ -1,10 +1,22 @@
 import { FeatureCard } from '@/components/FeatureCard';
 import { Screen, SectionLabel } from '@/components/Screen';
+import { StaffServices, isStaff } from '@/components/StaffTools';
+import { useAuth } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 
 // Each card becomes a flow. Specs: docs/modules/cases.md and docs/modules/loans.md.
 export default function ServicesScreen() {
   const { t } = useT();
+  const { roles } = useAuth();
+  // Committee members see their work here, not the member services (applying for help is for families).
+  if (isStaff(roles))
+    return (
+      <Screen hero title={t('tab.services')} intro="Your committee work. Every decision is still made by a person, never the app.">
+        <StaffServices roles={roles} />
+        <SectionLabel>{t('sec.account')}</SectionLabel>
+        <FeatureCard icon="user" title={t('card.profile.t')} description={t('card.profile.d')} href="/profile" />
+      </Screen>
+    );
   return (
     <Screen hero title={t('tab.services')} intro={t('services.intro')}>
       <SectionLabel>{t('sec.apply')}</SectionLabel>

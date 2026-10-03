@@ -9,12 +9,13 @@ import { Text, View, useThemeColor } from '@/components/Themed';
 import { Banner } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { ART } from '@/components/Art';
+import { CommitteeToday, isStaff } from '@/components/StaffTools';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
-  const { member, session, signOut } = useAuth();
+  const { member, session, signOut, roles } = useAuth();
   const [news, setNews] = useState<Tables<'announcements'>[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [updates, setUpdates] = useState<Tables<'notifications'>[]>([]);
@@ -55,6 +56,7 @@ export default function HomeScreen() {
           already apply for help and give; family dues and loans appear once you are verified.
         </Banner>
       ) : null}
+      {isStaff(roles) ? <CommitteeToday roles={roles} /> : null}
       {updates.length > 0 ? (
         <>
           <SectionLabel>{t('sec.updates')}</SectionLabel>
@@ -77,7 +79,13 @@ export default function HomeScreen() {
         <FeatureCard key={n.id} icon="speakerphone" title={n.title} description={n.body} />
       ))}
       <SectionLabel>{t('sec.quick')}</SectionLabel>
-      <FeatureCard icon="file-plus" title={t('card.apply.t')} description={t('card.apply.d')} href="/apply" />
+      {isStaff(roles) ? (
+        roles.includes('volunteer') || roles.includes('super_admin') ? (
+          <FeatureCard icon="file-plus" title="Refer a family" description="Apply for help on behalf of a family who cannot use the app." href="/apply?refer=1" />
+        ) : null
+      ) : (
+        <FeatureCard icon="file-plus" title={t('card.apply.t')} description={t('card.apply.d')} href="/apply" />
+      )}
       <FeatureCard icon="heart-handshake" accent="gold" title={t('card.supportSadaat.t')} description={t('card.supportSadaat.d')} href="/cases/sadaat" />
       <FeatureCard icon="calculator" title={t('card.payKhums.t')} description={t('card.payKhums.d')} href="/give" />
       <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.signout}>
